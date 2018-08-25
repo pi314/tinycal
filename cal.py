@@ -13,8 +13,13 @@ class Config(object):
         self.sep = False
         self.fill = False
         self.color = True
+        self.year = None
+        self.month = None
 
     def update(self, args):
+        today = date.today()
+        self.today = today
+
         if args.col is not None:
             self.col = args.col
 
@@ -40,29 +45,41 @@ class Config(object):
             self.after = 1
             self.before = 1
 
-        today = date.today()
-        self.today = today
-        year_month_range = [today]
+        if args.year is not None:
+            self.year = args.year
 
-        probe_y = today.year
-        probe_m = today.month
-        for i in range(self.before):
-            probe_m -= 1
-            if probe_m == 0:
-                probe_y -= 1
-                probe_m = 12
+        if args.month is not None:
+            self.month = args.month
 
-            year_month_range.append(date(probe_y, probe_m, 1))
+        if self.year and not self.month:
+            year_month_range = [date(self.year, m, 1) for m in range(1, 13)]
 
-        probe_y = today.year
-        probe_m = today.month
-        for i in range(self.after):
-            probe_m += 1
-            if probe_m == 13:
-                probe_y += 1
-                probe_m = 1
+        else:
+            if self.year and self.month:
+                base_date = date(self.year, self.month, 1)
+            else:
+                base_date = today
 
-            year_month_range.append(date(probe_y, probe_m, 1))
+            year_month_range = [base_date]
+            probe_y = base_date.year
+            probe_m = base_date.month
+            for i in range(self.before):
+                probe_m -= 1
+                if probe_m == 0:
+                    probe_y -= 1
+                    probe_m = 12
+
+                year_month_range.append(date(probe_y, probe_m, 1))
+
+            probe_y = base_date.year
+            probe_m = base_date.month
+            for i in range(self.after):
+                probe_m += 1
+                if probe_m == 13:
+                    probe_y += 1
+                    probe_m = 1
+
+                year_month_range.append(date(probe_y, probe_m, 1))
 
         year_month_range.sort()
         self.range = year_month_range
@@ -85,6 +102,10 @@ class TableYear(object):
                 buf = []
 
         if buf:
+            for i in range(col - len(buf)):
+                dummy = TableMonth(None, None)
+                buf.append(dummy)
+
             ret.append(tuple(buf))
 
         return ret
@@ -92,6 +113,12 @@ class TableYear(object):
 
 class TableMonth(object):
     def __init__(self, cal, m):
+        if cal is None:
+            self.empty = True
+            self.weeks = []
+            return
+
+        self.empty = False
         self.year = m.year
         self.month = m.month
         self.title = m.strftime('%B') + ' ' + str(self.year)
@@ -106,10 +133,22 @@ class TableMonth(object):
         self.width = 7 * 2 + 6 + (3 if config.wk else 0)
 
     def render_title(self):
+        if self.empty:
+            return ' ' * self.width
+
         return '{title:^{width}}'.format(title=self.title, width=self.width)
 
     def render_week_ind(self):
-        ret = 'WK ' if self.config.wk else ''
+        if self.empty:
+            return ' ' * self.width
+
+        color = ''
+        uncolor = ''
+        if self.config.color:
+            color = '\033[1;30m'
+            uncolor = '\033[m'
+
+        ret = (color + 'WK ' + uncolor) if self.config.wk else ''
         ret += ' '.join(d.strftime('%a')[:2] for d in self.weeks[0])
         return ret
 
@@ -125,7 +164,7 @@ class TableMonth(object):
                 color = '\033[1;30m'
                 uncolor = '\033[m'
 
-            ret = color + str(self.wk_start + wk + 1).rjust(2) + uncolor + ' '
+            ret = color + str(self.wk_start + wk + 1).rjust(2) + ' ' + uncolor
 
         def day(d):
             if self.config.fill or d.month == self.month:
@@ -166,7 +205,9 @@ def render(config, table):
         for line in lines:
             print(line)
 
-        print()
+        sep = '-+-' if config.sep else '  '
+        c = '-' if config.sep else ' '
+        print(sep.join(c * m.width for m in row))
 
 
 def main():
@@ -196,7 +237,16 @@ def main():
     parser.add_argument('-C', action='store_false', dest='color', default=None,
             help='Disable VT100 color output.')
 
+    parser.add_argument('year', type=int, nargs='?', default=None,
+            help='Year to display.')
+
+    parser.add_argument('month', type=int, nargs='?', default=None,
+            help='Month to display. Must specified after year.')
+
     args = parser.parse_args()
+
+    # temporary disable a1b1, I need to parse arg by hand
+    args.a1b1 = False
 
     config = Config()
     config.update(args)
