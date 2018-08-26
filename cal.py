@@ -1,65 +1,105 @@
+from __future__ import print_function
+
 import argparse
 import calendar
-from datetime import date
 import sys
 
+from argparse import Namespace
+from datetime import date
+from os.path import exists, expanduser
 
-class Config(object):
-    def __init__(self):
-        self.col = 3
-        self.after = 0
-        self.before = 0
-        self.wk = False
-        self.sep = False
-        self.fill = False
-        self.year = None
-        self.month = None
-        self.color = True
 
-    def update(self, args):
+COLOR_CODE = {
+    'black': '0',
+    'red': '1',
+    'green': '2',
+    'yellow': '3',
+    'blue': '4',
+    'magenta': '5',
+    'cyan': '6',
+    'white': '7',
+}
+
+
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
+
+def get_config_with_type(cfg, key, default):
+    if key not in cfg:
+        return default
+
+    try:
+        if isinstance(default, bool) and not isinstance(cfg[key], bool):
+            return {
+                'false': False,
+                'true': True,
+                '0': False,
+                '1': True,
+            }[cfg[key].lower()]
+
+        return type(default)(cfg[key])
+    except:
+        eprint('Warning: type incorrect of {} = {}'.format(key, cfg[key]))
+        return default
+
+
+def parse_color_config(color_config):
+    fg, bg = color_config.split(':')
+    fg = fg.strip()
+    bg = bg.strip()
+
+    if fg.lower() == 'none' and bg.lower() == 'none':
+        return ''
+
+    color_codes = []
+
+    if fg.lower() != 'none':
+        if fg.upper() == fg:
+            color_codes.append('1')
+
+        color_codes.append('3' + COLOR_CODE[fg.lower()])
+
+    color_codes.append('4' + COLOR_CODE[bg.lower()])
+
+    ret = '\033['
+    ret += ';'.join(color_codes)
+    ret += 'm'
+
+    return ret
+
+    print(fg, bg)
+
+
+class TinyCalConfig(Namespace):
+    def __init__(self, cfg):
+        def get(key, default):
+            return get_config_with_type(cfg, key, default)
+
         today = date.today()
         self.today = today
 
-        if args.col is not None:
-            self.col = args.col
+        self.col = get('col', 3)
+        self.after = get('after', 0)
+        self.before = get('before', 0)
+        self.wk = get('wk', False)
+        self.sep = get('sep', True)
+        self.fill = get('fill', False)
+        self.year = get('year', today.year)
+        self.month = get('month', today.month)
+        self.color = get('color', True)
 
-        if args.wk is not None:
-            self.wk = args.wk
+        print(cfg)
 
-        if args.sep is not None:
-            self.sep = args.sep
-
-        if args.fill is not None:
-            self.fill = args.fill
-
-        if args.color is not None:
-            self.color = args.color
-
-        self.color_wk = '\033[1;30m' if self.color else ''
-        self.color_today = '\033[0;30;47m' if self.color else ''
-        self.color_fill = '\033[1;30m' if self.color else ''
-
-        if args.after is not None:
-            self.after = args.after
-
-        if args.before is not None:
-            self.before = args.before
-
-        if args.a1b1:
+        if cfg.get('a1b1'):
             self.after = 1
             self.before = 1
 
-        if args.year is not None:
-            self.year = args.year
-
-        if args.month is not None:
-            self.month = args.month
-
-        if self.year and not self.month:
+        if 'year' in cfg and 'month' not in cfg:
             year_month_range = [date(self.year, m, 1) for m in range(1, 13)]
 
         else:
-            if self.year and self.month:
+            if 'year' in cfg and 'month' in cfg:
                 base_date = date(self.year, self.month, 1)
             else:
                 base_date = today
@@ -88,6 +128,36 @@ class Config(object):
         year_month_range.sort()
         self.range = year_month_range
         self.col = min(len(self.range), self.col)
+
+        self.color_wk = '\033[1;30m' if self.color else ''
+        self.color_today = parse_color_config(get('color_today', 'none:none')) if self.color else ''
+        self.color_fill = '\033[1;30m' if self.color else ''
+
+
+def read_user_config():
+    calrc = ''
+    calrc_2 = expanduser('~/.calrc')
+    if exists(calrc_2):
+        calrc = calrc_2
+
+    calrc_1 = expanduser('~/.config/.calrc')
+    if exists(calrc_1):
+        calrc = calrc_1
+
+    user_config = {}
+    if calrc:
+        with open(calrc) as f:
+            for line in f:
+                line = line.strip()
+                if not line or line.startswith('#'):
+                    continue
+
+                key, value = line.split('=')
+                key = key.strip()
+                value = value.strip()
+                user_config[key.lower()] = value
+
+    return user_config
 
 
 def uncolor(color):
@@ -240,8 +310,13 @@ def main():
 
     args = parser.parse_args()
 
-    config = Config()
-    config.update(args)
+    cfg = {}
+    cfg.update(read_user_config())
+    cli_cfg = vars(args)
+    cli_cfg = {key: cli_cfg[key] for key in cli_cfg if cli_cfg[key] is not None}
+    cfg.update(cli_cfg)
+
+    config = TinyCalConfig(cfg)
 
     cal = calendar.Calendar(firstweekday=calendar.SUNDAY)
     table = TableYear()
