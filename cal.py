@@ -20,6 +20,8 @@ COLOR_CODE = {
     'white': '7',
 }
 
+JAPANESE_WEEKDAY = '月火水木金土日'
+
 
 def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
@@ -102,6 +104,8 @@ class TinyCalConfig(Namespace):
         self.year = get('year', today.year)
         self.month = get('month', today.month)
         self.border = get('border', True)
+        self.jp = get('jp', False)
+        self.start_monday = get('start_monday', False)
 
         self.color = Namespace()
         self.color.enable = get('color', True)
@@ -293,7 +297,10 @@ class TableMonth(object):
                 calendar.FRIDAY: self.config.color.weekday.fri,
                 calendar.SATURDAY: self.config.color.weekday.sat,
             }[d.weekday()]
-            ret = color(d.strftime('%a')[:2], c)
+            if self.config.jp:
+                ret = color(JAPANESE_WEEKDAY[d.weekday()], c)
+            else:
+                ret = color(d.strftime('%a')[:2], c)
             return ret + (self.config.color.weekday.base if c else '')
 
         ret += ''.join([
@@ -408,14 +415,23 @@ def main():
 
     parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=None,
             help='Fill every month into rectangle with previous/next month dates.')
-
     parser.add_argument('-F', '--no-fill', action='store_false', dest='fill', default=None,
-            help='Don`t fill month into rectangle')
+            help='Don`t fill month into rectangle.')
 
     parser.add_argument('-c', action='store_true', dest='color', default=None,
             help='Enable VT100 color output.')
     parser.add_argument('-C', action='store_false', dest='color', default=None,
             help='Disable VT100 color output.')
+
+    parser.add_argument('-j', action='store_true', dest='jp', default=None,
+            help='Enable Japanese weekday names.')
+    parser.add_argument('-J', action='store_false', dest='jp', default=None,
+            help='Disable Japanese weekday names.')
+
+    parser.add_argument('-m', action='store_true', dest='start_monday', default=None,
+            help='Use Monday as first weekday.')
+    parser.add_argument('-M', action='store_false', dest='start_monday', default=None,
+            help='Use Sunday as first weekday.')
 
     parser.add_argument('year', type=int, nargs='?', default=None,
             help='Year to display.')
@@ -433,7 +449,7 @@ def main():
 
     config = TinyCalConfig(cfg)
 
-    cal = calendar.Calendar(firstweekday=calendar.SUNDAY)
+    cal = calendar.Calendar(firstweekday=calendar.MONDAY if config.start_monday else calendar.SUNDAY)
     table = TableYear()
 
     for m in config.range:
