@@ -12,9 +12,9 @@ class Config(object):
         self.wk = False
         self.sep = False
         self.fill = False
-        self.color = True
         self.year = None
         self.month = None
+        self.color = True
 
     def update(self, args):
         today = date.today()
@@ -34,6 +34,10 @@ class Config(object):
 
         if args.color is not None:
             self.color = args.color
+
+        self.color_wk = '\033[1;30m' if self.color else ''
+        self.color_today = '\033[0;30;47m' if self.color else ''
+        self.color_fill = '\033[1;30m' if self.color else ''
 
         if args.after is not None:
             self.after = args.after
@@ -83,6 +87,10 @@ class Config(object):
 
         year_month_range.sort()
         self.range = year_month_range
+
+
+def uncolor(color):
+    return '\033[m' if color else ''
 
 
 class TableYear(object):
@@ -142,13 +150,7 @@ class TableMonth(object):
         if self.empty:
             return ' ' * self.width
 
-        color = ''
-        uncolor = ''
-        if self.config.color:
-            color = '\033[1;30m'
-            uncolor = '\033[m'
-
-        ret = (color + 'WK ' + uncolor) if self.config.wk else ''
+        ret = (self.config.color_wk + 'WK ' + uncolor(self.config.color_wk)) if self.config.wk else ''
         ret += ' '.join(d.strftime('%a')[:2] for d in self.weeks[0])
         return ret
 
@@ -158,28 +160,19 @@ class TableMonth(object):
 
         ret = ''
         if self.config.wk:
-            color = ''
-            uncolor = ''
-            if self.config.color:
-                color = '\033[1;30m'
-                uncolor = '\033[m'
-
-            ret = color + str(self.wk_start + wk + 1).rjust(2) + ' ' + uncolor
+            ret = self.config.color_wk + str(self.wk_start + wk + 1).rjust(2) + ' ' + uncolor(self.config.color_wk)
 
         def day(d):
             if self.config.fill or d.month == self.month:
                 color = ''
-                uncolor = ''
 
                 if self.config.color:
                     if d == self.config.today:
-                        color = '\033[0;30;47m'
-                        uncolor = '\033[m'
+                        color = self.config.color_today
                     elif d.month != self.month:
-                        color = '\033[1;30m'
-                        uncolor = '\033[m'
+                        color = self.config.color_fill
 
-                return color + str(d.day).rjust(2) + uncolor
+                return color + str(d.day).rjust(2) + uncolor(color)
 
             return '  '
 
