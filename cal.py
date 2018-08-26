@@ -240,9 +240,6 @@ def main():
 
     args = parser.parse_args()
 
-    # temporary disable a1b1, I need to parse arg by hand
-    args.a1b1 = False
-
     config = Config()
     config.update(args)
 
