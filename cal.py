@@ -87,6 +87,7 @@ class Config(object):
 
         year_month_range.sort()
         self.range = year_month_range
+        self.col = min(len(self.range), self.col)
 
 
 def uncolor(color):
@@ -181,7 +182,7 @@ class TableMonth(object):
 
 
 def render(config, table):
-    for row in table.rows(config.col):
+    for idx, row in enumerate(table.rows(config.col)):
         height = max(len(tm.weeks) for tm in row)
         lines = []
 
@@ -195,12 +196,13 @@ def render(config, table):
         for wk in range(height):
             lines.append(sep.join(m.render_week(wk) for m in row))
 
+        if idx > 0:
+            sep = '-+-' if config.sep else '  '
+            c = '-' if config.sep else ' '
+            print(sep.join(c * m.width for m in row))
+
         for line in lines:
             print(line)
-
-        sep = '-+-' if config.sep else '  '
-        c = '-' if config.sep else ' '
-        print(sep.join(c * m.width for m in row))
 
 
 def main():
