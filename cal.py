@@ -44,31 +44,45 @@ def get_config_with_type(cfg, key, default):
         return default
 
 
-def parse_color_config(color_config):
-    fg, bg = color_config.split(':')
-    fg = fg.strip()
-    bg = bg.strip()
+def merge_color_config(base, new):
+    b = list(map(str.strip, base.split(':') + ['']))
+    n = list(map(str.strip, new.split(':') + ['']))
 
-    if fg.lower() == 'none' and bg.lower() == 'none':
+    if n[0] and n[0].lower() != 'none':
+        b[0] = n[0]
+
+    if n[1] and n[1].lower() != 'none':
+        b[1] = n[1]
+
+    return b[0] + ':' + b[1]
+
+
+def parse_color_config(color_config):
+    c = color_config.split(':') + ['none']
+    fg = c[0].strip()
+    bg = c[1].strip()
+
+    if (not fg or fg.lower() == 'none') and (not bg or bg.lower() == 'none'):
         return ''
 
     color_codes = []
 
-    if fg.lower() != 'none':
+    if fg and fg.lower() != 'none':
         if fg.upper() == fg:
             color_codes.append('1')
+        else:
+            color_codes.append('0')
 
         color_codes.append('3' + COLOR_CODE[fg.lower()])
 
-    color_codes.append('4' + COLOR_CODE[bg.lower()])
+    if bg and bg.lower() != 'none':
+        color_codes.append('4' + COLOR_CODE[bg.lower()])
 
     ret = '\033['
     ret += ';'.join(color_codes)
     ret += 'm'
 
     return ret
-
-    print(fg, bg)
 
 
 class TinyCalConfig(Namespace):
@@ -87,9 +101,10 @@ class TinyCalConfig(Namespace):
         self.fill = get('fill', False)
         self.year = get('year', today.year)
         self.month = get('month', today.month)
-        self.color = get('color', True)
+        self.border = get('border', True)
 
-        print(cfg)
+        self.color = Namespace()
+        self.color.enable = get('color', True)
 
         if cfg.get('a1b1'):
             self.after = 1
@@ -129,9 +144,43 @@ class TinyCalConfig(Namespace):
         self.range = year_month_range
         self.col = min(len(self.range), self.col)
 
-        self.color_wk = '\033[1;30m' if self.color else ''
-        self.color_today = parse_color_config(get('color_today', 'none:none')) if self.color else ''
-        self.color_fill = '\033[1;30m' if self.color else ''
+        if self.color.enable:
+            self.color.wk = parse_color_config(get('color.wk', 'BLACK'))
+            self.color.today = parse_color_config(get('color.today', 'black:white'))
+            self.color.fill = parse_color_config(get('color.fill', 'BLACK'))
+            self.color.title = parse_color_config(get('color.title', ''))
+
+            self.color.weekday = Namespace()
+            color_base = get('color.weekday', '')
+            color_sun = merge_color_config(color_base, get('color.weekday.sunday', ''))
+            color_mon = merge_color_config(color_base, get('color.weekday.monday', ''))
+            color_tue = merge_color_config(color_base, get('color.weekday.tuesday', ''))
+            color_wed = merge_color_config(color_base, get('color.weekday.wednesday', ''))
+            color_thu = merge_color_config(color_base, get('color.weekday.thursday', ''))
+            color_fri = merge_color_config(color_base, get('color.weekday.friday', ''))
+            color_sat = merge_color_config(color_base, get('color.weekday.saturday', ''))
+            self.color.weekday.base = parse_color_config(color_base)
+            self.color.weekday.sun = parse_color_config(color_sun)
+            self.color.weekday.mon = parse_color_config(color_mon)
+            self.color.weekday.tue = parse_color_config(color_tue)
+            self.color.weekday.wed = parse_color_config(color_wed)
+            self.color.weekday.thu = parse_color_config(color_thu)
+            self.color.weekday.fri = parse_color_config(color_fri)
+            self.color.weekday.sat = parse_color_config(color_sat)
+        else:
+            self.color.wk = ''
+            self.color.today = ''
+            self.color.fill = ''
+            self.color.title = ''
+            self.color.weekday = Namespace()
+            self.color.weekday.base = ''
+            self.color.weekday.sun = ''
+            self.color.weekday.mon = ''
+            self.color.weekday.tue = ''
+            self.color.weekday.wed = ''
+            self.color.weekday.thu = ''
+            self.color.weekday.fri = ''
+            self.color.weekday.sat = ''
 
 
 def read_user_config():
@@ -158,6 +207,10 @@ def read_user_config():
                 user_config[key.lower()] = value
 
     return user_config
+
+
+def color(s, c):
+    return c + s + ('\033[m' if c else '')
 
 
 def uncolor(color):
@@ -215,14 +268,42 @@ class TableMonth(object):
         if self.empty:
             return ' ' * self.width
 
-        return '{title:^{width}}'.format(title=self.title, width=self.width)
+        return color('{title:^{width}}'.format(
+            title=self.title,
+            width=self.width
+        ),
+        self.config.color.title)
 
-    def render_week_ind(self):
+    def render_weekday(self):
         if self.empty:
             return ' ' * self.width
 
-        ret = (self.config.color_wk + 'WK ' + uncolor(self.config.color_wk)) if self.config.wk else ''
-        ret += ' '.join(d.strftime('%a')[:2] for d in self.weeks[0])
+        ret = color('WK', self.config.color.wk) if self.config.wk else ''
+
+        ret += self.config.color.weekday.base
+        ret += ' ' if self.config.wk else ''
+
+        def render_single_weekday(d):
+            c = {
+                calendar.SUNDAY: self.config.color.weekday.sun,
+                calendar.MONDAY: self.config.color.weekday.mon,
+                calendar.TUESDAY: self.config.color.weekday.tue,
+                calendar.WEDNESDAY: self.config.color.weekday.wed,
+                calendar.THURSDAY: self.config.color.weekday.thu,
+                calendar.FRIDAY: self.config.color.weekday.fri,
+                calendar.SATURDAY: self.config.color.weekday.sat,
+            }[d.weekday()]
+            ret = color(d.strftime('%a')[:2], c)
+            return ret + (self.config.color.weekday.base if c else '')
+
+        ret += ''.join([
+            ' '.join(
+                render_single_weekday(d)
+                for d in self.weeks[0]
+            ),
+        ])
+
+        ret += '\033[m' if self.config.color.weekday.base else ''
         return ret
 
     def render_week(self, wk):
@@ -231,7 +312,12 @@ class TableMonth(object):
 
         ret = ''
         if self.config.wk:
-            ret = self.config.color_wk + str(self.wk_start + wk + 1).rjust(2) + ' ' + uncolor(self.config.color_wk)
+            ret = ''.join([
+                self.config.color.wk,
+                str(self.wk_start + wk + 1).rjust(2),
+                uncolor(self.config.color.wk),
+                ' '
+            ])
 
         def day(d):
             if self.config.fill or d.month == self.month:
@@ -239,9 +325,9 @@ class TableMonth(object):
 
                 if self.config.color:
                     if d == self.config.today:
-                        color = self.config.color_today
+                        color = self.config.color.today
                     elif d.month != self.month:
-                        color = self.config.color_fill
+                        color = self.config.color.fill
 
                 return color + str(d.day).rjust(2) + uncolor(color)
 
@@ -252,39 +338,54 @@ class TableMonth(object):
 
 
 def render(config, table):
-    for idx, row in enumerate(table.rows(config.col)):
+    rows = table.rows(config.col)
+
+    for row in rows:
+        for m in row:
+            m.set_render_config(config)
+
+    max_row = len(rows) - 1
+    sep_v = ' | ' if config.sep else '  '
+    sep_h_int = '-+-' if config.sep else '  '
+    sep_h_line = '-' if config.sep else ' '
+    sep_h = sep_h_int.join(sep_h_line * m.width for m in rows[0])
+
+    for idx, row in enumerate(rows):
         height = max(len(tm.weeks) for tm in row)
         lines = []
 
         for m in row:
             m.set_render_config(config)
 
-        sep = ' | ' if config.sep else '  '
-        lines.append(sep.join(m.render_title() for m in row))
-        lines.append(sep.join(m.render_week_ind() for m in row))
+        lines.append(sep_v.join(m.render_title() for m in row))
+        lines.append(sep_v.join(m.render_weekday() for m in row))
 
         for wk in range(height):
-            lines.append(sep.join(m.render_week(wk) for m in row))
+            lines.append(sep_v.join(m.render_week(wk) for m in row))
+
+        if idx == 0 and config.border:
+            print('.-' + ('-' * len(sep_h)) + '-.')
 
         if idx > 0:
-            sep = '-+-' if config.sep else '  '
-            c = '-' if config.sep else ' '
-            print(sep.join(c * m.width for m in row))
+            print(('|' + sep_h[0] if config.border else '') + sep_h + (sep_h[0] + '|' if config.border else ''))
 
         for line in lines:
-            print(line)
+            print(('| ' if config.border else '') + line + (' |' if config.border else ''))
+
+        if idx == max_row and config.border:
+            print("'-" + ('-' * len(sep_h)) + "-'")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='tiny cal')
+    parser = argparse.ArgumentParser(description='Tiny cal')
 
-    parser.add_argument('-c', nargs='?', dest='col', default=None, type=int,
+    parser.add_argument('--col', nargs='?', dest='col', default=None, type=int,
             help='Column number.')
 
-    parser.add_argument('-A', nargs='?', dest='after', default=None, type=int,
+    parser.add_argument('-A', dest='after', default=None, type=int,
             help='Display the number of months after the current month.')
 
-    parser.add_argument('-B', nargs='?', dest='before', default=None, type=int,
+    parser.add_argument('-B', dest='before', default=None, type=int,
             help='Display the number of months before the current month.')
 
     parser.add_argument('-3', action='store_true', dest='a1b1', default=None,
@@ -292,13 +393,27 @@ def main():
 
     parser.add_argument('-w', action='store_true', dest='wk', default=None,
             help='Display week number.')
+    parser.add_argument('-W', action='store_false', dest='wk', default=None,
+            help='Don`t display week number.')
 
-    parser.add_argument('-s', action='store_true', dest='sep', default=None,
-            help='Display separation line.')
+    parser.add_argument('-s', '--sep', action='store_true', dest='sep', default=None,
+            help='Display separation lines.')
+    parser.add_argument('-S', '--no-sep', action='store_false', dest='sep', default=None,
+            help='Don`t display separation lines.')
 
-    parser.add_argument('-f', action='store_true', dest='fill', default=None,
-            help='Fill every month with previous/next month dates.')
+    parser.add_argument('-b', '--border', action='store_true', dest='border', default=None,
+            help='Display border lines.')
+    parser.add_argument('-nb', '--no-border', action='store_false', dest='border', default=None,
+            help='Don`t display border lines.')
 
+    parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=None,
+            help='Fill every month into rectangle with previous/next month dates.')
+
+    parser.add_argument('-F', '--no-fill', action='store_false', dest='fill', default=None,
+            help='Don`t fill month into rectangle')
+
+    parser.add_argument('-c', action='store_true', dest='color', default=None,
+            help='Enable VT100 color output.')
     parser.add_argument('-C', action='store_false', dest='color', default=None,
             help='Disable VT100 color output.')
 
