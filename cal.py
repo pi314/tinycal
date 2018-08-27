@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 
 import argparse
@@ -20,7 +23,7 @@ COLOR_CODE = {
     'white': '7',
 }
 
-JAPANESE_WEEKDAY = '月火水木金土日'
+JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
 
 
 def eprint(*args, **kwargs):
