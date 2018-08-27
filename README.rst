@@ -68,3 +68,71 @@ A snapshot of help page here:
 Example usage:
 
 ..  image:: screenshot.png
+
+
+Configuration File
+-------------------------------------------------------------------------------
+Hey, you are not leaving :D
+
+tiny-cal finds its configuration file in this order:
+
+1.  ``~/.config/.calrc``
+2.  ``~/.calrc``
+
+Here is the full set of configurable options, with default values:
+
+::
+
+  col = 3
+  after = 0
+  before = 0
+  wk = false
+  sep = true
+  fill = false
+  border = true
+  jp = false
+  start_monday = false
+
+  color.wk = BLACK
+  color.today = black:white
+  color.fill = BLACK
+  color.title = none:none
+  color.weekday = none:none
+  color.weekday.sunday = none:none
+  color.weekday.monday = none:none
+  color.weekday.tuesday = none:none
+  color.weekday.wednesday = none:none
+  color.weekday.thursday = none:none
+  color.weekday.friday = none:none
+  color.weekday.saturday = none:none
+
+For color settings, use ``foreground:background`` format to describe colors.
+
+Recognized colors: ``black``, ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``.
+
+If every letter in foreground is capitalized, the color will be bright.
+
+This configuration:
+
+::
+
+  col = 5
+  sep = true
+  wk = true
+  border = true
+  fill = true
+
+  color.title = black:cyan
+  color.wk = black:white
+  color.today = RED
+  color.weekday = YELLOW
+  color.weekday.sunday = GREEN
+  color.weekday.saturday = GREEN
+
+looks like this:
+
+..  image:: screenshot-config-example.png
+
+If it looks ugly, I'm sorry :(
+
+But you can design your own configuration anyway :)
