@@ -386,8 +386,8 @@ def render(config, table):
 def main():
     parser = argparse.ArgumentParser(description='Tiny cal')
 
-    parser.add_argument('--col', nargs='?', dest='col', default=None, type=int,
-            help='Column number.')
+    parser.add_argument('--col', dest='col', default=None, type=int,
+            help='Specify the column numbers.')
 
     parser.add_argument('-A', dest='after', default=None, type=int,
             help='Display the number of months after the current month.')
