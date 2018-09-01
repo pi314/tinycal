@@ -1,5 +1,5 @@
 ===============================================================================
-Tiny-cal
+Tinycal
 ===============================================================================
 A Python implementation of ``cal`` command.
 
@@ -20,12 +20,12 @@ over again.
 
 "NO, we RD exists to solve problems! At least our own problems..."
 
-Here comes tiny-cal.
+Here comes tinycal.
 
 
 Usage
 -------------------------------------------------------------------------------
-tiny-cal comes with a command utility ``tcal``.
+tinycal comes with a command utility ``tcal``.
 It's command line argument design is mostly based on traditional ``cal``.
 
 A snapshot of help page here:
@@ -74,7 +74,7 @@ Configuration File
 -------------------------------------------------------------------------------
 Hey, you are not leaving :D
 
-tiny-cal finds its configuration file in this order:
+tinycal finds its configuration file in this order:
 
 1.  ``~/.config/.calrc``
 2.  ``~/.calrc``
