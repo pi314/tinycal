@@ -1,4 +1,6 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import print_function
 
 import calendar
@@ -21,8 +23,8 @@ COLOR_CODE = {
     'white': '7',
 }
 
-JAPANESE_WEEKDAY = '月火水木金土日'
-CHINESE_WEEKDAY = '一二三四五六日'
+JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
+CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
 
 CALRC_1ST = '~/.config/.calrc'
 CALRC_2ND = '~/.calrc'
