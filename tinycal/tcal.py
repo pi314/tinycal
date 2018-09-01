@@ -20,6 +20,7 @@ COLOR_CODE = {
 }
 
 JAPANESE_WEEKDAY = '月火水木金土日'
+CHINESE_WEEKDAY = '一二三四五六日'
 
 CALRC_1ST = '~/.config/.calrc'
 CALRC_2ND = '~/.calrc'
@@ -106,7 +107,7 @@ class TinyCalConfig(Namespace):
         self.year = get('year', today.year)
         self.month = get('month', today.month)
         self.border = get('border', True)
-        self.jp = get('jp', False)
+        self.lang = get('lang', 'zh')
         self.start_monday = get('start_monday', False)
 
         self.color = Namespace()
@@ -151,20 +152,20 @@ class TinyCalConfig(Namespace):
         self.col = min(len(self.range), self.col)
 
         if self.color.enable:
-            self.color.wk = parse_color_config(get('color.wk', 'BLACK'))
-            self.color.today = parse_color_config(get('color.today', 'black:white'))
-            self.color.fill = parse_color_config(get('color.fill', 'BLACK'))
-            self.color.title = parse_color_config(get('color.title', ''))
+            self.color.wk = parse_color_config(get('wk.color', 'BLACK'))
+            self.color.today = parse_color_config(get('today.color', 'black:white'))
+            self.color.fill = parse_color_config(get('fill.color', 'BLACK'))
+            self.color.title = parse_color_config(get('title.color', ''))
 
             self.color.weekday = Namespace()
-            color_base = get('color.weekday', '')
-            color_sun = merge_color_config(color_base, get('color.weekday.sunday', ''))
-            color_mon = merge_color_config(color_base, get('color.weekday.monday', ''))
-            color_tue = merge_color_config(color_base, get('color.weekday.tuesday', ''))
-            color_wed = merge_color_config(color_base, get('color.weekday.wednesday', ''))
-            color_thu = merge_color_config(color_base, get('color.weekday.thursday', ''))
-            color_fri = merge_color_config(color_base, get('color.weekday.friday', ''))
-            color_sat = merge_color_config(color_base, get('color.weekday.saturday', ''))
+            color_base = get('weekday.color', '')
+            color_sun = merge_color_config(color_base, get('weekday.sunday.color', ''))
+            color_mon = merge_color_config(color_base, get('weekday.monday.color', ''))
+            color_tue = merge_color_config(color_base, get('weekday.tuesday.color', ''))
+            color_wed = merge_color_config(color_base, get('weekday.wednesday.color', ''))
+            color_thu = merge_color_config(color_base, get('weekday.thursday.color', ''))
+            color_fri = merge_color_config(color_base, get('weekday.friday.color', ''))
+            color_sat = merge_color_config(color_base, get('weekday.saturday.color', ''))
             self.color.weekday.base = parse_color_config(color_base)
             self.color.weekday.sun = parse_color_config(color_sun)
             self.color.weekday.mon = parse_color_config(color_mon)
@@ -299,8 +300,10 @@ class TableMonth(object):
                 calendar.FRIDAY: self.config.color.weekday.fri,
                 calendar.SATURDAY: self.config.color.weekday.sat,
             }[d.weekday()]
-            if self.config.jp:
+            if self.config.lang == 'jp':
                 ret = color(JAPANESE_WEEKDAY[d.weekday()], c)
+            elif self.config.lang == 'zh':
+                ret = color(CHINESE_WEEKDAY[d.weekday()], c)
             else:
                 ret = color(d.strftime('%a')[:2], c)
             return ret + (self.config.color.weekday.base if c else '')
@@ -433,10 +436,17 @@ def main():
     parser.add_argument('-C', action='store_false', dest='color', default=None,
             help='Disable VT100 color output.')
 
-    parser.add_argument('-j', action='store_true', dest='jp', default=None,
-            help='Enable Japanese weekday names.')
-    parser.add_argument('-J', action='store_false', dest='jp', default=None,
-            help='Disable Japanese weekday names.')
+    parser.add_argument('-l', '--lang', default='en', choices=['jp', 'zh', 'en'], type=str,
+            help='Select the language used to display weekday.')
+
+    parser.add_argument('-j', action='store_const', const='jp', dest='lang',
+            help='Enable Japanese weekday names, equals to --lang=jp.')
+
+    parser.add_argument('-z', action='store_const', const='zh', dest='lang',
+            help='Enable Chinese weekday names, equals to --lang=zh.')
+
+    parser.add_argument('-e', action='store_const', const='en', dest='lang',
+            help='Enable Chinese weekday names, equals to --lang=en.')
 
     parser.add_argument('-m', action='store_true', dest='start_monday', default=None,
             help='Use Monday as first weekday.')

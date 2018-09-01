@@ -90,21 +90,21 @@ Here is the full set of configurable options, with default values:
   sep = true
   fill = false
   border = true
-  jp = false
   start_monday = false
+  lang = en
 
-  color.wk = BLACK
-  color.today = black:white
-  color.fill = BLACK
-  color.title = none:none
-  color.weekday = none:none
-  color.weekday.sunday = none:none
-  color.weekday.monday = none:none
-  color.weekday.tuesday = none:none
-  color.weekday.wednesday = none:none
-  color.weekday.thursday = none:none
-  color.weekday.friday = none:none
-  color.weekday.saturday = none:none
+  wk.color = BLACK
+  today.color = black:white
+  fill.color = BLACK
+  title.color = none:none
+  weekday.color = none:none
+  weekday.sunday.color = none:none
+  weekday.monday.color = none:none
+  weekday.tuesday.color = none:none
+  weekday.wednesday.color = none:none
+  weekday.thursday.color = none:none
+  weekday.friday.color = none:none
+  weekday.saturday.color = none:none
 
 For color settings, use ``foreground:background`` format to describe colors.
 
@@ -122,12 +122,12 @@ This configuration:
   border = true
   fill = true
 
-  color.title = black:cyan
-  color.wk = black:white
-  color.today = RED
-  color.weekday = YELLOW
-  color.weekday.sunday = GREEN
-  color.weekday.saturday = GREEN
+  title.color = black:cyan
+  wk.color = black:white
+  today.color = RED
+  weekday.color = YELLOW
+  weekday.sunday.color = GREEN
+  weekday.saturday.color = GREEN
 
 looks like this:
 
