@@ -1,10 +1,9 @@
 from __future__ import print_function
 
-import argparse
 import calendar
 import sys
 
-from argparse import Namespace
+from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
 from datetime import date
 from os.path import exists, expanduser
 
@@ -21,6 +20,9 @@ COLOR_CODE = {
 }
 
 JAPANESE_WEEKDAY = '月火水木金土日'
+
+CALRC_1ST = '~/.config/.calrc'
+CALRC_2ND = '~/.calrc'
 
 
 def eprint(*args, **kwargs):
@@ -189,11 +191,11 @@ class TinyCalConfig(Namespace):
 
 def read_user_config():
     calrc = ''
-    calrc_2 = expanduser('~/.calrc')
+    calrc_2 = expanduser(CALRC_2ND)
     if exists(calrc_2):
         calrc = calrc_2
 
-    calrc_1 = expanduser('~/.config/.calrc')
+    calrc_1 = expanduser(CALRC_1ST)
     if exists(calrc_1):
         calrc = calrc_1
 
@@ -384,7 +386,15 @@ def render(config, table):
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Tiny cal')
+    parser = ArgumentParser(
+            description='tinycal: Python implementation of cal utility.',
+            epilog='\n'.join((
+                'Configuration files:',
+                '1st: {}'.format(CALRC_1ST),
+                '2nd: {}'.format(CALRC_2ND),
+                )),
+            formatter_class=RawTextHelpFormatter,
+            )
 
     parser.add_argument('--col', dest='col', default=None, type=int,
             help='Specify the column numbers.')
@@ -458,4 +468,5 @@ def main():
     render(config, table)
 
 
-main()
+if __name__ == '__main__':
+    main()
