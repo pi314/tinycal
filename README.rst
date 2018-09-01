@@ -94,7 +94,6 @@ Here is the full set of configurable options, with default values:
   lang = en
 
   wk.color = BLACK
-  today.color = black:white
   fill.color = BLACK
   title.color = none:none
   weekday.color = none:none
@@ -105,6 +104,16 @@ Here is the full set of configurable options, with default values:
   weekday.thursday.color = none:none
   weekday.friday.color = none:none
   weekday.saturday.color = none:none
+  sunday.color = none:none
+  monday.color = none:none
+  tuesday.color = none:none
+  wednesday.color = none:none
+  thursday.color = none:none
+  friday.color = none:none
+  saturday.color = none:none
+  today.color = none:white
+
+The ordering is not important.
 
 For color settings, use ``foreground:background`` format to describe colors.
 
@@ -112,7 +121,10 @@ Recognized colors: ``black``, ``red``, ``green``, ``yellow``, ``blue``, ``magent
 
 If every letter in foreground is capitalized, the color will be bright.
 
-This configuration:
+Several color configuration may refer to the same day (like today & saturday).
+The more specific setting overrides the other.
+
+For example, this configuration:
 
 ::
 

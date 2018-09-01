@@ -4,6 +4,7 @@ import calendar
 import sys
 
 from argparse import ArgumentParser, Namespace, RawTextHelpFormatter
+from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 from datetime import date
 from os.path import exists, expanduser
 
@@ -24,6 +25,7 @@ CHINESE_WEEKDAY = '一二三四五六日'
 
 CALRC_1ST = '~/.config/.calrc'
 CALRC_2ND = '~/.calrc'
+BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
 def eprint(*args, **kwargs):
@@ -53,10 +55,15 @@ def merge_color_config(base, new):
     b = list(map(str.strip, base.split(':') + ['']))
     n = list(map(str.strip, new.split(':') + ['']))
 
-    if n[0] and n[0].lower() != 'none':
+    b[0] = b[0] if b[0] else 'none'
+    b[1] = b[1] if b[1] else 'none'
+    n[0] = n[0] if n[0] else 'none'
+    n[1] = n[1] if n[1] else 'none'
+
+    if n[0].lower() != 'none':
         b[0] = n[0]
 
-    if n[1] and n[1].lower() != 'none':
+    if n[1].lower() != 'none':
         b[1] = n[1]
 
     return b[0] + ':' + b[1]
@@ -66,6 +73,9 @@ def parse_color_config(color_config):
     c = color_config.split(':') + ['none']
     fg = c[0].strip()
     bg = c[1].strip()
+
+    fg = fg if fg else 'none'
+    bg = bg if bg else 'none'
 
     if (not fg or fg.lower() == 'none') and (not bg or bg.lower() == 'none'):
         return ''
@@ -110,9 +120,6 @@ class TinyCalConfig(Namespace):
         self.lang = get('lang', 'zh')
         self.start_monday = get('start_monday', False)
 
-        self.color = Namespace()
-        self.color.enable = get('color', True)
-
         if cfg.get('a1b1'):
             self.after = 1
             self.before = 1
@@ -151,43 +158,75 @@ class TinyCalConfig(Namespace):
         self.range = year_month_range
         self.col = min(len(self.range), self.col)
 
+        self.color = Namespace()
+        self.color.enable = get('color', True)
         if self.color.enable:
             self.color.wk = parse_color_config(get('wk.color', 'BLACK'))
-            self.color.today = parse_color_config(get('today.color', 'black:white'))
             self.color.fill = parse_color_config(get('fill.color', 'BLACK'))
             self.color.title = parse_color_config(get('title.color', ''))
 
-            self.color.weekday = Namespace()
-            color_base = get('weekday.color', '')
-            color_sun = merge_color_config(color_base, get('weekday.sunday.color', ''))
-            color_mon = merge_color_config(color_base, get('weekday.monday.color', ''))
-            color_tue = merge_color_config(color_base, get('weekday.tuesday.color', ''))
-            color_wed = merge_color_config(color_base, get('weekday.wednesday.color', ''))
-            color_thu = merge_color_config(color_base, get('weekday.thursday.color', ''))
-            color_fri = merge_color_config(color_base, get('weekday.friday.color', ''))
-            color_sat = merge_color_config(color_base, get('weekday.saturday.color', ''))
-            self.color.weekday.base = parse_color_config(color_base)
-            self.color.weekday.sun = parse_color_config(color_sun)
-            self.color.weekday.mon = parse_color_config(color_mon)
-            self.color.weekday.tue = parse_color_config(color_tue)
-            self.color.weekday.wed = parse_color_config(color_wed)
-            self.color.weekday.thu = parse_color_config(color_thu)
-            self.color.weekday.fri = parse_color_config(color_fri)
-            self.color.weekday.sat = parse_color_config(color_sat)
+            color_weekday_base = get('weekday.color', '')
+            color_weekday_sun = merge_color_config(color_weekday_base, get('weekday.sunday.color', ''))
+            color_weekday_mon = merge_color_config(color_weekday_base, get('weekday.monday.color', ''))
+            color_weekday_tue = merge_color_config(color_weekday_base, get('weekday.tuesday.color', ''))
+            color_weekday_wed = merge_color_config(color_weekday_base, get('weekday.wednesday.color', ''))
+            color_weekday_thu = merge_color_config(color_weekday_base, get('weekday.thursday.color', ''))
+            color_weekday_fri = merge_color_config(color_weekday_base, get('weekday.friday.color', ''))
+            color_weekday_sat = merge_color_config(color_weekday_base, get('weekday.saturday.color', ''))
+            self.color.weekday = {}
+            self.color.weekday[BASE]      = parse_color_config(color_weekday_base)
+            self.color.weekday[SUNDAY]    = parse_color_config(color_weekday_sun)
+            self.color.weekday[MONDAY]    = parse_color_config(color_weekday_mon)
+            self.color.weekday[TUESDAY]   = parse_color_config(color_weekday_tue)
+            self.color.weekday[WEDNESDAY] = parse_color_config(color_weekday_wed)
+            self.color.weekday[THURSDAY]  = parse_color_config(color_weekday_thu)
+            self.color.weekday[FRIDAY]    = parse_color_config(color_weekday_fri)
+            self.color.weekday[SATURDAY]  = parse_color_config(color_weekday_sat)
+
+            color_day = {}
+            color_day[SUNDAY]    = get('sunday.color', '')
+            color_day[MONDAY]    = get('monday.color', '')
+            color_day[TUESDAY]   = get('tuesday.color', '')
+            color_day[WEDNESDAY] = get('wednesday.color', '')
+            color_day[THURSDAY]  = get('thursday.color', '')
+            color_day[FRIDAY]    = get('friday.color', '')
+            color_day[SATURDAY]  = get('saturday.color', '')
+            self.color.day = {}
+            self.color.day[SUNDAY]    = parse_color_config(color_day[SUNDAY])
+            self.color.day[MONDAY]    = parse_color_config(color_day[MONDAY])
+            self.color.day[TUESDAY]   = parse_color_config(color_day[TUESDAY])
+            self.color.day[WEDNESDAY] = parse_color_config(color_day[WEDNESDAY])
+            self.color.day[THURSDAY]  = parse_color_config(color_day[THURSDAY])
+            self.color.day[FRIDAY]    = parse_color_config(color_day[FRIDAY])
+            self.color.day[SATURDAY]  = parse_color_config(color_day[SATURDAY])
+
+            color_day_today = merge_color_config(
+                    color_day[today.weekday()],
+                    get('today.color', ':white'),
+                    )
+            self.color.today = parse_color_config(color_day_today)
         else:
             self.color.wk = ''
-            self.color.today = ''
             self.color.fill = ''
             self.color.title = ''
-            self.color.weekday = Namespace()
-            self.color.weekday.base = ''
-            self.color.weekday.sun = ''
-            self.color.weekday.mon = ''
-            self.color.weekday.tue = ''
-            self.color.weekday.wed = ''
-            self.color.weekday.thu = ''
-            self.color.weekday.fri = ''
-            self.color.weekday.sat = ''
+            self.color.weekday = {}
+            self.color.weekday[BASE]      = ''
+            self.color.weekday[SUNDAY]    = ''
+            self.color.weekday[MONDAY]    = ''
+            self.color.weekday[TUESDAY]   = ''
+            self.color.weekday[WEDNESDAY] = ''
+            self.color.weekday[THURSDAY]  = ''
+            self.color.weekday[FRIDAY]    = ''
+            self.color.weekday[SATURDAY]  = ''
+            self.color.day = {}
+            self.color.day[SUNDAY]    = ''
+            self.color.day[MONDAY]    = ''
+            self.color.day[TUESDAY]   = ''
+            self.color.day[WEDNESDAY] = ''
+            self.color.day[THURSDAY]  = ''
+            self.color.day[FRIDAY]    = ''
+            self.color.day[SATURDAY]  = ''
+            self.color.today = ''
 
 
 def read_user_config():
@@ -287,26 +326,18 @@ class TableMonth(object):
 
         ret = color('WK', self.config.color.wk) if self.config.wk else ''
 
-        ret += self.config.color.weekday.base
+        ret += self.config.color.weekday[BASE]
         ret += ' ' if self.config.wk else ''
 
         def render_single_weekday(d):
-            c = {
-                calendar.SUNDAY: self.config.color.weekday.sun,
-                calendar.MONDAY: self.config.color.weekday.mon,
-                calendar.TUESDAY: self.config.color.weekday.tue,
-                calendar.WEDNESDAY: self.config.color.weekday.wed,
-                calendar.THURSDAY: self.config.color.weekday.thu,
-                calendar.FRIDAY: self.config.color.weekday.fri,
-                calendar.SATURDAY: self.config.color.weekday.sat,
-            }[d.weekday()]
+            c = self.config.color.weekday[d.weekday()]
             if self.config.lang == 'jp':
                 ret = color(JAPANESE_WEEKDAY[d.weekday()], c)
             elif self.config.lang == 'zh':
                 ret = color(CHINESE_WEEKDAY[d.weekday()], c)
             else:
                 ret = color(d.strftime('%a')[:2], c)
-            return ret + (self.config.color.weekday.base if c else '')
+            return ret + (self.config.color.weekday[BASE] if c else '')
 
         ret += ''.join([
             ' '.join(
@@ -315,7 +346,7 @@ class TableMonth(object):
             ),
         ])
 
-        ret += '\033[m' if self.config.color.weekday.base else ''
+        ret += '\033[m' if self.config.color.weekday[BASE] else ''
         return ret
 
     def render_week(self, wk):
@@ -331,21 +362,23 @@ class TableMonth(object):
                 ' '
             ])
 
-        def day(d):
+        def render_single_day(d):
             if self.config.fill or d.month == self.month:
-                color = ''
+                c = ''
 
                 if self.config.color:
                     if d == self.config.today:
-                        color = self.config.color.today
+                        c = self.config.color.today
                     elif d.month != self.month:
-                        color = self.config.color.fill
+                        c = self.config.color.fill
+                    else:
+                        c = self.config.color.day[d.weekday()]
 
-                return color + str(d.day).rjust(2) + uncolor(color)
+                return color(str(d.day).rjust(2), c)
 
             return '  '
 
-        ret += ' '.join(day(d) for d in self.weeks[wk])
+        ret += ' '.join(render_single_day(d) for d in self.weeks[wk])
         return ret
 
 
