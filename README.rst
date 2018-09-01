@@ -23,6 +23,31 @@ over again.
 Here comes tinycal.
 
 
+Installation
+-------------------------------------------------------------------------------
+::
+
+  $ pip install --upgrade tinycal
+
+Or, if you don't have access to PyPI, there are two ways to install it by hand.
+
+1.  Single file solution
+    (a) Copy ``tinycal/tcal.py`` into ``~/bin/``
+    (b) Rename it to ``tcal``.
+    (c) ``chmod 755 tcal``.
+
+2.  Whole folder solution
+    (a) Put the repository into your favorite folder, like ``~/bin/tinycal/``
+    (b) Put a shell script into ``~/bin/``, named ``tcal`` ::
+
+          #!/usr/bin/env sh
+          cd ~/bin/tinycal/ && python -m tinycal "$@"
+
+Make sure ``~/bin/`` is in your ``$PATH``.
+
+It's just an example, you can decide which place to put.
+
+
 Usage
 -------------------------------------------------------------------------------
 tinycal comes with a command utility ``tcal``.
@@ -32,38 +57,44 @@ A snapshot of help page here:
 
 ::
 
-  $ python tcal.py -h
-  usage: tcal.py [-h] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W] [-s]
-                 [-S] [-b] [-nb] [-f] [-F] [-c] [-C] [-j] [-J] [-m] [-M]
-                 [year] [month]
+  usage: tcal [-h] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W] [-s] [-S]
+              [-b] [-nb] [-f] [-F] [-c] [-C] [-l {jp,zh,en}] [-j] [-z] [-e] [-m]
+              [-M]
+              [year] [month]
 
-  Tiny cal
+  tinycal: A Python implementation of cal utility.
 
   positional arguments:
-    year              Year to display.
-    month             Month to display. Must specified after year.
+    year                  Year to display.
+    month                 Month to display. Must specified after year.
 
   optional arguments:
-    -h, --help        show this help message and exit
-    --col COL         Specify the column numbers.
-    -A AFTER          Display the number of months after the current month.
-    -B BEFORE         Display the number of months before the current month.
-    -3                Equals to -A 1 -B 1.
-    -w                Display week number.
-    -W                Don`t display week number.
-    -s, --sep         Display separation lines.
-    -S, --no-sep      Don`t display separation lines.
-    -b, --border      Display border lines.
-    -nb, --no-border  Don`t display border lines.
-    -f, --fill        Fill every month into rectangle with previous/next month
-                      dates.
-    -F, --no-fill     Don`t fill month into rectangle.
-    -c                Enable VT100 color output.
-    -C                Disable VT100 color output.
-    -j                Enable Japanese weekday names.
-    -J                Disable Japanese weekday names.
-    -m                Use Monday as first weekday.
-    -M                Use Sunday as first weekday.
+    -h, --help            show this help message and exit
+    --col COL             Specify the column numbers.
+    -A AFTER              Display the number of months after the current month.
+    -B BEFORE             Display the number of months before the current month.
+    -3                    Equals to -A 1 -B 1.
+    -w                    Display week number.
+    -W                    Don`t display week number.
+    -s, --sep             Display separation lines.
+    -S, --no-sep          Don`t display separation lines.
+    -b, --border          Display border lines.
+    -nb, --no-border      Don`t display border lines.
+    -f, --fill            Fill every month into rectangle with previous/next month dates.
+    -F, --no-fill         Don`t fill month into rectangle.
+    -c                    Enable VT100 color output.
+    -C                    Disable VT100 color output.
+    -l {jp,zh,en}, --lang {jp,zh,en}
+                          Select the language used to display weekday.
+    -j                    Enable Japanese weekday names, equals to --lang=jp.
+    -z                    Enable Chinese weekday names, equals to --lang=zh.
+    -e                    Enable Chinese weekday names, equals to --lang=en.
+    -m                    Use Monday as first weekday.
+    -M                    Use Sunday as first weekday.
+
+  Configuration files:
+  1st: ~/.config/.calrc
+  2nd: ~/.calrc
 
 Example usage:
 
@@ -72,7 +103,7 @@ Example usage:
 
 Configuration File
 -------------------------------------------------------------------------------
-Hey, you are not leaving :D
+Hey, you still reading :D
 
 tinycal finds its configuration file in this order:
 

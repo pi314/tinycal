@@ -2,8 +2,8 @@ from setuptools import setup
 
 setup(
     name='tinycal',
-    version='0.1.1',
-    description='My Python implementation of cal utility',
+    version='0.1.2',
+    description='A Python implementation of cal utility',
     author='Chang-Yen Chih',
     author_email='michael66230@gmail.com',
     scripts=['scripts/tcal'],

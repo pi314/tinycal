@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 from __future__ import print_function
 
 import calendar
@@ -423,7 +424,8 @@ def render(config, table):
 
 def main():
     parser = ArgumentParser(
-            description='tinycal: Python implementation of cal utility.',
+            description='tinycal: A Python implementation of cal utility.',
+            prog='tcal',
             epilog='\n'.join((
                 'Configuration files:',
                 '1st: {}'.format(CALRC_1ST),
