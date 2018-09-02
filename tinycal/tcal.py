@@ -83,9 +83,12 @@ def parse_color_config(color_config):
     if (not fg or fg.lower() == 'none') and (not bg or bg.lower() == 'none'):
         return ''
 
+    if fg == 'none' and bg.lower() == 'white':
+        fg = 'black'
+
     color_codes = []
 
-    if fg and fg.lower() != 'none':
+    if fg.lower() != 'none':
         if fg.upper() == fg:
             color_codes.append('1')
         else:
@@ -93,7 +96,7 @@ def parse_color_config(color_config):
 
         color_codes.append('3' + COLOR_CODE[fg.lower()])
 
-    if bg and bg.lower() != 'none':
+    if bg.lower() != 'none':
         color_codes.append('4' + COLOR_CODE[bg.lower()])
 
     ret = '\033['
