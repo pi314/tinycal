@@ -12,11 +12,11 @@ BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
 def color(s, c):
-    return c + s + ('\033[m' if c else '')
+    return c + s + ('\033[0m' if c else '')
 
 
 def uncolor(color):
-    return '\033[m' if color else ''
+    return '\033[0m' if color else ''
 
 
 class TableYear(object):
