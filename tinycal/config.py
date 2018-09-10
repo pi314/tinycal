@@ -104,7 +104,7 @@ def parse_color_config(color_config):
     if (not fg or fg.lower() == 'none') and (not bg or bg.lower() == 'none'):
         return ''
 
-    if fg == 'none' and bg.lower() == 'white':
+    if fg.lower() == 'none' and bg.lower() == 'white':
         fg = 'black'
 
     color_codes = []
