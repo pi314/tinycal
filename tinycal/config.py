@@ -5,6 +5,7 @@ Parse configurations.
 from __future__ import print_function, absolute_import
 
 import sys
+import re
 from datetime import date
 from argparse import Namespace
 from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
@@ -93,38 +94,68 @@ def parse_color_config(color_config):
     >>> assert p('white') == p('white:') == p('white:none')
     >>> assert p(':black') == p('none:black')
     >>> assert p(':white') == p('none:white') == p('NONE:white')
+
+    Error handling
+    >>> p('a:b:c')
+    Traceback (most recent call last):
+    ...
+    Exception: invalid color configuration: a:b:c
+    >>> p('a_1:')
+    Traceback (most recent call last):
+    ...
+    Exception: unrecognized foreground color: a_1
+    >>> p(':B')
+    Traceback (most recent call last):
+    ...
+    Exception: unrecognized background color: b
     """
-    c = color_config.split(':') + ['none']
-    fg = c[0].strip()
-    bg = c[1].strip()
+    patt = re.compile(r'^\s*(?P<fg>\w+)?\s*:?(?:\s*(?P<bg>\w+)\s*)?$')
+    m = patt.match(color_config)
+    if m is None:
+        raise Exception('invalid color configuration: {}'.format(color_config))
 
-    fg = fg if fg else 'none'
-    bg = bg if bg else 'none'
+    assert patt.match('').groups() == (None, None)
+    assert patt.match('a').groups() == ('a', None)
+    assert patt.match('a:').groups() == ('a', None)
+    assert patt.match(':b').groups() == (None, 'b')
+    assert patt.match('a:b').groups() == ('a', 'b')
 
-    if (not fg or fg.lower() == 'none') and (not bg or bg.lower() == 'none'):
-        return ''
+    if m.group('fg') is None or m.group('fg').lower() == 'none':
+        fg, bright = None, None
+    else:
+        fg = m.group('fg').lower()
+        bright = '1' if fg.upper()==m.group('fg') else '0'  # highlight
 
-    if fg.lower() == 'none' and bg.lower() == 'white':
-        fg = 'black'
+    if m.group('bg') is None or m.group('bg').lower() == 'none':
+        bg = None
+    else:
+        bg = m.group('bg').lower()
 
-    color_codes = []
+    if fg is not None and fg not in COLOR_CODE:
+        raise Exception('unrecognized foreground color: {}'.format(fg))
+    elif bg is not None and bg not in COLOR_CODE:
+        raise Exception('unrecognized background color: {}'.format(bg))
 
-    if fg.lower() != 'none':
-        if fg.upper() == fg:
-            color_codes.append('1')
+    assert fg is None or fg in COLOR_CODE
+    assert bg is None or bg in COLOR_CODE
+
+    seq = lambda *t: '\033[{}m'.format(";".join(t))
+    fg_code = lambda c: '3' + COLOR_CODE[c]
+    bg_code = lambda c: '4' + COLOR_CODE[c]
+
+    if fg is None:
+        if bg is None:
+            prefix =  ''
+        elif bg == 'white':
+            prefix =  seq('0', fg_code('black'), bg_code(bg))  # reverse
         else:
-            color_codes.append('0')
-
-        color_codes.append('3' + COLOR_CODE[fg.lower()])
-
-    if bg.lower() != 'none':
-        color_codes.append('4' + COLOR_CODE[bg.lower()])
-
-    ret = '\033['
-    ret += ';'.join(color_codes)
-    ret += 'm'
-
-    return ret
+            prefix =  seq(bg_code(bg))  # keep foreground setting
+    else:
+        if bg is None:
+            prefix =  seq(bright, fg_code(fg))  # keep background setting
+        else:
+            prefix =  seq(bright, fg_code(fg), bg_code(bg))
+    return prefix
 
 
 class TinyCalConfig(Namespace):
