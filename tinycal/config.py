@@ -64,6 +64,36 @@ def merge_color_config(base, new):
 
 
 def parse_color_config(color_config):
+    r"""
+    >>> p = parse_color_config
+    >>> p('white:black')
+    '\x1b[0;37;40m'
+
+    No effect
+    >>> p('')
+    ''
+
+    Keep background setting
+    >>> p('white')
+    '\x1b[0;37m'
+
+    Keep foreground setting
+    >>> p(':black')
+    '\x1b[40m'
+
+    Highlight
+    >>> p('WHITE:black')
+    '\x1b[1;37;40m'
+
+    Reverse (NOTE: there is already an ASCII code 7 for reverse)
+    >>> p(':white')
+    '\x1b[0;30;47m'
+
+    Equivalent configuration
+    >>> assert p('white') == p('white:') == p('white:none')
+    >>> assert p(':black') == p('none:black')
+    >>> assert p(':white') == p('none:white') == p('NONE:white')
+    """
     c = color_config.split(':') + ['none']
     fg = c[0].strip()
     bg = c[1].strip()
