@@ -1,7 +1,3 @@
-# TODO:
-#   implement `def main(argv=None)`, with `setup.py` below:
-#   https://github.com/PyCQA/flake8/blob/master/setup.py#L85
-
 from __future__ import print_function
 
 import calendar
