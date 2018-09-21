@@ -95,7 +95,7 @@ A snapshot of help page here:
     -M                    Use Sunday as first weekday.
 
   Configuration files:
-  1st: ~/.config/.calrc
+  1st: ~/.config/calrc
   2nd: ~/.calrc
 
 Example usage:
@@ -109,7 +109,7 @@ Hey, you still reading :D
 
 tinycal finds its configuration file in this order:
 
-1.  ``~/.config/.calrc``
+1.  ``~/.config/calrc``
 2.  ``~/.calrc``
 
 Here is the full set of configurable options, with default values:

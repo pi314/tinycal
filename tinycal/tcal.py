@@ -26,7 +26,7 @@ COLOR_CODE = {
 JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
 CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
 
-CALRC_1ST = '~/.config/.calrc'
+CALRC_1ST = '~/.config/calrc'
 CALRC_2ND = '~/.calrc'
 BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
