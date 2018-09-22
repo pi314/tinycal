@@ -6,8 +6,10 @@ setup(
     description='A Python implementation of cal utility',
     author='Chang-Yen Chih',
     author_email='michael66230@gmail.com',
-    scripts=['scripts/tcal'],
     packages=['tinycal'],
+    entry_points = {
+        'console_scripts': ['tcal=tinycal.tcal:main'],
+    },
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Environment :: Console',
