@@ -29,21 +29,15 @@ Installation
 
   $ pip install --upgrade tinycal
 
-Or, if you don't have access to PyPI, there are two ways to install it by hand.
+Add ``--user`` if you need.
 
-1.  Single file solution
+Or, if you don't have access to PyPI, you can still install it by hand:
 
-    (a) Copy ``tinycal/tcal.py`` into ``~/bin/``
-    (b) Rename it to ``tcal``.
-    (c) ``chmod 755 tcal``.
+1.  Put the repository into your favorite folder, like ``~/bin/tinycal/``
+2.  Put a shell script into ``~/bin/``, named ``tcal`` ::
 
-2.  Whole folder solution
-
-    (a) Put the repository into your favorite folder, like ``~/bin/tinycal/``
-    (b) Put a shell script into ``~/bin/``, named ``tcal`` ::
-
-          #!/usr/bin/env sh
-          cd ~/bin/tinycal/ && python -m tinycal "$@"
+      #!/usr/bin/env sh
+      cd ~/bin/tinycal/ && python -m tinycal "$@"
 
 Make sure ``~/bin/`` is in your ``$PATH``.
 

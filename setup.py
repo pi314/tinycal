@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='tinycal',
-    version='0.1.6',
+    version='0.1.7',
     description='A Python implementation of cal utility',
     author='Chang-Yen Chih',
     author_email='michael66230@gmail.com',
