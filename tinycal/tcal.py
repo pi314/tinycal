@@ -3,47 +3,36 @@ from __future__ import print_function
 import calendar
 import os.path
 
-from . import CALRC_1ST, CALRC_2ND
+from . import CALRC
 from .argparse import parser
 from .config import TinyCalConfig
 from .render import TableYear, TableMonth, render
 
 
 def read_user_config():
-    calrc = ''
-    calrc_2 = os.path.expanduser(CALRC_2ND)
-    if os.path.exists(calrc_2):
-        calrc = calrc_2
+    """
+    :rtype: [(str, str)]
+    """
+    try:
+        calrc = next(rc for rc in map(os.path.expanduser, CALRC) if os.path.exists(rc))
+    except StopIteration:
+        return []
+    else:
+        lines = filter(lambda l: l and not l.startswith('#'), map(str.strip, open(calrc)))
+        return [tuple(map(str.strip, l.split('=', 1))) for l in lines]
 
-    calrc_1 = os.path.expanduser(CALRC_1ST)
-    if os.path.exists(calrc_1):
-        calrc = calrc_1
 
-    user_config = {}
-    if calrc:
-        with open(calrc) as f:
-            for line in f:
-                line = line.strip()
-                if not line or line.startswith('#'):
-                    continue
-
-                key, value = line.split('=')
-                key = key.strip()
-                value = value.strip()
-                user_config[key.lower()] = value
-
-    return user_config
+def get_command_arguments():
+    """
+    :rtype: [(str, str)]
+    """
+    args = parser.parse_args().__dict__
+    return [(k, v) for k, v in args.items() if v is not None]
 
 
 def main():
-    args = parser.parse_args()
-
-    cfg = {}
-    cfg.update(read_user_config())
-    cli_cfg = vars(args)
-    cli_cfg = {key: cli_cfg[key] for key in cli_cfg if cli_cfg[key] is not None}
-    cfg.update(cli_cfg)
-
+    # Ref: https://stackoverflow.com/questions/16878315/what-is-the-right-way-to-treat-python-argparse-namespace-as-a-dictionary
+    cfg = dict(read_user_config() + get_command_arguments())
     config = TinyCalConfig(cfg)
 
     cal = calendar.Calendar(firstweekday=calendar.MONDAY if config.start_monday else calendar.SUNDAY)

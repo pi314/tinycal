@@ -6,17 +6,13 @@ from __future__ import absolute_import
 
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-from . import CALRC_1ST, CALRC_2ND
+from . import CALRC
 
 
 parser = ArgumentParser(
     description='tinycal: A Python implementation of cal utility.',
     prog='tcal',
-    epilog='\n'.join((
-        'Configuration files:',
-        '1st: {}'.format(CALRC_1ST),
-        '2nd: {}'.format(CALRC_2ND),
-        )),
+    epilog='Configuration files: {}'.format(CALRC),
     formatter_class=RawTextHelpFormatter,
     )
 

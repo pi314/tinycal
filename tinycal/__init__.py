@@ -2,6 +2,5 @@
 Package description and configuration.
 """
 
-name = 'tinycal'
-CALRC_1ST = '~/.config/calrc'
-CALRC_2ND = '~/.calrc'
+__name__ = 'tinycal'
+CALRC = ('~/.config/calrc', '~/.calrc')
