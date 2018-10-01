@@ -47,6 +47,18 @@ def get_config_with_type(cfg, key, default):
 
 
 def merge_color_config(base, new):
+    r"""
+    >>> merge_color_config('YELLOW', 'GREEN')
+    'GREEN:none'
+    >>> merge_color_config('YELLOW', '')
+    'YELLOW:none'
+    >>> merge_color_config('', 'RED')
+    'RED:none'
+    >>> merge_color_config('GREEN:none', 'RED')
+    'RED:none'
+    >>> merge_color_config('BLUE:YELLOW', ':RED')
+    'BLUE:RED'
+    """
     b = list(map(str.strip, base.split(':') + ['']))
     n = list(map(str.strip, new.split(':') + ['']))
 
