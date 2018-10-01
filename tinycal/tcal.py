@@ -2,6 +2,7 @@ from __future__ import print_function
 
 import calendar
 import os.path
+from collections import namedtuple
 
 from . import CALRC
 from .argparse import parser
@@ -9,31 +10,34 @@ from .config import TinyCalConfig
 from .render import TableYear, TableMonth, render
 
 
-def parse_config(number, line):
-    if '=' not in line:
-        raise Exception('...')
+Line = namedtuple('Line', ['lineno', 'text'])
 
-    key, value = map(str.strip, line.split('=', 1))
+
+def parse_config(line):
+    if '=' not in line.text:
+        raise Exception(line.lineno)
+
+    key, value = map(str.strip, line.text.split('=', 1))
 
     if key in ('col', 'after', 'before'):
         try:
             value_ = int(value)
         except ValueError:
-            raise ValueError(number)
+            raise ValueError(line.lineno)
 
         if value_ < 0:
-            raise ValueError(number)
+            raise ValueError(line.lineno)
 
         return key, value_
 
     if key in ('start_monday', 'border', 'fill', 'sep', 'wk'):
         if value.lower() not in ('true', 'false'):
-            raise ValueError(number)
+            raise ValueError(line.lineno)
         return key, (value.lower() == 'true')
 
     if key == 'lang':
         if value not in ('en', 'jp', 'zh'):
-            raise ValueError(number)
+            raise ValueError(line.lineno)
         return key, value
 
     if key in (
@@ -59,11 +63,13 @@ def parse_config(number, line):
             ):
         import re
         patt = re.compile(r'^\s*(?P<fg>\w+)?\s*:?(?:\s*(?P<bg>\w+)\s*)?$')
+        # TODO: convert to None, coler, and existing fg/bg color
         if not patt.match(value):
-            raise ValueError(number)
+            raise ValueError(line.lineno)
+
         return key, value
 
-    raise ValueError(number)
+    raise ValueError(line.lineno)
 
 
 def get_calrc():
@@ -85,11 +91,11 @@ def read_user_config():
         return []
 
     # read lines and strip
-    lines = ((n, l.strip()) for n, l in enumerate(open(calrc)))
+    lines = (Line(n, t.strip()) for n, t in enumerate(open(calrc)))
     # remove empty or commented lines
-    lines_ = ((n, l) for n, l in lines if l and not l.startswith('#'))
+    lines_ = (l for l in lines if l.text and not l.text.startswith('#'))
     # parse configuration lines
-    config = (parse_config(n, l) for n, l in lines_)
+    config = (parse_config(l) for l in lines_)
     return list(config)
 
 
