@@ -1,71 +1,105 @@
 r"""
 Configuration Parser
 
-It provide base class `Config` which considers basic feature as below:
+It provide declarative base class `Config` which considers basic feature as below:
 
 - read config file
-- parse config content into AST
+- parse config content into dict
 - convert value with types according to declaration of `Config`
-- warn or raise error with sufficient information, for example, line number
 
 and advanced feature as below:
 
 - render config file
 - allowing undeclared key-values is optional
+- optional `required=True` for `Value`
+- warn or raise error with sufficient information, for example, line number
 
 Here is the flow chart::
 
-    file -> content  -> AST
-                         |
-                         v
+    file -> content  -> dict
+                          |
+                          v
     file <- content* <- config -> engine
 
 
+Usage:
 
-It is declarative as below:
+    class TinyCalConfig(Config):
+        col = Natural(default=3)
 
->>> class Color(Value):
-...     def __init__(self, key=None, default=None):
-...         pass
-...     def convert(self, v):
-...         pass
+    def get_config_from_file(paths: [str]) -> TinyCalConfig: ...
 
->>> class MyConfig(Config):
-...     key1 = Int(default='...')
-...     key2 = Color()
-...     def validate(self):
-...         pass
+    def get_config_from_args() -> TinyCalConfig: ...
 
->>> config = MyConfig("......")
+    config = TinyCalConfig.merge(get_config_from_file(), get_config_from_args())
+
+    config.col  # 3
+
+
+Test:
+
+>>> class Integer(Value):
+...     def to_python(self, text):
+...         return int(text)
+...
+>>> n = Integer(default=3, validators=[greater_than(0)])
+>>> n.clean('3')
+3
+>>> n.clean('-1')
+Traceback (most recent call last):
+  ...
+config.ValidationError
+>>> class TinyCalConfig(Config):
+...     column = Integer(default=3, validators=[greater_than(0)])
 """
 
-from abc import ABCMeta, abstractmethod
+class ValidationError(Exception):
+    pass
 
 
-# comes from `six` package for Python 2/3 compatible
-def add_metaclass(metaclass):
-    """Class decorator for creating a class with a metaclass."""
-    def wrapper(cls):
-        orig_vars = cls.__dict__.copy()
-        slots = orig_vars.get('__slots__')
-        if slots is not None:
-            if isinstance(slots, str):
-                slots = [slots]
-            for slots_var in slots:
-                orig_vars.pop(slots_var)
-        orig_vars.pop('__dict__', None)
-        orig_vars.pop('__weakref__', None)
-        return metaclass(cls.__name__, cls.__bases__, orig_vars)
-    return wrapper
+def greater_than(number):
+    def validator(value):
+        if not (value > number):
+            raise ValidationError
+    return validator
 
 
-@add_metaclass(ABCMeta)
 class Value:
-    @abstractmethod
-    def convert(self):
-        print(123)
+    def __init__(self, key=None, default=None, validators=()):
+        self.key = key
+        self.default = default
+        self.validators = validators
+
+    def to_python(self, text):
+        return text
+
+    def validate(self, value):
+        for v in self.validators:
+            v(value)
+
+    def clean(self, text):
+        value = self.to_python(text)
+        self.validate(value)
+        return value
 
 
 class Config:
-    def __init__(self, ast):
+    def __init__(self, data):
+        self.data = data
+
+
+'''
+class Color(Value):
+    def __init__(self, key=None, default=None):
         pass
+    def __str__(self):
+        pass
+    def clean(self, v):
+        pass
+
+class TinyCalConfig(Config):
+    key1 = Int(default=0)
+    key2 = Color()
+    def validate(self):
+        pass
+'''
