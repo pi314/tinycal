@@ -116,7 +116,7 @@ def main():
     table = TableYear()
 
     for m in config.range:
-        table.add(TableMonth(cal, m))
+        table.months.append(TableMonth(cal, m))
 
     render(config, table)
 

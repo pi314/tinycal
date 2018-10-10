@@ -23,26 +23,11 @@ class TableYear(object):
     def __init__(self):
         self.months = []
 
-    def add(self, m):
-        self.months.append(m)
-
     def rows(self, col):
-        ret = []
-        buf = []
-        for i in self.months:
-            buf.append(i)
-            if len(buf) == col:
-                ret.append(tuple(buf))
-                buf = []
-
-        if buf:
-            for i in range(col - len(buf)):
-                dummy = TableMonth(None, None)
-                buf.append(dummy)
-
-            ret.append(tuple(buf))
-
-        return ret
+        dummy = [] if len(self.months) % col == 0 else \
+                [TableMonth(None, None)] * (col - len(self.months) % col)
+        months = self.months + dummy
+        return [months[i:i+col] for i in range(0, len(months), col)]
 
 
 class TableMonth(object):
