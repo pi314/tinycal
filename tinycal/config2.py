@@ -1,8 +1,15 @@
 r"""
->>> import configparser
->>> c = configparser.ConfigParser()
->>> c.read_string('[_]\n' + open('allcalrc').read())
->>> config = TinyCalConfig(dict(c['_']))
+>>> sample_config = '[_]\n' + open('allcalrc').read()
+>>> try:
+...     import configparser
+...     c = configparser.ConfigParser()
+...     c.read_string(sample_config)
+...     config = TinyCalConfig(dict(c['_']))
+... except:
+...     import ConfigParser, io
+...     c = ConfigParser.ConfigParser()
+...     c.readfp(io.BytesIO(sample_config))
+...     config = TinyCalConfig(dict(c.items('_')))
 >>> config.col
 3
 >>> config.lang
