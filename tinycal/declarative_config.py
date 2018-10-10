@@ -28,10 +28,10 @@ however, `argparse` has more object-oriented for later usage.
 ...     a = IntegerField(default=1)
 ...     b = IntegerField(key='c', default=2)
 ...
->>> config = MyConfig({'b': '4'})
+>>> config = MyConfig({'c': '4'})
 >>> config
-MyConfig(a=1,c=4)
->>> config.c
+MyConfig(a=1,b=4)
+>>> config.b
 4
 """
 
@@ -107,11 +107,9 @@ class Config(object):
         assert isinstance(attrs, dict)
         assert all(isinstance(k, str) and isinstance(v, str) for k,v in attrs.items())
 
-        self._attrs = {field.key or name: field.clean(attrs.get(name))
-                       for name, field in vars(self.__class__).items() if isinstance(field, ValueField)}
+        for name, field in vars(self.__class__).items():
+            if isinstance(field, ValueField):
+                setattr(self, name, field.clean(attrs.get(field.key or name)))
 
     def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, ','.join('%s=%s' % attr for attr in sorted(self._attrs.items())))
-
-    def __getattr__(self, k):
-        return self._attrs[k]
+        return "%s(%s)" % (self.__class__.__name__, ','.join('%s=%s' % attr for attr in sorted(vars(self).items())))
