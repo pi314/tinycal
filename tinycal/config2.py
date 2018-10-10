@@ -8,10 +8,13 @@ r"""
 >>> config.lang
 'en'
 >>> config.color_wk
+Color(fg=BLACK,bg=None)
+>>> config.color_today
+Color(fg=None,bg=white)
 """
 
 from .declarative_config import (
-        Config, ValueField,
+        Config, ValueField, ValidationError,
         IntegerField, BoolField, SelectorField,
         )
 
@@ -24,19 +27,42 @@ def greater_than(n):
 
 
 class Color:
+    definition = {
+            'black': '0', 'red': '1', 'green': '2', 'yellow': '3',
+            'blue': '4', 'magenta': '5', 'cyan': '6', 'white': '7',
+            }
+
     def __init__(self, color_setting):
-        self.color_setting = color_setting
+        import re
+        patt = re.compile(r'^\s*(?P<fg>\w+)?\s*:?(?:\s*(?P<bg>\w+)\s*)?$')
+        m = patt.match(color_setting)
+        if m is None:
+            raise ValueError
+        self.fg = self.clean(m.group('fg'))
+        self.bg = self.clean(m.group('bg'))
+
+    def clean(self, setting):
+        if setting is None or setting.lower() == 'none':
+            return None
+        if setting.lower() not in self.definition:
+            raise ValueError('Not defined color setting %s' % setting)
+        return setting if setting == setting.upper() else setting.lower()
 
     def __repr__(self):
-        return '%s(setting=%s)' % (self.__class__.__name__, self.color_setting)
+        return '%s(fg=%s,bg=%s)' % (self.__class__.__name__, self.fg, self.bg)
 
 
-class BaseColorField(ValueField):
-    ...
+class ColorField(ValueField):
+    def __init__(self, *args, **kwargs):
+        if 'key' not in kwargs:
+            kwargs['key'] = lambda name: '.'.join((lambda t: t[1:]+t[0:1])(name.split('_')))
+        super(ColorField, self).__init__(*args, **kwargs)
 
-
-class ColorField(BaseColorField):
-    ...
+    def to_python(self, text):
+        try:
+            return Color(text)
+        except ValueError as e:
+            raise ValidationError('%r not match color setting pattern' % text)
 
 
 class TinyCalConfig(Config):
