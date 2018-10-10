@@ -26,13 +26,14 @@ however, `argparse` has more object-oriented for later usage.
 
 >>> class MyConfig(Config):
 ...     a = IntegerField(default=1)
-...     b = IntegerField(key='c', default=2)
+...     b = BoolField(key='bb', default=True)
+...     c = SelectorField(['en', 'zh'], key=lambda n: n*2, default='en')
 ...
->>> config = MyConfig({'c': '4'})
+>>> config = MyConfig({'bb': '0', 'cc': 'en'})
 >>> config
-MyConfig(a=1,b=4)
->>> config.b
-4
+MyConfig(a=1,b=False,c=en)
+>>> config.c
+'en'
 """
 
 
@@ -48,7 +49,7 @@ class ValueField(object):
 
     def __init__(self, key=None, default=None, validators=()):
         # TOOD: assert `key` must a valid variable name in Python
-        self.key = key
+        self.map_key = lambda name: name if key is None else key(name) if callable(key) else key
         self.default = default
         self.validators = validators
 
@@ -93,6 +94,8 @@ class BoolField(ValueField):
 class SelectorField(ValueField):
     def __init__(self, choices, *args, **kwargs):
         assert all(isinstance(c, str) for c in choices)
+        if 'default' in kwargs:
+            assert isinstance(kwargs['default'], str)
         self.choices = choices
         super(SelectorField, self).__init__(*args, **kwargs)
 
@@ -109,7 +112,7 @@ class Config(object):
 
         for name, field in vars(self.__class__).items():
             if isinstance(field, ValueField):
-                setattr(self, name, field.clean(attrs.get(field.key or name)))
+                setattr(self, name, field.clean(attrs.get(field.map_key(name))))
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ','.join('%s=%s' % attr for attr in sorted(vars(self).items())))
