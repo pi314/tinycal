@@ -121,9 +121,14 @@ def render(cal, config):
         for m in row:
             m.set_render_config(config)
 
-    sep_v = ' | ' if config.sep else '  '
-    sep_h_int = '-+-' if config.sep else '  '
-    sep_h_line = '-' if config.sep else ' '
+    if config.sep:
+        sep_v = ' | '
+        sep_h_int = '-+-'
+        sep_h_line = '-'
+    else:
+        sep_v = '  '
+        sep_h_int = '  '
+        sep_h_line = ' '
     sep_h = sep_h_int.join(sep_h_line * m.width for m in rows[0])
 
     if config.border:
@@ -136,14 +141,16 @@ def render(cal, config):
         hr = sep_h
 
     output_lines = [top]
-    for idx, row in enumerate(rows):
-        if idx > 0:
-            output_lines.append(hr)
 
+    for row in rows:
         title = sep_v.join(m.render_title() for m in row)
         th = sep_v.join(m.render_weekday() for m in row)
         height = max(len(tm.weeks) for tm in row)
         for line in [title, th] + [sep_v.join(m.render_week(wk) for m in row) for wk in range(height)]:
             output_lines.append(left + line + right)
+        output_lines.append(hr)
+    output_lines.pop()
+
     output_lines.append(bottom)
+
     return output_lines
