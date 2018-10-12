@@ -139,13 +139,8 @@ def render(config, table):
     for idx, row in enumerate(rows):
         height = max(len(tm.weeks) for tm in row)
         lines = []
-
-        for m in row:
-            m.set_render_config(config)
-
         lines.append(sep_v.join(m.render_title() for m in row))
         lines.append(sep_v.join(m.render_weekday() for m in row))
-
         for wk in range(height):
             lines.append(sep_v.join(m.render_week(wk) for m in row))
 
