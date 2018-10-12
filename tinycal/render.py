@@ -19,18 +19,7 @@ def uncolor(color):
     return '\033[0m' if color else ''
 
 
-class TableYear(object):
-    def __init__(self):
-        self.months = []
-
-    def rows(self, col):
-        dummy = [] if len(self.months) % col == 0 else \
-                [TableMonth(None, None)] * (col - len(self.months) % col)
-        months = self.months + dummy
-        return [months[i:i+col] for i in range(0, len(months), col)]
-
-
-class TableMonth(object):
+class Month(object):
     def __init__(self, cal, m):
         if cal is None:
             self.empty = True
@@ -123,8 +112,10 @@ class TableMonth(object):
         return ret
 
 
-def render(config, table):
-    rows = table.rows(config.col)
+def render(cal, config):
+    months = [Month(cal, m) for m in config.range]
+    dummy = [] if len(months) % config.col == 0 else [Month(None, None)] * (config.col - len(months) % config.col)
+    rows = list(zip(*[iter(months + dummy)] * config.col))
 
     for row in rows:
         for m in row:

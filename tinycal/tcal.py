@@ -1,12 +1,10 @@
-from __future__ import print_function
-
 import calendar
 import os.path
 
 from . import CALRC
 from .argparse import parser
 from .config import TinyCalConfig
-from .render import TableYear, TableMonth, render
+from .render import render
 
 
 def read_config():
@@ -37,12 +35,7 @@ def main():
     config = TinyCalConfig(cfg)
 
     cal = calendar.Calendar(firstweekday=calendar.MONDAY if config.start_monday else calendar.SUNDAY)
-    table = TableYear()
-
-    for m in config.range:
-        table.months.append(TableMonth(cal, m))
-
-    render(config, table)
+    render(cal, config)
 
 
 if __name__ == '__main__':
