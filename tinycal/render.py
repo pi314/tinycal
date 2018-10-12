@@ -121,28 +121,29 @@ def render(cal, config):
         for m in row:
             m.set_render_config(config)
 
-    max_row = len(rows) - 1
     sep_v = ' | ' if config.sep else '  '
     sep_h_int = '-+-' if config.sep else '  '
     sep_h_line = '-' if config.sep else ' '
     sep_h = sep_h_int.join(sep_h_line * m.width for m in rows[0])
 
+    if config.border:
+        top = ('.-' + ('-' * len(sep_h)) + '-.')
+        bottom = ("'-" + ('-' * len(sep_h)) + "-'")
+        hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
+        left, right = '| ', ' |'
+    else:
+        top = bottom = left = right = ''
+        hr = sep_h
+
+    output_lines = [top]
     for idx, row in enumerate(rows):
-        height = max(len(tm.weeks) for tm in row)
-        lines = []
-        lines.append(sep_v.join(m.render_title() for m in row))
-        lines.append(sep_v.join(m.render_weekday() for m in row))
-        for wk in range(height):
-            lines.append(sep_v.join(m.render_week(wk) for m in row))
-
-        if idx == 0 and config.border:
-            print('.-' + ('-' * len(sep_h)) + '-.')
-
         if idx > 0:
-            print(('|' + sep_h[0] if config.border else '') + sep_h + (sep_h[0] + '|' if config.border else ''))
+            output_lines.append(hr)
 
-        for line in lines:
-            print(('| ' if config.border else '') + line + (' |' if config.border else ''))
-
-        if idx == max_row and config.border:
-            print("'-" + ('-' * len(sep_h)) + "-'")
+        title = sep_v.join(m.render_title() for m in row)
+        th = sep_v.join(m.render_weekday() for m in row)
+        height = max(len(tm.weeks) for tm in row)
+        for line in [title, th] + [sep_v.join(m.render_week(wk) for m in row) for wk in range(height)]:
+            output_lines.append(left + line + right)
+    output_lines.append(bottom)
+    return output_lines
