@@ -137,11 +137,10 @@ def render(cal, config):
         hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
         left, right = '| ', ' |'
     else:
-        top = bottom = left = right = ''
+        left = right = ''
         hr = sep_h
 
-    output_lines = [top]
-
+    output_lines = []
     for row in rows:
         title = sep_v.join(m.render_title() for m in row)
         th = sep_v.join(m.render_weekday() for m in row)
@@ -151,6 +150,8 @@ def render(cal, config):
         output_lines.append(hr)
     output_lines.pop()
 
-    output_lines.append(bottom)
+    if config.border:
+        output_lines.insert(0, top)
+        output_lines.append(bottom)
 
     return output_lines
