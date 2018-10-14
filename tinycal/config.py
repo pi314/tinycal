@@ -175,9 +175,7 @@ class TinyCalConfig(Namespace):
         def get(key, default):
             return get_config_with_type(cfg, key, default)
 
-        today = date.today()
         self.today = today
-
         self.col = get('col', 3)
         self.after = get('after', 0)
         self.before = get('before', 0)
@@ -297,3 +295,6 @@ class TinyCalConfig(Namespace):
             self.color.day[FRIDAY]    = ''
             self.color.day[SATURDAY]  = ''
             self.color.today = ''
+
+
+today = date.today()

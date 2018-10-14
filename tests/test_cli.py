@@ -1,5 +1,12 @@
 import unittest
 
+try:
+    from io import StringIO
+    from unittest.mock import patch
+except:
+    from StringIO import StringIO
+    from mock import patch
+
 
 ARGS_LIST = [
         '2018 10',
@@ -23,23 +30,40 @@ def generate_case(args):
         expected = f.read()
 
     def case(self):
-        self.assertCommand(command, expected)
+        self.assert_command_output(args.split(), expected)
 
     return case_name, case
 
 
 class ArgumentsTest(unittest.TestCase):
-    def run_cmd(self, cmd):
-        import subprocess
-        output = subprocess.check_output(cmd, shell=True)
-        return output.decode()
+    @classmethod
+    def set_up_class(cls):
+        import datetime
+        import sys
 
-    def assertCommand(self, cmd, expected):
-        output = self.run_cmd(cmd)
+        # fix search path since executing `pytest`
+        sys.path.insert(0, '')
+        from tinycal import config
+        sys.path.pop(0)
+
+        # set today is 2018.10.13 the day of generating test data
+        config.today = datetime.date(2018, 10, 13)
+
+    setUpClass = set_up_class
+
+    @patch('sys.stdout', new_callable=StringIO)
+    def run_cmd(self, args, buff):
+        import sys
+        from tinycal import tcal
+        sys.argv = [''] + args
+        tcal.main()
+        return buff.getvalue()
+
+    def assert_command_output(self, args, expected):
+        output = self.run_cmd(args)
         if output != expected:
-            from pprint import pprint
-            pprint(list(map(repr, output.splitlines())))
-            pprint(list(map(repr, expected.splitlines())))
+            for line in output.splitlines(): print(repr(line))
+            for line in expected.splitlines(): print(repr(line))
             raise AssertionError
 
 
