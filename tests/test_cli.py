@@ -8,49 +8,22 @@ except:
     from mock import patch
 
 
-ARGS_LIST = [
-        '2018 10',
-        '-3 2018 10',
-        '-3 --col 2 2018 10',
-        '-3 --col 2 -w 2018 10',
-        '-3 --col 2 -S 2018 10',
-        '-3 --col 2 -nb 2018 10',
-        '-3 --col 2 -nb -S 2018 10',
-        ]
+def setUpModule():
+    import datetime
+    import sys
 
+    # fix search path since executing `pytest`
+    # though it can be fixed by make `tests` folder to be Python package, this way
+    # is more straightforward
+    sys.path.insert(0, '')
+    from tinycal import config
+    sys.path.pop(0)
 
-def generate_case(args):
-    file_name = args.replace('-', '_').replace(' _', '_').replace(' ', '_')
-    file_path = 'tests/testdata/%s' % file_name
-    case_name = 'test_%s' % file_name
-    command = 'python -m tinycal %s' % args
-    #print(f'{command} > {file_name}')  # list commands to generate test data
-
-    with open(file_path) as f:
-        expected = f.read()
-
-    def case(self):
-        self.assert_command_output(args.split(), expected)
-
-    return case_name, case
+    # set today is 2018.10.13 the day of generating test data
+    config.today = datetime.date(2018, 10, 13)
 
 
 class ArgumentsTest(unittest.TestCase):
-    @classmethod
-    def set_up_class(cls):
-        import datetime
-        import sys
-
-        # fix search path since executing `pytest`
-        sys.path.insert(0, '')
-        from tinycal import config
-        sys.path.pop(0)
-
-        # set today is 2018.10.13 the day of generating test data
-        config.today = datetime.date(2018, 10, 13)
-
-    setUpClass = set_up_class
-
     @patch('sys.stdout', new_callable=StringIO)
     def run_cmd(self, args, buff):
         import sys
@@ -67,6 +40,30 @@ class ArgumentsTest(unittest.TestCase):
             raise AssertionError
 
 
-for args in ARGS_LIST:
+def generate_case(args):
+    file_name = args
+    file_path = 'tests/testdata/%s' % file_name
+    case_name = 'test_%s' % file_name
+    command = 'python -m tinycal %s' % args
+    #print(f'{command} > {file_name}')  # list commands to generate test data
+
+    with open(file_path) as f:
+        expected = f.read()
+
+    def case(self):
+        self.assert_command_output(args.split(), expected)
+
+    return case_name, case
+
+
+for args in [
+        '2018 10',
+        '-3 2018 10',
+        '-3 --col 2 2018 10',
+        '-3 --col 2 -w 2018 10',
+        '-3 --col 2 -S 2018 10',
+        '-3 --col 2 -nb 2018 10',
+        '-3 --col 2 -nb -S 2018 10',
+        ]:
     case_name, case = generate_case(args)
     setattr(ArgumentsTest, case_name, case)
