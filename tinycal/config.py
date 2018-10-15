@@ -223,8 +223,19 @@ class TinyCalConfig(Namespace):
                 year_month_range.append(date(probe_y, probe_m, 1))
 
         year_month_range.sort()
-        self.range = year_month_range
-        self.col = min(len(self.range), self.col)
+
+        def to_matrix(L, c):
+            if len(L) == c:
+                return [L]
+            elif len(L) > c:
+                return [L[:c]] + to_matrix(L[c:], c)
+            else:
+                return [L + [None] * (c - len(L))]
+
+        if len(year_month_range) < self.col:
+            self.matrix = [year_month_range]
+        else:
+            self.matrix = to_matrix(year_month_range, self.col)
 
         self.color = Namespace()
         self.color.enable = get('color', True)

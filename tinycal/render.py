@@ -20,7 +20,7 @@ def color(s, c):
 
 class Month(object):
     def __init__(self, cal, m):
-        if cal is None:
+        if m is None:
             self.empty = True
             self.weeks = []
             return
@@ -113,9 +113,7 @@ class Month(object):
 
 def render(config):
     cal = TinyCalendar(config)
-    months = [Month(cal, m) for m in config.range]
-    dummy = [] if len(months) % config.col == 0 else [Month(None, None)] * (config.col - len(months) % config.col)
-    rows = list(zip(*[iter(months + dummy)] * config.col))
+    rows = [[Month(cal, m) for m in row] for row in config.matrix]
 
     for row in rows:
         for m in row:
