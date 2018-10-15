@@ -13,14 +13,15 @@ def read_config():
     if not calrcs:
         return []
 
-    # read lines and strip
-    lines = map(str.strip, open(calrcs[0]))
-    # remove empty or commented lines
-    lines_ = (line for line in lines if line and not line.startswith('#'))
-    # parse configuration lines
-    parse_line = lambda line: tuple(map(str.strip, line.split('=', 1)))
-    config = map(parse_line, lines_)
-    return [(k, v) for k, v in config if v is not None]  # TODO: internal variable is different
+    with open(calrcs[0]) as f:
+        # read lines and strip
+        lines = map(str.strip, f)
+        # remove empty or commented lines
+        lines_ = (line for line in lines if line and not line.startswith('#'))
+        # parse configuration lines
+        parse_line = lambda line: tuple(map(str.strip, line.split('=', 1)))
+        config = map(parse_line, lines_)
+        return [(k, v) for k, v in config if v is not None]  # TODO: internal variable is different
 
 
 def get_command_arguments():
