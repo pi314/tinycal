@@ -64,6 +64,9 @@ for args in [
         '-3 --col 2 -S 2018 10',
         '-3 --col 2 -nb 2018 10',
         '-3 --col 2 -nb -S 2018 10',
+        '-A 3 -B 2 --col 3',
+        '-A 3 -B 2 --col 4',
+        '-A 1 -B 1 --col 4',
         ]:
     case_name, case = generate_case(args)
     setattr(ArgumentsTest, case_name, case)
