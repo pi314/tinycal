@@ -15,10 +15,6 @@ def color(s, c):
     return c + s + ('\033[0m' if c else '')
 
 
-def uncolor(color):
-    return '\033[0m' if color else ''
-
-
 class Month(object):
     def __init__(self, cal, m):
         if cal is None:
@@ -88,7 +84,7 @@ class Month(object):
             ret = ''.join([
                 self.config.color.wk,
                 str(self.wk_start + wk + 1).rjust(2),
-                uncolor(self.config.color.wk),
+                ('\033[0m' if self.config.color.wk else ''),
                 ' '
             ])
 
