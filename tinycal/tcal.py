@@ -1,6 +1,5 @@
 from __future__ import print_function
 
-import calendar
 import os.path
 
 from . import CALRC
@@ -36,8 +35,7 @@ def main():
     cfg = dict(read_config() + get_command_arguments())
     config = TinyCalConfig(cfg)
 
-    cal = calendar.Calendar(firstweekday=calendar.MONDAY if config.start_monday else calendar.SUNDAY)
-    lines = render(cal, config)
+    lines = render(config)
     print(*lines, sep='\n')
 
 
