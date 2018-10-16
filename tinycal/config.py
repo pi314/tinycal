@@ -27,6 +27,23 @@ def eprint(*args, **kwargs):
     print(*args, file=sys.stderr, **kwargs)
 
 
+def to_matrix(L, c):
+    r"""
+    >>> L = [1, 2, 3, 4, 5, 6, 7]
+    >>> to_matrix(L, 2)
+    [[1, 2], [3, 4], [5, 6], [7, None]]
+    >>> to_matrix(L, 3)
+    [[1, 2, 3], [4, 5, 6], [7, None, None]]
+    >>> to_matrix(L, 4)
+    [[1, 2, 3, 4], [5, 6, 7, None]]
+    >>> to_matrix(L, 7)
+    [[1, 2, 3, 4, 5, 6, 7]]
+    >>> to_matrix(L, 8)
+    [[1, 2, 3, 4, 5, 6, 7, None]]
+    """
+    return [L[i:i+c] + [None] * (i + c - len(L)) for i in range(0, len(L), c)]
+
+
 def get_config_with_type(cfg, key, default):
     if key not in cfg:
         return default
@@ -224,18 +241,7 @@ class TinyCalConfig(Namespace):
 
         year_month_range.sort()
 
-        def to_matrix(L, c):
-            if len(L) == c:
-                return [L]
-            elif len(L) > c:
-                return [L[:c]] + to_matrix(L[c:], c)
-            else:
-                return [L + [None] * (c - len(L))]
-
-        if len(year_month_range) < self.col:
-            self.matrix = [year_month_range]
-        else:
-            self.matrix = to_matrix(year_month_range, self.col)
+        self.matrix = to_matrix(year_month_range, self.col) if len(year_month_range) > self.col else [year_month_range]
 
         self.color = Namespace()
         self.color.enable = get('color', True)

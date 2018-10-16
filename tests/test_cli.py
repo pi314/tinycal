@@ -34,7 +34,10 @@ class ArgumentsTest(unittest.TestCase):
 
 
 def assert_command_output(output, expected):
-    assert [repr(line) for line in output.splitlines()] == [repr(line) for line in expected.splitlines()]
+    if output != expected:
+        for line in output.splitlines(): print(line.__repr__())
+        for line in expected.splitlines(): print(line.__repr__())
+        raise AssertionError
 
 
 def generate_case(args):
