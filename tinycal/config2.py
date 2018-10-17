@@ -10,6 +10,7 @@ r"""
 ...     c = ConfigParser.ConfigParser()
 ...     c.readfp(io.BytesIO(sample_config))
 ...     config = TinyCalConfig(dict(c.items('_')))
+...
 >>> config.col
 3
 >>> config.lang
@@ -70,7 +71,8 @@ class Color:
             raise ValueError
         self.highlight, self.fg, self.bg = self.clean(*m.groups())
 
-    def __bool__(self):
+    def __len__(self):
+        # use `__len__` instead of `__bool__` for Python 2/3 compatible
         return False if self.fg == self.bg == None else True
 
     def clean(self, fg, bg):
