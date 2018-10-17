@@ -251,66 +251,34 @@ class TinyCalConfig(Namespace):
             self.color.title = parse_color_config(get('title.color', ''))
 
             color_weekday_base = get('weekday.color', '')
-            color_weekday_sun = merge_color_config(color_weekday_base, get('weekday.sunday.color', ''))
-            color_weekday_mon = merge_color_config(color_weekday_base, get('weekday.monday.color', ''))
-            color_weekday_tue = merge_color_config(color_weekday_base, get('weekday.tuesday.color', ''))
-            color_weekday_wed = merge_color_config(color_weekday_base, get('weekday.wednesday.color', ''))
-            color_weekday_thu = merge_color_config(color_weekday_base, get('weekday.thursday.color', ''))
-            color_weekday_fri = merge_color_config(color_weekday_base, get('weekday.friday.color', ''))
-            color_weekday_sat = merge_color_config(color_weekday_base, get('weekday.saturday.color', ''))
-            self.color.weekday = {}
-            self.color.weekday[BASE]      = parse_color_config(color_weekday_base)
-            self.color.weekday[SUNDAY]    = parse_color_config(color_weekday_sun)
-            self.color.weekday[MONDAY]    = parse_color_config(color_weekday_mon)
-            self.color.weekday[TUESDAY]   = parse_color_config(color_weekday_tue)
-            self.color.weekday[WEDNESDAY] = parse_color_config(color_weekday_wed)
-            self.color.weekday[THURSDAY]  = parse_color_config(color_weekday_thu)
-            self.color.weekday[FRIDAY]    = parse_color_config(color_weekday_fri)
-            self.color.weekday[SATURDAY]  = parse_color_config(color_weekday_sat)
+            self.color.weekday = {
+                BASE: parse_color_config(color_weekday_base),
+                SUNDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.sunday.color', ''))),
+                MONDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.monday.color', ''))),
+                TUESDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.tuesday.color', ''))),
+                WEDNESDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.wednesday.color', ''))),
+                THURSDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.thursday.color', ''))),
+                FRIDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.friday.color', ''))),
+                SATURDAY: parse_color_config(merge_color_config(color_weekday_base, get('weekday.saturday.color', ''))),
+                }
 
-            color_day = {}
-            color_day[SUNDAY]    = get('sunday.color', '')
-            color_day[MONDAY]    = get('monday.color', '')
-            color_day[TUESDAY]   = get('tuesday.color', '')
-            color_day[WEDNESDAY] = get('wednesday.color', '')
-            color_day[THURSDAY]  = get('thursday.color', '')
-            color_day[FRIDAY]    = get('friday.color', '')
-            color_day[SATURDAY]  = get('saturday.color', '')
-            self.color.day = {}
-            self.color.day[SUNDAY]    = parse_color_config(color_day[SUNDAY])
-            self.color.day[MONDAY]    = parse_color_config(color_day[MONDAY])
-            self.color.day[TUESDAY]   = parse_color_config(color_day[TUESDAY])
-            self.color.day[WEDNESDAY] = parse_color_config(color_day[WEDNESDAY])
-            self.color.day[THURSDAY]  = parse_color_config(color_day[THURSDAY])
-            self.color.day[FRIDAY]    = parse_color_config(color_day[FRIDAY])
-            self.color.day[SATURDAY]  = parse_color_config(color_day[SATURDAY])
+            self.color.day = {
+                SUNDAY: parse_color_config(get('sunday.color', '')),
+                MONDAY: parse_color_config(get('monday.color', '')),
+                TUESDAY: parse_color_config(get('tuesday.color', '')),
+                WEDNESDAY: parse_color_config(get('wednesday.color', '')),
+                THURSDAY: parse_color_config(get('thursday.color', '')),
+                FRIDAY: parse_color_config(get('friday.color', '')),
+                SATURDAY: parse_color_config(get('saturday.color', '')),
+                }
 
-            color_day_today = merge_color_config(
-                    color_day[today.weekday()],
-                    get('today.color', ':white'),
-                    )
-            self.color.today = parse_color_config(color_day_today)
+            self.color.today = parse_color_config(merge_color_config(self.color.day[today.weekday()], get('today.color', ':white')))
         else:
             self.color.wk = ''
             self.color.fill = ''
             self.color.title = ''
-            self.color.weekday = {}
-            self.color.weekday[BASE]      = ''
-            self.color.weekday[SUNDAY]    = ''
-            self.color.weekday[MONDAY]    = ''
-            self.color.weekday[TUESDAY]   = ''
-            self.color.weekday[WEDNESDAY] = ''
-            self.color.weekday[THURSDAY]  = ''
-            self.color.weekday[FRIDAY]    = ''
-            self.color.weekday[SATURDAY]  = ''
-            self.color.day = {}
-            self.color.day[SUNDAY]    = ''
-            self.color.day[MONDAY]    = ''
-            self.color.day[TUESDAY]   = ''
-            self.color.day[WEDNESDAY] = ''
-            self.color.day[THURSDAY]  = ''
-            self.color.day[FRIDAY]    = ''
-            self.color.day[SATURDAY]  = ''
+            self.color.weekday = dict.fromkeys([BASE, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, TUESDAY, FRIDAY, SATURDAY], '')
+            self.color.day = dict.fromkeys([SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY], '')
             self.color.today = ''
 
 
