@@ -21,7 +21,15 @@ def read_config():
         # parse configuration lines
         parse_line = lambda line: tuple(map(str.strip, line.split('=', 1)))
         config = map(parse_line, lines_)
-        return [(k, v) for k, v in config if v is not None]  # TODO: internal variable is different
+        return [clean_type(k, v) for k, v in config if v is not None]  # TODO: internal variable is different
+
+
+def clean_type(k, v):
+    if k in ('wk', 'sep', 'fill', 'border', 'start_monday'):
+        return k, {'false': False, 'true': True, '0': False, '1': True}[v.lower()]
+    if k in ('col', 'after', 'before'):
+        return k, int(v)
+    return k, v
 
 
 def get_command_arguments():

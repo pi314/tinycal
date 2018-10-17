@@ -4,19 +4,12 @@
 Render calendar.
 """
 
-from calendar import (
-        Calendar,
-        SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY,
-        )
+from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 
 JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
 CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
 BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
-
-def color(string, code):
-    reset = '\033[0m'
-    return '{code}{string}{reset}'.format(**locals()) if code else string
 
 color = lambda string, coloring: coloring(string)
 
@@ -115,8 +108,7 @@ class Month(object):
 
 
 def render(config):
-    cal = TinyCalendar(config)
-    rows = [[Month(cal, m) for m in row] for row in config.matrix]
+    rows = [[Month(config.cal, m) for m in row] for row in config.matrix]
 
     for row in rows:
         for m in row:
@@ -156,9 +148,3 @@ def render(config):
         output_lines.append(bottom)
 
     return output_lines
-
-
-class TinyCalendar(Calendar):
-    def __init__(self, config):
-        firstweekday = MONDAY if config.start_monday else SUNDAY
-        super(TinyCalendar, self).__init__(firstweekday)
