@@ -14,8 +14,9 @@ CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
 BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
-def color(s, c):
-    return c + s + ('\033[0m' if c else '')
+def color(string, code):
+    reset = '\033[0m'
+    return '{code}{string}{reset}'.format(**locals()) if code else string
 
 
 class Month(object):
