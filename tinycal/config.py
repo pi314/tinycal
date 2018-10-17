@@ -44,6 +44,12 @@ def to_matrix(L, c):
     return [L[i:i+c] + [None] * (i + c - len(L)) for i in range(0, len(L), c)]
 
 
+def expand_year_month(before, after, year, month):
+    return [date(year - (month <= i), (month - 1 - i) % 12 + 1, 1) for i in range(1, before+1)][::-1] + \
+           [date(year, month, 1)] + \
+           [date(year + (month + i > 12), (month - 1 + i) % 12 + 1, 1) for i in range(1, after+1)]
+
+
 def get_config_with_type(cfg, key, default):
     if key not in cfg:
         return default
@@ -210,36 +216,10 @@ class TinyCalConfig(Namespace):
             self.before = 1
 
         if 'year' in cfg and 'month' not in cfg:
+            # ignore `before` and `after` arguments and just list all months in the year
             year_month_range = [date(self.year, m, 1) for m in range(1, 13)]
-
         else:
-            if 'year' in cfg and 'month' in cfg:
-                base_date = date(self.year, self.month, 1)
-            else:
-                base_date = today
-
-            year_month_range = [base_date]
-            probe_y = base_date.year
-            probe_m = base_date.month
-            for i in range(self.before):
-                probe_m -= 1
-                if probe_m == 0:
-                    probe_y -= 1
-                    probe_m = 12
-
-                year_month_range.append(date(probe_y, probe_m, 1))
-
-            probe_y = base_date.year
-            probe_m = base_date.month
-            for i in range(self.after):
-                probe_m += 1
-                if probe_m == 13:
-                    probe_y += 1
-                    probe_m = 1
-
-                year_month_range.append(date(probe_y, probe_m, 1))
-
-        year_month_range.sort()
+            year_month_range = expand_year_month(self.before, self.after, self.year, self.month)
 
         self.matrix = to_matrix(year_month_range, self.col) if len(year_month_range) > self.col else [year_month_range]
 
