@@ -16,15 +16,11 @@ color = lambda string, coloring: coloring(string)
 
 class Month(object):
     def __init__(self, cal, m):
+        self.m = m
         if m is None:
-            self.empty = True
             self.weeks = []
             return
 
-        self.empty = False
-        self.year = m.year
-        self.month = m.month
-        self.title = m.strftime('%B') + ' ' + str(self.year)
         self.weeks = cal.monthdatescalendar(m.year, m.month)
 
         year_start = cal.monthdatescalendar(m.year, 1)[0][0]
@@ -36,17 +32,15 @@ class Month(object):
         self.width = 7 * 2 + 6 + (3 if config.wk else 0)
 
     def render_title(self):
-        if self.empty:
+        if self.m is None:
             return ' ' * self.width
 
-        return color('{title:^{width}}'.format(
-            title=self.title,
-            width=self.width
-            ),
-            self.config.color.title)
+        title = self.m.strftime('%B') + ' %s' % self.m.year
+        return color('{title:^{width}}'.format(title=title, width=self.width),
+                     self.config.color.title)
 
     def render_weekday(self):
-        if self.empty:
+        if self.m is None:
             return ' ' * self.width
 
         ret = color('WK', self.config.color.wk) if self.config.wk else ''
@@ -64,12 +58,7 @@ class Month(object):
                 ret = color(d.strftime('%a')[:2], c)
             return ret + (self.config.color.weekday[BASE].code if c else '')
 
-        ret += ''.join([
-            ' '.join(
-                render_single_weekday(d)
-                for d in self.weeks[0]
-            ),
-        ])
+        ret += ''.join([' '.join(render_single_weekday(d) for d in self.weeks[0])])
 
         ret += '\033[0m' if self.config.color.weekday[BASE] else ''
         return ret
@@ -88,13 +77,13 @@ class Month(object):
             ])
 
         def render_single_day(d):
-            if self.config.fill or d.month == self.month:
+            if self.config.fill or d.month == self.m.month:
                 c = ''
 
                 if self.config.color:
                     if d == self.config.today:
                         c = self.config.color.today
-                    elif d.month != self.month:
+                    elif d.month != self.m.month:
                         c = self.config.color.fill
                     else:
                         c = self.config.color.day[d.weekday()]
