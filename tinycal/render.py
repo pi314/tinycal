@@ -18,6 +18,8 @@ def color(string, code):
     reset = '\033[0m'
     return '{code}{string}{reset}'.format(**locals()) if code else string
 
+color = lambda string, coloring: coloring(string)
+
 
 class Month(object):
     def __init__(self, cal, m):
@@ -56,7 +58,7 @@ class Month(object):
 
         ret = color('WK', self.config.color.wk) if self.config.wk else ''
 
-        ret += self.config.color.weekday[BASE]
+        ret += self.config.color.weekday[BASE].code
         ret += ' ' if self.config.wk else ''
 
         def render_single_weekday(d):
@@ -67,7 +69,7 @@ class Month(object):
                 ret = color(CHINESE_WEEKDAY[d.weekday()], c)
             else:
                 ret = color(d.strftime('%a')[:2], c)
-            return ret + (self.config.color.weekday[BASE] if c else '')
+            return ret + (self.config.color.weekday[BASE].code if c else '')
 
         ret += ''.join([
             ' '.join(
@@ -86,7 +88,7 @@ class Month(object):
         ret = ''
         if self.config.wk:
             ret = ''.join([
-                self.config.color.wk,
+                self.config.color.wk.code,
                 str(self.wk_start + wk + 1).rjust(2),
                 ('\033[0m' if self.config.color.wk else ''),
                 ' '

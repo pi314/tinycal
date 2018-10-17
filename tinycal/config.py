@@ -10,6 +10,9 @@ from datetime import date
 from argparse import Namespace
 from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 
+from .config2 import Color
+
+
 COLOR_CODE = {
     'black': '0',
     'red': '1',
@@ -192,6 +195,9 @@ def parse_color_config(color_config):
             prefix =  seq(bright, fg_code(fg), bg_code(bg))
     return prefix
 
+
+parse_color_config = lambda color: color if isinstance(color, Color) else Color(color)
+merge_color_config = lambda base, new: (base if isinstance(base, Color) else Color(base)) << Color(new)
 
 class TinyCalConfig(Namespace):
     def __init__(self, cfg):
