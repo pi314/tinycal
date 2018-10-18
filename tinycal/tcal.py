@@ -5,7 +5,7 @@ import os.path
 from . import CALRC
 from .argparse import parser
 from .config import TinyCalConfig
-from .render import render
+from .render import TinyCal
 
 
 def read_config():
@@ -44,7 +44,7 @@ def main():
     cfg = dict(read_config() + get_command_arguments())
     config = TinyCalConfig(cfg)
 
-    lines = render(config)
+    lines = TinyCal().render(config)
     print(*lines, sep='\n')
 
 

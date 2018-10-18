@@ -12,21 +12,18 @@ BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
 class Month(object):
-    def __init__(self, cal, m):
+    def __init__(self, config, m):
         self.m = m
-        if m is None:
-            self.weeks = []
-            return
-
-        self.weeks = cal.monthdatescalendar(m.year, m.month)
-
-        year_start = cal.monthdatescalendar(m.year, 1)[0][0]
-        month_start = self.weeks[0][0]
-        self.wk_start = int((month_start - year_start).days / 7)
-
-    def set_render_config(self, config):
         self.config = config
         self.width = 7 * 2 + 6 + (3 if config.wk else 0)
+
+        if m is None:
+            self.weeks = []
+        else:
+            self.weeks = config.cal.monthdatescalendar(m.year, m.month)
+            year_start = config.cal.monthdatescalendar(m.year, 1)[0][0]
+            month_start = self.weeks[0][0]
+            self.wk_start = int((month_start - year_start).days / 7)
 
     def render_title(self):
         if self.m is None:
@@ -92,44 +89,41 @@ class Month(object):
         return ret
 
 
-def render(config):
-    rows = [[Month(config.cal, m) for m in row] for row in config.matrix]
+class TinyCal:
+    def render(self, config):
+        rows = [[Month(config, m) for m in row] for row in config.matrix]
 
-    for row in rows:
-        for m in row:
-            m.set_render_config(config)
+        if config.sep:
+            sep_v = ' | '
+            sep_h_int = '-+-'
+            sep_h_line = '-'
+        else:
+            sep_v = '  '
+            sep_h_int = '  '
+            sep_h_line = ' '
+        sep_h = sep_h_int.join(sep_h_line * m.width for m in rows[0])
 
-    if config.sep:
-        sep_v = ' | '
-        sep_h_int = '-+-'
-        sep_h_line = '-'
-    else:
-        sep_v = '  '
-        sep_h_int = '  '
-        sep_h_line = ' '
-    sep_h = sep_h_int.join(sep_h_line * m.width for m in rows[0])
+        if config.border:
+            top = ('.-' + ('-' * len(sep_h)) + '-.')
+            bottom = ("'-" + ('-' * len(sep_h)) + "-'")
+            hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
+            left, right = '| ', ' |'
+        else:
+            left = right = ''
+            hr = sep_h
 
-    if config.border:
-        top = ('.-' + ('-' * len(sep_h)) + '-.')
-        bottom = ("'-" + ('-' * len(sep_h)) + "-'")
-        hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
-        left, right = '| ', ' |'
-    else:
-        left = right = ''
-        hr = sep_h
+        output_lines = []
+        for row in rows:
+            title = sep_v.join(m.render_title() for m in row)
+            th = sep_v.join(m.render_weekday() for m in row)
+            height = max(len(tm.weeks) for tm in row)
+            for line in [title, th] + [sep_v.join(m.render_week(wk) for m in row) for wk in range(height)]:
+                output_lines.append(left + line + right)
+            output_lines.append(hr)
+        output_lines.pop()
 
-    output_lines = []
-    for row in rows:
-        title = sep_v.join(m.render_title() for m in row)
-        th = sep_v.join(m.render_weekday() for m in row)
-        height = max(len(tm.weeks) for tm in row)
-        for line in [title, th] + [sep_v.join(m.render_week(wk) for m in row) for wk in range(height)]:
-            output_lines.append(left + line + right)
-        output_lines.append(hr)
-    output_lines.pop()
+        if config.border:
+            output_lines.insert(0, top)
+            output_lines.append(bottom)
 
-    if config.border:
-        output_lines.insert(0, top)
-        output_lines.append(bottom)
-
-    return output_lines
+        return output_lines
