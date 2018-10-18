@@ -36,16 +36,6 @@ def greater_than(n):
             }
 
 
-def represent_color(fore, back):
-    assert isinstance(fore, Color)
-    assert isinstance(back, Color)
-
-    fg = fore.fg.upper() if fore.fg is not None and fore.highlight else fore.fg
-    bg = back.bg
-
-    return '%s:%s' % (fg, bg)
-
-
 class Color:
     definition = {
             'black': '0', 'red': '1', 'green': '2', 'yellow': '3',
@@ -107,7 +97,9 @@ class Color:
         >>> '%s' % Color('BLACK:WHITE')
         'BLACK:white'
         """
-        return represent_color(self, self)
+        fg = self.fg.upper() if self.fg is not None and self.highlight else self.fg
+        bg = self.bg
+        return '%s:%s' % (fg, bg)
 
     def __lshift__(self, new):
         r"""
@@ -118,8 +110,10 @@ class Color:
 
         fg_color = self if new.fg is None else new
         bg_color = self if new.bg is None else new
-
-        return Color(represent_color(fg_color, bg_color))
+        color = Color('')
+        color.highlight, color.fg = fg_color.highlight, fg_color.fg
+        color.bg = bg_color.bg
+        return color
 
     def __repr__(self):
         r"""
@@ -128,7 +122,7 @@ class Color:
         >>> Color('')
         Color('None:None')
         """
-        return "%s('%s')" % (self.__class__.__name__, represent_color(self, self))
+        return "%s('%s')" % (self.__class__.__name__, self.__str__())
 
     def __call__(self, item):
         r"""
