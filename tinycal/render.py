@@ -11,9 +11,6 @@ CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
 BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
-color = lambda string, coloring: coloring(string)
-
-
 class Month(object):
     def __init__(self, cal, m):
         self.m = m
@@ -36,14 +33,13 @@ class Month(object):
             return ' ' * self.width
 
         title = self.m.strftime('%B') + ' %s' % self.m.year
-        return color('{title:^{width}}'.format(title=title, width=self.width),
-                     self.config.color.title)
+        return self.config.color.title('{:^{}}'.format(title, self.width))
 
     def render_weekday(self):
         if self.m is None:
             return ' ' * self.width
 
-        ret = color('WK', self.config.color.wk) if self.config.wk else ''
+        ret = self.config.color.wk('WK') if self.config.wk else ''
 
         ret += self.config.color.weekday[BASE].code
         ret += ' ' if self.config.wk else ''
@@ -51,11 +47,11 @@ class Month(object):
         def render_single_weekday(d):
             c = self.config.color.weekday[d.weekday()]
             if self.config.lang == 'jp':
-                ret = color(JAPANESE_WEEKDAY[d.weekday()], c)
+                ret = c(JAPANESE_WEEKDAY[d.weekday()])
             elif self.config.lang == 'zh':
-                ret = color(CHINESE_WEEKDAY[d.weekday()], c)
+                ret = c(CHINESE_WEEKDAY[d.weekday()])
             else:
-                ret = color(d.strftime('%a')[:2], c)
+                ret = c(d.strftime('%a')[:2])
             return ret + (self.config.color.weekday[BASE].code if c else '')
 
         ret += ''.join([' '.join(render_single_weekday(d) for d in self.weeks[0])])
@@ -88,7 +84,7 @@ class Month(object):
                     else:
                         c = self.config.color.day[d.weekday()]
 
-                return color(str(d.day).rjust(2), c)
+                return c(str(d.day).rjust(2))
 
             return '  '
 
