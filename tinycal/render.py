@@ -90,8 +90,19 @@ class Month(object):
 
 
 class TinyCal:
-    def render(self, config):
-        rows = [[Month(config, m) for m in row] for row in config.matrix]
+    def __init__(self, config):
+        self.config = config
+
+    def cell(self, year, month): pass
+    def render_cell(self): pass
+    def render_table(self):
+        try:
+            from itertools import zip_longest
+        except:
+            from itertools import izip_longest as zip_longest
+
+        config = self.config
+        rows = [[Month(config, dt) for dt in row] for row in config.matrix]
 
         if config.sep:
             sep_v = ' | '
@@ -112,18 +123,22 @@ class TinyCal:
             left = right = ''
             hr = sep_h
 
-        output_lines = []
+        render_cell = lambda month: [month.render_title(), month.render_weekday()] \
+                                    + [month.render_week(lineno) for lineno in range(len(month.weeks))]
+
+        fillvalue = ' ' * rows[0][0].width
+
+        lines_of_rows = []
         for row in rows:
-            title = sep_v.join(m.render_title() for m in row)
-            th = sep_v.join(m.render_weekday() for m in row)
-            height = max(len(tm.weeks) for tm in row)
-            for line in [title, th] + [sep_v.join(m.render_week(wk) for m in row) for wk in range(height)]:
-                output_lines.append(left + line + right)
-            output_lines.append(hr)
-        output_lines.pop()
+            line_slices = zip_longest(*(render_cell(month) for month in row), fillvalue=fillvalue)
+            lines = [left + sep_v.join(slices) + right for slices in line_slices]
+            lines_of_rows.append(lines)
+        lines = sum(([hr] + lines for lines in lines_of_rows[1:]), lines_of_rows[0])
 
         if config.border:
-            output_lines.insert(0, top)
-            output_lines.append(bottom)
+            lines = [top] + lines + [bottom]
 
-        return output_lines
+        return lines
+
+    def render(self):
+        return '\n'.join(self.render_table())

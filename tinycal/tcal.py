@@ -44,8 +44,7 @@ def main():
     cfg = dict(read_config() + get_command_arguments())
     config = TinyCalConfig(cfg)
 
-    lines = TinyCal().render(config)
-    print(*lines, sep='\n')
+    print(TinyCal(config).render())
 
 
 if __name__ == '__main__':
