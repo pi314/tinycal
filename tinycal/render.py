@@ -4,11 +4,6 @@
 Render calendar.
 """
 
-from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
-
-BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
-
-
 class TinyCal(object):
     def __init__(self, config, args):
         "conclude todo base on `config` and `args`, and set todo as property"
@@ -21,6 +16,8 @@ class TinyCal(object):
         self.cell_width = 7 * 2 + 6 + (3 if self.wk else 0)
 
         self.weekdays = list(config.cal.iterweekdays())
+
+        BASE = 7
 
         # ==== title ====
 
@@ -73,36 +70,44 @@ class TinyCal(object):
 
         self.render_single_day = render_single_day
 
+        # ==== month data ====
+
+        self.monthdatescalendar = monthdatescalendar = config.cal.monthdatescalendar
+
+        def wks(mdt):
+            year_start = monthdatescalendar(mdt.year, 1)[0][0]
+            month_cal = monthdatescalendar(mdt.year, mdt.month)
+            month_start = month_cal[0][0]
+            wk_start = (month_start - year_start).days // 7 + 1
+            return list(range(wk_start, wk_start+len(month_cal)))
+
+        self.wks = wks
 
     @property
     def months(self):
         from collections import namedtuple
+
         Month = namedtuple('Month', ['title', 'weeks', 'wks'])
         Day = namedtuple('Day', ['date', 'filled'])
-        L = []
-        for mdt in self.config.list:
-            title = '%s %s' % (mdt.strftime('%B'), mdt.year)
-            weeks = [[Day(dt, dt.month != mdt.month) for dt in row]
-                     for row in self.config.cal.monthdatescalendar(mdt.year, mdt.month)]
-            year_start = self.config.cal.monthdatescalendar(mdt.year, 1)[0][0]
-            month_start = weeks[0][0].date
-            wk_start = (month_start - year_start).days // 7 + 1
-            wks = list(range(wk_start, wk_start+len(weeks)))
-            L.append(Month(title, weeks, wks))
-        return L
+        return [
+            Month(
+                wks = self.wks(mdt),
+                title = '%s %s' % (mdt.strftime('%B'), mdt.year),
+                weeks = [[Day(dt, dt.month != mdt.month) for dt in row]
+                         for row in self.monthdatescalendar(mdt.year, mdt.month)],
+                )
+            for mdt in self.config.list
+            ]
 
     @property
     def colored(self):
-        L = []
-        for m in self.months:
-            colored_month = []
-            colored_month.append(self.render_title(m.title))
-            colored_month.append(self.colored_weekdays)
-            for wk, week in zip(m.wks, m.weeks):
-                colored_week = ' '.join(self.colored_wk(wk) + [self.render_single_day(dt, filled) for dt, filled in week])
-                colored_month.append(colored_week)
-            L.append(colored_month)
-        return L
+        return [
+            [self.render_title(m.title), self.colored_weekdays] + [
+                ' '.join(self.colored_wk(wk) + [self.render_single_day(dt, filled) for dt, filled in week])
+                for wk, week in zip(m.wks, m.weeks)
+                ]
+            for m in self.months
+            ]
 
     @property
     def framed(self):
