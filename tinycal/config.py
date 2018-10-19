@@ -80,6 +80,8 @@ class TinyCalConfig(Namespace):
         else:
             year_month_range = expand_year_month(before, after, year, month)
 
+        self.list = year_month_range
+        self.col = min(len(self.list), col)
         self.matrix = to_matrix(year_month_range, col) if len(year_month_range) > col else [year_month_range]
 
         # color

@@ -6,8 +6,6 @@ Render calendar.
 
 from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 
-JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
-CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
 BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
@@ -15,104 +13,102 @@ class Month(object):
     def __init__(self, config, m):
         self.m = m
         self.config = config
-        self.width = 7 * 2 + 6 + (3 if config.wk else 0)
 
-        if m is None:
-            self.weeks = []
+        self.weeks = config.cal.monthdatescalendar(m.year, m.month)
+        year_start = config.cal.monthdatescalendar(m.year, 1)[0][0]
+        month_start = self.weeks[0][0]
+        self.wk_start = int((month_start - year_start).days / 7)
+
+        self.title = self.m.strftime('%B') + ' %s' % self.m.year
+
+
+def render_week(month, idx):
+    wk, week = (month.wk_start + 1 + idx), month.weeks[idx]
+
+    def render_single_day(dt):
+        if dt.month != month.m.month and not month.config.fill:
+            c = lambda s: '  '
+        elif dt == month.config.today:
+            c = month.config.color.today
+        elif dt.month != month.m.month:
+            c = month.config.color.fill
         else:
-            self.weeks = config.cal.monthdatescalendar(m.year, m.month)
-            year_start = config.cal.monthdatescalendar(m.year, 1)[0][0]
-            month_start = self.weeks[0][0]
-            self.wk_start = int((month_start - year_start).days / 7)
+            c = month.config.color.day[dt.weekday()]
+        return c('{:2}'.format(dt.day))
 
-    def render_title(self):
-        if self.m is None:
-            return ' ' * self.width
-
-        title = self.m.strftime('%B') + ' %s' % self.m.year
-        return self.config.color.title('{:^{}}'.format(title, self.width))
-
-    def render_weekday(self):
-        if self.m is None:
-            return ' ' * self.width
-
-        ret = self.config.color.wk('WK') if self.config.wk else ''
-
-        ret += self.config.color.weekday[BASE].code
-        ret += ' ' if self.config.wk else ''
-
-        def render_single_weekday(d):
-            c = self.config.color.weekday[d.weekday()]
-            if self.config.lang == 'jp':
-                ret = c(JAPANESE_WEEKDAY[d.weekday()])
-            elif self.config.lang == 'zh':
-                ret = c(CHINESE_WEEKDAY[d.weekday()])
-            else:
-                ret = c(d.strftime('%a')[:2])
-            return ret + (self.config.color.weekday[BASE].code if c else '')
-
-        ret += ''.join([' '.join(render_single_weekday(d) for d in self.weeks[0])])
-
-        ret += '\033[0m' if self.config.color.weekday[BASE] else ''
-        return ret
-
-    def render_week(self, wk):
-        if wk >= len(self.weeks):
-            return ' ' * self.width
-
-        ret = ''
-        if self.config.wk:
-            ret = ''.join([
-                self.config.color.wk.code,
-                str(self.wk_start + wk + 1).rjust(2),
-                ('\033[0m' if self.config.color.wk else ''),
-                ' '
-            ])
-
-        def render_single_day(d):
-            if self.config.fill or d.month == self.m.month:
-                c = ''
-
-                if self.config.color:
-                    if d == self.config.today:
-                        c = self.config.color.today
-                    elif d.month != self.m.month:
-                        c = self.config.color.fill
-                    else:
-                        c = self.config.color.day[d.weekday()]
-
-                return c(str(d.day).rjust(2))
-
-            return '  '
-
-        ret += ' '.join(render_single_day(d) for d in self.weeks[wk])
-        return ret
+    week = [render_single_day(dt) for dt in week]
+    if month.config.wk:
+        week.insert(0, month.config.color.wk('{:2}'.format(wk)))
+    return ' '.join(week)
 
 
-class TinyCal:
+class TinyCal(object):
     def __init__(self, config, args):
         "conclude todo base on `config` and `args`, and set todo as property"
         self.config = config
 
+        self.border = config.border
+        self.sep = config.sep
+        self.matrix = config.matrix
+        self.wk = config.wk
+        self.cell_width = 7 * 2 + 6 + (3 if self.wk else 0)
+
+        self.weekdays = list(config.cal.iterweekdays())
+
+        # ==== weekdays ====
+
+        from calendar import day_name
+
+        BUILTIN_WEEKDAY = [day_name[i][:2] for i in range(7)]
+        JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
+        CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
+        ENGLISH_WEEKDAY = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
+
+        if self.config.lang == 'jp':
+            lang = lambda wd: JAPANESE_WEEKDAY[wd]
+        elif self.config.lang == 'zh':
+            lang = lambda wd: CHINESE_WEEKDAY[wd]
+        else:
+            lang = lambda wd: BUILTIN_WEEKDAY[wd]
+
+        def render_single_weekday(wd):
+            c = config.color.weekday[wd]
+            c2 = lambda s: c(s)+config.color.weekday[BASE].code if c else s
+            return c2(lang(wd))
+
+        half_colored_weekdays = ' '.join(render_single_weekday(wd) for wd in self.weekdays)
+        self.colored_weekdays = config.color.wk('WK') + config.color.weekday[BASE](' ' + half_colored_weekdays) \
+                                if config.wk else \
+                                config.color.weekday[BASE](half_colored_weekdays)
+
     def month(self, dt):
         "date -> {'title', 'weekdays', 'weeks': [[date]]}"
 
-    def colored(self, month):
-        "month -> colored month"
-        return [month.render_title(), month.render_weekday()] \
-               + [month.render_week(lineno) for lineno in range(len(month.weeks))]
+    @property
+    def colored(self):
+        L = []
+        for dt in self.config.list:
+            month = Month(self.config, dt)
+            colored_month = [self.config.color.title('{:^{}}'.format(month.title, self.cell_width))] \
+                            + [self.colored_weekdays] \
+                            + [render_week(month, lineno) for lineno in range(len(month.weeks))]
+            L.append(colored_month)
+        return L
 
+    @property
     def framed(self):
-        "[colored] -> framed"
         try:
             from itertools import zip_longest
         except:
             from itertools import izip_longest as zip_longest
 
-        config = self.config
-        rows = [[Month(config, dt) for dt in row] for row in config.matrix]
+        def to_matrix(seq, col, dummy):
+            if len(seq) > col:
+                return [seq[:col]] + to_matrix(seq[col:], col, dummy)
+            else:
+                return [seq + [dummy] * (col - len(seq))]
 
-        if config.sep:
+        if self.sep:
             sep_v = ' | '
             sep_h_int = '-+-'
             sep_h_line = '-'
@@ -120,30 +116,29 @@ class TinyCal:
             sep_v = '  '
             sep_h_int = '  '
             sep_h_line = ' '
-        sep_h = sep_h_int.join(sep_h_line * m.width for m in rows[0])
 
-        if config.border:
+        sep_h = sep_h_int.join([sep_h_line * self.cell_width] * self.config.col)
+
+        if self.border:
             top = ('.-' + ('-' * len(sep_h)) + '-.')
             bottom = ("'-" + ('-' * len(sep_h)) + "-'")
-            hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
+
+            wrap = lambda lines: [top] + lines + [bottom]
             left, right = '| ', ' |'
+            hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
         else:
+            wrap = lambda lines: lines
             left = right = ''
             hr = sep_h
 
-        fillvalue = ' ' * rows[0][0].width
+        matrix = to_matrix(self.colored, self.config.col, [])
 
-        lines_of_rows = []
-        for row in rows:
-            line_slices = zip_longest(*(self.colored(month) for month in row), fillvalue=fillvalue)
-            lines = [left + sep_v.join(slices) + right for slices in line_slices]
-            lines_of_rows.append(lines)
-        lines = sum(([hr] + lines for lines in lines_of_rows[1:]), lines_of_rows[0])
-
-        if config.border:
-            lines = [top] + lines + [bottom]
-
-        return lines
+        lines_of_rows = [
+                [left + sep_v.join(slices) + right for slices in zip_longest(*row, fillvalue=' ' * self.cell_width)]
+                for row in matrix
+                ]
+        framed_lines = wrap(sum(([hr] + lines for lines in lines_of_rows[1:]), lines_of_rows[0]))
+        return framed_lines
 
     def render(self):
-        return '\n'.join(self.framed())
+        return '\n'.join(self.framed)
