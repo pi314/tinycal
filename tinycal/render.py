@@ -9,39 +9,6 @@ from calendar import SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATUR
 BASE = max(SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY) + 1
 
 
-class Month(object):
-    def __init__(self, config, m):
-        self.m = m
-        self.config = config
-
-        self.weeks = config.cal.monthdatescalendar(m.year, m.month)
-        year_start = config.cal.monthdatescalendar(m.year, 1)[0][0]
-        month_start = self.weeks[0][0]
-        self.wk_start = int((month_start - year_start).days / 7)
-
-        self.title = self.m.strftime('%B') + ' %s' % self.m.year
-
-
-def render_week(month, idx):
-    wk, week = (month.wk_start + 1 + idx), month.weeks[idx]
-
-    def render_single_day(dt):
-        if dt.month != month.m.month and not month.config.fill:
-            c = lambda s: '  '
-        elif dt == month.config.today:
-            c = month.config.color.today
-        elif dt.month != month.m.month:
-            c = month.config.color.fill
-        else:
-            c = month.config.color.day[dt.weekday()]
-        return c('{:2}'.format(dt.day))
-
-    week = [render_single_day(dt) for dt in week]
-    if month.config.wk:
-        week.insert(0, month.config.color.wk('{:2}'.format(wk)))
-    return ' '.join(week)
-
-
 class TinyCal(object):
     def __init__(self, config, args):
         "conclude todo base on `config` and `args`, and set todo as property"
@@ -54,6 +21,10 @@ class TinyCal(object):
         self.cell_width = 7 * 2 + 6 + (3 if self.wk else 0)
 
         self.weekdays = list(config.cal.iterweekdays())
+
+        # ==== title ====
+
+        self.render_title = lambda title: self.config.color.title('{:^{}}'.format(title, self.cell_width))
 
         # ==== weekdays ====
 
@@ -86,12 +57,43 @@ class TinyCal(object):
 
     @property
     def colored(self):
+        def render_single_day(month, dt):
+            if dt.month != month:
+                if self.config.fill:
+                    c = self.config.color.fill
+                else:
+                    c = lambda s: '  '
+            else:
+                if dt == self.config.today:
+                    c = self.config.color.today
+                else:
+                    c = self.config.color.day[dt.weekday()]
+            return c('{:2}'.format(dt.day))
+
         L = []
         for dt in self.config.list:
-            month = Month(self.config, dt)
-            colored_month = [self.config.color.title('{:^{}}'.format(month.title, self.cell_width))] \
-                            + [self.colored_weekdays] \
-                            + [render_week(month, lineno) for lineno in range(len(month.weeks))]
+            colored_month = []
+
+            title = '%s %s' % (dt.strftime('%B'), dt.year)
+
+            weeks = self.config.cal.monthdatescalendar(dt.year, dt.month)
+
+            year_start = self.config.cal.monthdatescalendar(dt.year, 1)[0][0]
+            month_start = weeks[0][0]
+            wk_start = (month_start - year_start).days // 7 + 1
+            wks = list(range(wk_start, wk_start+len(weeks)))
+
+            if self.config.wk:
+                colored_wk = lambda wk: [self.config.color.wk('{:2}'.format(wk))]
+            else:
+                colored_wk = lambda wk: []
+
+            colored_month.append(self.render_title(title))
+            colored_month.append(self.colored_weekdays)
+            for wk, week in zip(wks, weeks):
+                colored_week = ' '.join(colored_wk(wk) + [render_single_day(dt.month, sdt) for sdt in week])
+                colored_month.append(colored_week)
+
             L.append(colored_month)
         return L
 
