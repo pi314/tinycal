@@ -90,12 +90,18 @@ class Month(object):
 
 
 class TinyCal:
-    def __init__(self, config):
+    def __init__(self, config, args):
+        "conclude todo base on `config` and `args`, and set todo as property"
         self.config = config
 
-    def cell(self, year, month): pass
-    def render_cell(self): pass
-    def render_table(self):
+    def month(self, dt):
+        "date -> title ++ (wk : weekdays) ++ [days to week]"
+
+    def colored(self, month):
+        "month -> colored month"
+
+    def framed(self):
+        "[colored] -> framed"
         try:
             from itertools import zip_longest
         except:
@@ -141,4 +147,4 @@ class TinyCal:
         return lines
 
     def render(self):
-        return '\n'.join(self.render_table())
+        return '\n'.join(self.framed())

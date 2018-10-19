@@ -43,8 +43,7 @@ def main():
     # Ref: https://stackoverflow.com/questions/16878315/what-is-the-right-way-to-treat-python-argparse-namespace-as-a-dictionary
     cfg = dict(read_config() + get_command_arguments())
     config = TinyCalConfig(cfg)
-
-    print(TinyCal(config).render())
+    print(TinyCal(config, None).render())
 
 
 if __name__ == '__main__':
