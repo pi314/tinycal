@@ -119,7 +119,7 @@ class TinyCalConfig(Namespace):
             self.color.wk = Color('')
             self.color.fill = Color('')
             self.color.title = Color('')
-            self.color.weekday = dict.fromkeys([BASE, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, TUESDAY, FRIDAY, SATURDAY], Color(''))
+            self.color.weekday = dict.fromkeys([BASE, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY], Color(''))
             self.color.day = dict.fromkeys([SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY], Color(''))
             self.color.today = Color('')
 
