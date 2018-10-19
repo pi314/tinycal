@@ -52,48 +52,55 @@ class TinyCal(object):
                                 if config.wk else \
                                 config.color.weekday[BASE](half_colored_weekdays)
 
-    def month(self, dt):
-        "date -> {'title', 'weekdays', 'weeks': [[date]]}"
+        # ==== wk ====
 
-    @property
-    def colored(self):
-        def render_single_day(month, dt):
-            if dt.month != month:
-                if self.config.fill:
-                    c = self.config.color.fill
+        self.colored_wk = lambda wk: [config.color.wk('{:2}'.format(wk))] if self.config.wk else []
+
+        # ==== day ====
+
+        def render_single_day(dt, filled):
+            if filled:
+                if config.fill:
+                    c = config.color.fill
                 else:
                     c = lambda s: '  '
             else:
-                if dt == self.config.today:
-                    c = self.config.color.today
+                if dt == config.today:
+                    c = config.color.today
                 else:
-                    c = self.config.color.day[dt.weekday()]
+                    c = config.color.day[dt.weekday()]
             return c('{:2}'.format(dt.day))
 
+        self.render_single_day = render_single_day
+
+
+    @property
+    def months(self):
+        from collections import namedtuple
+        Month = namedtuple('Month', ['title', 'weeks', 'wks'])
+        Day = namedtuple('Day', ['date', 'filled'])
         L = []
-        for dt in self.config.list:
-            colored_month = []
-
-            title = '%s %s' % (dt.strftime('%B'), dt.year)
-
-            weeks = self.config.cal.monthdatescalendar(dt.year, dt.month)
-
-            year_start = self.config.cal.monthdatescalendar(dt.year, 1)[0][0]
-            month_start = weeks[0][0]
+        for mdt in self.config.list:
+            title = '%s %s' % (mdt.strftime('%B'), mdt.year)
+            weeks = [[Day(dt, dt.month != mdt.month) for dt in row]
+                     for row in self.config.cal.monthdatescalendar(mdt.year, mdt.month)]
+            year_start = self.config.cal.monthdatescalendar(mdt.year, 1)[0][0]
+            month_start = weeks[0][0].date
             wk_start = (month_start - year_start).days // 7 + 1
             wks = list(range(wk_start, wk_start+len(weeks)))
+            L.append(Month(title, weeks, wks))
+        return L
 
-            if self.config.wk:
-                colored_wk = lambda wk: [self.config.color.wk('{:2}'.format(wk))]
-            else:
-                colored_wk = lambda wk: []
-
-            colored_month.append(self.render_title(title))
+    @property
+    def colored(self):
+        L = []
+        for m in self.months:
+            colored_month = []
+            colored_month.append(self.render_title(m.title))
             colored_month.append(self.colored_weekdays)
-            for wk, week in zip(wks, weeks):
-                colored_week = ' '.join(colored_wk(wk) + [render_single_day(dt.month, sdt) for sdt in week])
+            for wk, week in zip(m.wks, m.weeks):
+                colored_week = ' '.join(self.colored_wk(wk) + [self.render_single_day(dt, filled) for dt, filled in week])
                 colored_month.append(colored_week)
-
             L.append(colored_month)
         return L
 
