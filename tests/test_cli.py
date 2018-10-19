@@ -94,7 +94,14 @@ class ConfigTest(unittest.TestCase):
             os.remove(self.config_path)
 
     @patch('sys.stdout', new_callable=StringIO)
-    def test_color_config(self, buff):
+    def run_cmd(self, args, buff):
+        import sys
+        from tinycal import tcal
+        sys.argv = [''] + args
+        tcal.main()
+        return buff.getvalue()
+
+    def test_color_config(self):
         expected_path = 'tests/testdata/color_config'
 
         import os.path
@@ -109,15 +116,7 @@ class ConfigTest(unittest.TestCase):
                 "weekday.sunday.color = GREEN\n"
                 "weekday.saturday.color = GREEN\n"
                 )
-
-        import sys
-        sys.argv = ['', '-3']
-
-        import tinycal.tcal
-        tinycal.tcal.main()
-
-        output = buff.getvalue()
+        output = self.run_cmd(['-3'])
         with open(expected_path) as f:
             expected = f.read()
-
         assert_command_output(output, expected)
