@@ -95,10 +95,12 @@ class TinyCal:
         self.config = config
 
     def month(self, dt):
-        "date -> title ++ (wk : weekdays) ++ [days to week]"
+        "date -> {'title', 'weekdays', 'weeks': [[date]]}"
 
     def colored(self, month):
         "month -> colored month"
+        return [month.render_title(), month.render_weekday()] \
+               + [month.render_week(lineno) for lineno in range(len(month.weeks))]
 
     def framed(self):
         "[colored] -> framed"
@@ -129,14 +131,11 @@ class TinyCal:
             left = right = ''
             hr = sep_h
 
-        render_cell = lambda month: [month.render_title(), month.render_weekday()] \
-                                    + [month.render_week(lineno) for lineno in range(len(month.weeks))]
-
         fillvalue = ' ' * rows[0][0].width
 
         lines_of_rows = []
         for row in rows:
-            line_slices = zip_longest(*(render_cell(month) for month in row), fillvalue=fillvalue)
+            line_slices = zip_longest(*(self.colored(month) for month in row), fillvalue=fillvalue)
             lines = [left + sep_v.join(slices) + right for slices in line_slices]
             lines_of_rows.append(lines)
         lines = sum(([hr] + lines for lines in lines_of_rows[1:]), lines_of_rows[0])
