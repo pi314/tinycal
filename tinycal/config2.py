@@ -4,13 +4,14 @@ r"""
 ...     import configparser
 ...     c = configparser.ConfigParser()
 ...     c.read_string(sample_config)
-...     config = TinyCalConfig(dict(c['_']))
+...     #config = TinyCalConfig(dict(c['_']))
 ... except:
 ...     import ConfigParser, io
 ...     c = ConfigParser.ConfigParser()
 ...     c.readfp(io.BytesIO(sample_config))
-...     config = TinyCalConfig(dict(c.items('_')))
+...     #config = TinyCalConfig(dict(c.items('_')))
 ...
+>>> config = TinyCalConfig(dict(c.items('_')))
 >>> config.col
 3
 >>> config.lang
