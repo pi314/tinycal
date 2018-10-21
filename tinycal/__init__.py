@@ -1,7 +1,6 @@
 """
-Package description and configuration.
+A Python implementation of `cal` command
 """
 
-name = 'tinycal'
-CALRC_1ST = '~/.config/calrc'
-CALRC_2ND = '~/.calrc'
+__name__ = 'tinycal'
+CALRCS = ('~/.config/calrc', '~/.calrc')
