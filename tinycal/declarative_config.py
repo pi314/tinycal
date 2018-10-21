@@ -56,19 +56,19 @@ class ValueField(object):
     def to_python(self, text):
         return text
 
-    def validate(self, value):
+    def validate(self, key, value):
         for v in self.validators:
             if not v['condition'](value):
                 raise Exception(v['message_template'].format(**locals()))
 
-    def clean(self, text):
+    def clean(self, key, text):
         if text is None:
             return self.default
 
         assert isinstance(text, str)
 
         value = self.to_python(text)
-        self.validate(value)
+        self.validate(key, value)
         return value
 
 
@@ -112,7 +112,8 @@ class Config(object):
 
         for name, field in vars(self.__class__).items():
             if isinstance(field, ValueField):
-                setattr(self, name, field.clean(attrs.get(field.map_key(name))))
+                key = field.map_key(name)
+                setattr(self, name, field.clean(key, attrs.get(key)))
 
     def __repr__(self):
         return "%s(%s)" % (self.__class__.__name__, ','.join('%s=%s' % attr for attr in sorted(vars(self).items())))
