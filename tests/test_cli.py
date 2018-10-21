@@ -16,11 +16,11 @@ def setUpModule():
     # though it can be fixed by make `tests` folder to be Python package, this way
     # is more straightforward
     sys.path.insert(0, '')
-    from tinycal import config
+    from tinycal import render
     sys.path.pop(0)
 
     # set today is 2018.10.13 the day of generating test data
-    config.today = datetime.date(2018, 10, 13)
+    render.today = datetime.date(2018, 10, 13)
 
 
 class ArgumentsTest(unittest.TestCase):

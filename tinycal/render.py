@@ -4,109 +4,131 @@
 Render calendar.
 """
 
+from datetime import date
+from calendar import day_name, Calendar, SUNDAY, MONDAY
+
+from .config2 import Color
+
+
+today = date.today()
+
+LANG = {
+        'jp': ['月', '火', '水', '木', '金', '土', '日'],
+        'zh': ['一', '二', '三', '四', '五', '六', '日'],
+        'en': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+        'lower': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        }
+
+
+def expand_year_month(before, after, year, month):
+    r"""
+    >>> expand_year_month(1, 1, 2018, 1)
+    [datetime.date(2017, 12, 1), datetime.date(2018, 1, 1), datetime.date(2018, 2, 1)]
+    """
+    return [date(year - (month <= i), (month - 1 - i) % 12 + 1, 1) for i in range(before, 0, -1)] + \
+           [date(year, month, 1)] + \
+           [date(year + (month + i > 12), (month - 1 + i) % 12 + 1, 1) for i in range(1, after+1)]
+
+
 class TinyCal(object):
-    def __init__(self, config, args):
+    def __init__(self, conf, args):
         "conclude todo base on `config` and `args`, and set todo as property"
-        self.config = config
 
-        self.border = config.border
-        self.sep = config.sep
-        self.matrix = config.matrix
-        self.wk = config.wk
-        self.cell_width = 7 * 2 + 6 + (3 if self.wk else 0)
+        # `conf` -- updated by `args`
+        for k in vars(conf):
+            if k in vars(args) and getattr(args, k) is not None:
+                setattr(conf, k , getattr(args, k))
+        self.conf = conf
 
-        self.weekdays = list(config.cal.iterweekdays())
+        # `months`
+        from collections import namedtuple
 
-        BASE = 7
+        calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
+        monthdates = calendar.monthdatescalendar
 
-        # ==== title ====
-
-        self.render_title = lambda title: self.config.color.title('{:^{}}'.format(title, self.cell_width))
-
-        # ==== weekdays ====
-
-        from calendar import day_name
-
-        BUILTIN_WEEKDAY = [day_name[i][:2] for i in range(7)]
-        JAPANESE_WEEKDAY = ['月', '火', '水', '木', '金', '土', '日']
-        CHINESE_WEEKDAY = ['一', '二', '三', '四', '五', '六', '日']
-        ENGLISH_WEEKDAY = ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su']
-
-        if self.config.lang == 'jp':
-            lang = lambda wd: JAPANESE_WEEKDAY[wd]
-        elif self.config.lang == 'zh':
-            lang = lambda wd: CHINESE_WEEKDAY[wd]
+        if args.year is not None and args.month is None:
+            first_month_dates = [date(args.year, month, 1) for month in range(1, 13)]
         else:
-            lang = lambda wd: BUILTIN_WEEKDAY[wd]
+            year = args.year or today.year
+            month = args.month or today.month
+            before, after = (1, 1) if args.a1b1 else (conf.before, conf.after)
+            first_month_dates = expand_year_month(before, after, year, month)
 
-        def render_single_weekday(wd):
-            c = config.color.weekday[wd]
-            c2 = lambda s: c(s)+config.color.weekday[BASE].code if c else s
-            return c2(lang(wd))
+        def get_wks(fdt):
+            wk_start = (monthdates(fdt.year, fdt.month)[0][0] - monthdates(fdt.year, 1)[0][0]).days // 7 + 1
+            return list(range(wk_start, wk_start + len(monthdates(fdt.year, fdt.month))))
 
-        half_colored_weekdays = ' '.join(render_single_weekday(wd) for wd in self.weekdays)
-        self.colored_weekdays = config.color.wk('WK') + config.color.weekday[BASE](' ' + half_colored_weekdays) \
-                                if config.wk else \
-                                config.color.weekday[BASE](half_colored_weekdays)
+        Month = namedtuple('Month', ['title', 'wks', 'weeks'])
+        Day = namedtuple('Day', ['date', 'filled'])
 
-        # ==== wk ====
+        self.months = [
+                Month(
+                    title = fdt.strftime('%B %Y'),
+                    wks = get_wks(fdt),
+                    weeks = [[Day(date=dt, filled=(dt.month != fdt.month)) for dt in row]
+                             for row in monthdates(fdt.year, fdt.month)],
+                    )
+                for fdt in first_month_dates
+                ]
 
-        self.colored_wk = lambda wk: [config.color.wk('{:2}'.format(wk))] if self.config.wk else []
+        # `cell_width`
+        self.cell_width = 7 * 2 + 6 + (3 if conf.wk else 0)
 
-        # ==== day ====
+        # enable/disable coloring
+        if not args.color:
+            for k in vars(conf):
+                if k.startswith('color_'):
+                    setattr(conf, k, Color(''))
 
-        def render_single_day(dt, filled):
-            if filled:
-                if config.fill:
-                    c = config.color.fill
+        # `render_title`
+        self.render_title = lambda title: conf.color_title('{:^{}}'.format(title, self.cell_width))
+
+        # `render_wk`
+        if conf.wk:
+            self.render_wk = lambda wk: [conf.color_wk('%2s' % wk)]
+        else:
+            self.render_wk = lambda wk: []
+
+        # `render_day`
+        def render_day(day):
+            if day.filled:
+                if conf.fill:
+                    c = conf.color_fill
                 else:
                     c = lambda s: '  '
             else:
-                if dt == config.today:
-                    c = config.color.today
+                if day.date == today:
+                    c = conf.color_today
                 else:
-                    c = config.color.day[dt.weekday()]
-            return c('{:2}'.format(dt.day))
+                    c = getattr(conf, 'color_%s' % LANG['lower'][day.date.weekday()])
+            return c('{:2}'.format(day.date.day))
 
-        self.render_single_day = render_single_day
+        self.render_week = lambda week: list(map(render_day, week))
 
-        # ==== month data ====
+        # `render_weekdays`
+        def render_weekday(idx):
+            color_name = 'color_weekday_%s' % LANG['lower'][idx]
+            color = getattr(conf, color_name)
+            string = LANG[conf.lang][idx]
+            return color(string) + conf.color_weekday.code if color else string
 
-        self.monthdatescalendar = monthdatescalendar = config.cal.monthdatescalendar
-
-        def wks(mdt):
-            year_start = monthdatescalendar(mdt.year, 1)[0][0]
-            month_cal = monthdatescalendar(mdt.year, mdt.month)
-            month_start = month_cal[0][0]
-            wk_start = (month_start - year_start).days // 7 + 1
-            return list(range(wk_start, wk_start+len(month_cal)))
-
-        self.wks = wks
-
-    @property
-    def months(self):
-        from collections import namedtuple
-
-        Month = namedtuple('Month', ['title', 'weeks', 'wks'])
-        Day = namedtuple('Day', ['date', 'filled'])
-        return [
-            Month(
-                wks = self.wks(mdt),
-                title = '%s %s' % (mdt.strftime('%B'), mdt.year),
-                weeks = [[Day(dt, dt.month != mdt.month) for dt in row]
-                         for row in self.monthdatescalendar(mdt.year, mdt.month)],
-                )
-            for mdt in self.config.list
-            ]
+        if conf.wk:
+            self.render_weekdays = lambda: conf.color_wk('WK') + conf.color_weekday(
+                    ' ' + ' '.join(map(render_weekday, calendar.iterweekdays()))
+                    )
+        else:
+            self.render_weekdays = lambda: conf.color_weekday(
+                    ' '.join(map(render_weekday, calendar.iterweekdays()))
+                    )
 
     @property
     def colored(self):
         return [
-            [self.render_title(m.title), self.colored_weekdays] + [
-                ' '.join(self.colored_wk(wk) + [self.render_single_day(dt, filled) for dt, filled in week])
-                for wk, week in zip(m.wks, m.weeks)
+            [self.render_title(title), self.render_weekdays()] + [
+                ' '.join(self.render_wk(wk) + self.render_week(week))
+                for wk, week in zip(wks, weeks)
                 ]
-            for m in self.months
+            for title, wks, weeks in self.months
             ]
 
     @property
@@ -122,7 +144,9 @@ class TinyCal(object):
             else:
                 return [seq + [dummy] * (col - len(seq))]
 
-        if self.sep:
+        col = min(self.conf.col, len(self.months))
+
+        if self.conf.sep:
             sep_v = ' | '
             sep_h_int = '-+-'
             sep_h_line = '-'
@@ -131,9 +155,9 @@ class TinyCal(object):
             sep_h_int = '  '
             sep_h_line = ' '
 
-        sep_h = sep_h_int.join([sep_h_line * self.cell_width] * self.config.col)
+        sep_h = sep_h_int.join([sep_h_line * self.cell_width] * col)
 
-        if self.border:
+        if self.conf.border:
             top = ('.-' + ('-' * len(sep_h)) + '-.')
             bottom = ("'-" + ('-' * len(sep_h)) + "-'")
 
@@ -145,7 +169,7 @@ class TinyCal(object):
             left = right = ''
             hr = sep_h
 
-        matrix = to_matrix(self.colored, self.config.col, [])
+        matrix = to_matrix(self.colored, col, [])
 
         lines_of_rows = [
                 [left + sep_v.join(slices) + right for slices in zip_longest(*row, fillvalue=' ' * self.cell_width)]

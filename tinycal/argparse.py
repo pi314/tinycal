@@ -48,12 +48,12 @@ parser.add_argument('-f', '--fill', dest='fill', action='store_true', default=No
 parser.add_argument('-F', '--no-fill', dest='fill', action='store_false', default=None,
                     help='Don`t fill month into rectangle.')
 
-parser.add_argument('-c', dest='color', action='store_true', default=None,
+parser.add_argument('-c', dest='color', action='store_true', default=True,
                     help='Enable VT100 color output.')
-parser.add_argument('-C', dest='color', action='store_false', default=None,
+parser.add_argument('-C', dest='color', action='store_false', default=True,
                     help='Disable VT100 color output.')
 
-parser.add_argument('-l', '--lang', dest='lang', default='en', choices=['jp', 'zh', 'en'], type=str,
+parser.add_argument('-l', '--lang', dest='lang', choices=['jp', 'zh', 'en'], type=str,
                     help='Select the language used to display weekday.')
 
 parser.add_argument('-j', dest='lang',action='store_const', const='jp',

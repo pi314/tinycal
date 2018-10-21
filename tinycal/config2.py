@@ -190,7 +190,7 @@ class TinyCalConfig(Config):
     fill = BoolField(default=False)
     border = BoolField(default=True)
     start_monday = BoolField(default=False)
-    lang = SelectorField(['zh', 'jp', 'en'], default='zh')
+    lang = SelectorField(['zh', 'jp', 'en'], default='en')
 
     color_wk = ColorField(default=Color('BLACK'))
     color_fill = ColorField(default=Color('BLACK'))
