@@ -82,11 +82,11 @@ class ConfigTest(unittest.TestCase):
             os.remove(self.config_path)
 
         import tinycal.tcal
-        tinycal.tcal.CALRC += (self.config_path,)
+        tinycal.tcal.CALRCS += (self.config_path,)
 
     def tearDown(self):
         import tinycal
-        tinycal.CALRC = tinycal.CALRC[:-1]
+        tinycal.CALRCS = tinycal.CALRCS[:-1]
 
         import os
         import os.path

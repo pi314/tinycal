@@ -99,10 +99,10 @@ class SelectorField(ValueField):
         self.choices = choices
         super(SelectorField, self).__init__(*args, **kwargs)
 
-    def validate(self, value):
+    def validate(self, key, value):
         if value not in self.choices:
             raise ValidationError('xxxx')
-        super(SelectorField, self).validate(value)
+        super(SelectorField, self).validate(key, value)
 
 
 class Config(object):

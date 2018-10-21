@@ -1,5 +1,5 @@
 r"""
->>> sample_config = '[_]\n' + open('allcalrc').read()
+>>> sample_config = '[_]\n' + open('tests/allcalrc').read()
 >>> try:
 ...     import configparser
 ...     c = configparser.ConfigParser()
@@ -23,6 +23,7 @@ Color('None:white')
 """
 
 import re
+import os.path
 
 from .declarative_config import (
         Config, ValueField, ValidationError,
@@ -211,3 +212,23 @@ class TinyCalConfig(Config):
     color_friday = ColorField(default=Color('none:none'))
     color_saturday = ColorField(default=Color('none:none'))
     color_today = ColorField(default=Color('none:white'))
+
+    @classmethod
+    def parse_conf(cls, calrcs):
+        calrcs = [rc for rc in map(os.path.expanduser, calrcs) if os.path.exists(rc)]
+        if calrcs:
+            content = '[_]\n' + open(calrcs[0]).read()
+            try:
+                import configparser
+                c = configparser.ConfigParser()
+                c.read_string(content)
+                kv = dict(c['_'])
+            except:
+                import ConfigParser, io
+                c = ConfigParser.ConfigParser()
+                c.readfp(io.BytesIO(content))
+                kv = dict(c.items('_'))
+        else:
+            kv = {}
+
+        return cls(kv)

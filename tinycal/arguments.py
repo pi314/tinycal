@@ -2,17 +2,15 @@
 List command line options.
 """
 
-from __future__ import absolute_import
-
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-from . import CALRC
+from . import CALRCS
 
 
 parser = ArgumentParser(
     description='tinycal: A Python implementation of cal utility.',
     prog='tcal',
-    epilog='Configuration files: {}'.format(CALRC),
+    epilog='Configuration files: {}'.format(CALRCS),
     formatter_class=RawTextHelpFormatter,
     )
 

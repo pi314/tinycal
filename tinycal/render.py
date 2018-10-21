@@ -5,9 +5,9 @@ Render calendar.
 """
 
 from datetime import date
-from calendar import day_name, Calendar, SUNDAY, MONDAY
+from calendar import Calendar, SUNDAY, MONDAY
 
-from .config2 import Color
+from .config import Color
 
 
 today = date.today()
