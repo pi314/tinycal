@@ -1,5 +1,5 @@
 """
-List command line options.
+Define command line options
 """
 
 from argparse import ArgumentParser, RawTextHelpFormatter

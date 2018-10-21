@@ -1,3 +1,7 @@
+"""
+Core function of `tcal` command
+"""
+
 from __future__ import print_function
 
 from . import CALRCS

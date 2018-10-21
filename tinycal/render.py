@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
 """
-Render calendar.
+Render calendar
 """
 
 from datetime import date

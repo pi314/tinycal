@@ -1,5 +1,5 @@
 """
-Package description and configuration.
+A Python implementation of `cal` command
 """
 
 __name__ = 'tinycal'

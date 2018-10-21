@@ -1,4 +1,6 @@
 r"""
+Define configuration options
+
 >>> sample_config = '[_]\n' + open('tests/allcalrc').read()
 >>> try:
 ...     import configparser

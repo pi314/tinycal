@@ -1,6 +1,5 @@
 r"""
-Configuration Parser
-
+Declarative configuration parser
 
 Features:
 
