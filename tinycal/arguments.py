@@ -1,22 +1,16 @@
 """
-List command line options.
+Define command line options
 """
-
-from __future__ import absolute_import
 
 from argparse import ArgumentParser, RawTextHelpFormatter
 
-from . import CALRC_1ST, CALRC_2ND
+from . import CALRCS
 
 
 parser = ArgumentParser(
     description='tinycal: A Python implementation of cal utility.',
     prog='tcal',
-    epilog='\n'.join((
-        'Configuration files:',
-        '1st: {}'.format(CALRC_1ST),
-        '2nd: {}'.format(CALRC_2ND),
-        )),
+    epilog='Configuration files: {}'.format(CALRCS),
     formatter_class=RawTextHelpFormatter,
     )
 
@@ -52,12 +46,12 @@ parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=No
 parser.add_argument('-F', '--no-fill', action='store_false', dest='fill', default=None,
                     help='Don`t fill month into rectangle.')
 
-parser.add_argument('-c', action='store_true', dest='color', default=None,
+parser.add_argument('-c', action='store_true', dest='color', default=True,
                     help='Enable VT100 color output.')
-parser.add_argument('-C', action='store_false', dest='color', default=None,
+parser.add_argument('-C', action='store_false', dest='color', default=True,
                     help='Disable VT100 color output.')
 
-parser.add_argument('-l', '--lang', default='en', choices=['jp', 'zh', 'en'], type=str,
+parser.add_argument('-l', '--lang', choices=['jp', 'zh', 'en'], type=str,
                     help='Select the language used to display weekday.')
 
 parser.add_argument('-j', action='store_const', const='jp', dest='lang',
