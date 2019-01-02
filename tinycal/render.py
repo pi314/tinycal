@@ -10,8 +10,6 @@ from calendar import Calendar, SUNDAY, MONDAY
 from .config import Color
 
 
-today = date.today()
-
 LANG = {
         'jp': ['月', '火', '水', '木', '金', '土', '日'],
         'zh': ['一', '二', '三', '四', '五', '六', '日'],
@@ -45,6 +43,8 @@ class TinyCal(object):
 
         calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
         monthdates = calendar.monthdatescalendar
+
+        today = args.today if args.today else date.today()
 
         if args.year is not None and args.month is None:
             first_month_dates = [date(args.year, month, 1) for month in range(1, 13)]

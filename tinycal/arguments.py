@@ -2,7 +2,8 @@
 Define command line options
 """
 
-from argparse import ArgumentParser, RawTextHelpFormatter
+from datetime import date
+from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
 
 from . import CALRCS
 
@@ -67,6 +68,15 @@ parser.add_argument('-m', action='store_true', dest='start_monday', default=None
                     help='Use Monday as first weekday.')
 parser.add_argument('-M', action='store_false', dest='start_monday', default=None,
                     help='Use Sunday as first weekday.')
+
+def full_date_str(today_str):
+    try:
+        return date(*map(int, today_str.split('/')))
+    except ValueError as e:
+        raise ArgumentTypeError("format should be yyyy/mm/dd")
+
+parser.add_argument('--today', type=full_date_str, default=None,
+                    help='Date that treated as today in format yyyy/mm/dd, used for debugging.')
 
 parser.add_argument('year', type=int, nargs='?', default=None,
                     help='Year to display.')
