@@ -6,6 +6,7 @@ from datetime import date
 from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
 
 from . import CALRCS
+from . import __version__
 
 
 parser = ArgumentParser(
@@ -14,6 +15,8 @@ parser = ArgumentParser(
     epilog='Configuration files: {}'.format(CALRCS),
     formatter_class=RawTextHelpFormatter,
     )
+
+parser.add_argument('--version', '-v', action='version', version=__version__)
 
 parser.add_argument('--col', dest='col', default=None, type=int,
                     help='Specify the column numbers.')
