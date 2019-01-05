@@ -3,7 +3,10 @@ Define command line options
 """
 
 from datetime import date
-from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
+from argparse import (
+        ArgumentParser, RawTextHelpFormatter, ArgumentTypeError,
+        FileType
+        )
 
 from . import CALRCS
 from . import __version__
@@ -80,6 +83,9 @@ def full_date_str(today_str):
 
 parser.add_argument('--today', type=full_date_str, default=None,
                     help='Date that treated as today in format yyyy/mm/dd, used for debugging.')
+
+parser.add_argument('--marks', type=FileType('r'), dest='marks', default=None,
+                    help='Date marks file to be used for marking dates.')
 
 parser.add_argument('year', type=int, nargs='?', default=None,
                     help='Year to display.')

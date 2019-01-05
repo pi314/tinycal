@@ -25,7 +25,7 @@ Color('None:white')
 """
 
 import re
-import os.path
+from os.path import exists, expanduser
 
 from .declarative_config import (
         Config, ValueField, ValidationError,
@@ -37,6 +37,12 @@ def greater_than(n):
     return {
             'condition': (lambda v: v > n),
             'message_template': ('{key} must be greater than %s, get {value}' % n),
+            }
+
+
+file_exists = {
+            'condition': (lambda f: exists(expanduser(f))),
+            'message_template': 'File "{value}" does not exist',
             }
 
 
@@ -194,6 +200,7 @@ class TinyCalConfig(Config):
     border = BoolField(default=True)
     start_monday = BoolField(default=False)
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
+    marks = ValueField(default=None, validators=[file_exists])
 
     color_wk = ColorField(default=Color('BLACK'))
     color_fill = ColorField(default=Color('BLACK'))
@@ -217,7 +224,7 @@ class TinyCalConfig(Config):
 
     @classmethod
     def parse_conf(cls, calrcs):
-        calrcs = [rc for rc in map(os.path.expanduser, calrcs) if os.path.exists(rc)]
+        calrcs = [rc for rc in map(expanduser, calrcs) if exists(rc)]
         if calrcs:
             content = '[_]\n' + open(calrcs[0]).read()
             try:
