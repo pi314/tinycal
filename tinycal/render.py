@@ -4,6 +4,7 @@
 Render calendar
 """
 
+from os.path import expanduser
 from datetime import date
 from calendar import Calendar, SUNDAY, MONDAY
 
@@ -37,6 +38,15 @@ class TinyCal(object):
             if k in vars(args) and getattr(args, k) is not None:
                 setattr(conf, k , getattr(args, k))
         self.conf = conf
+
+        self.marks_set = {}
+        if self.conf.marks:
+            with open(expanduser(self.conf.marks)) as marks_file:
+                for line in marks_file:
+                    line = line.strip()
+                    mark_date, mark_color = line.split()
+                    mark_date = date(*map(int, mark_date.split('/')))
+                    self.marks_set[mark_date] = Color(mark_color)
 
         # `months`
         from collections import namedtuple
@@ -99,6 +109,8 @@ class TinyCal(object):
             else:
                 if day.date == today:
                     c = conf.color_today
+                elif day.date in self.marks_set:
+                    c = self.marks_set[day.date]
                 else:
                     c = getattr(conf, 'color_%s' % LANG['lower'][day.date.weekday()])
             return c('{:2}'.format(day.date.day))
