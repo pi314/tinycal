@@ -40,7 +40,7 @@ class TinyCal(object):
         self.conf = conf
 
         self.marks_set = {}
-        if self.conf.marks:
+        if self.conf.marks and args.color:
             with open(expanduser(self.conf.marks)) as marks_file:
                 for line in marks_file:
                     line = line.strip()
