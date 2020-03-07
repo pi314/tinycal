@@ -4,18 +4,42 @@
 Render calendar
 """
 
-from datetime import date
 from calendar import Calendar, SUNDAY, MONDAY
+from datetime import date
+from unicodedata import east_asian_width
 
 from .config import Color
 
 
 LANG = {
-        'jp': ['月', '火', '水', '木', '金', '土', '日'],
-        'zh': ['一', '二', '三', '四', '五', '六', '日'],
-        'en': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
-        'lower': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+        'weekday': {
+            'jp': ['月', '火', '水', '木', '金', '土', '日'],
+            'zh': ['一', '二', '三', '四', '五', '六', '日'],
+            'en': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
+            'full': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
+            },
+        'month': {
+            'jp': ['<Error>',
+                '睦月 (１月)', '如月 (２月)', '彌生 (３月)',
+                '卯月 (４月)', '皐月 (５月)', '水無月 (６月)',
+                '文月 (７月)', '葉月 (８月)', '長月 (９月)',
+                '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
+            'zh': ['<Error>',
+                '１月', '２月', '３月',
+                '４月', '５月', '６月',
+                '７月', '８月', '９月',
+                '１０月', '１１月', '１２月'],
+            'en': ['<Error>',
+                'January', 'February', 'March',
+                'April', 'May', 'June',
+                'July', 'August', 'September',
+                'October', 'November', 'December'],
+            },
         }
+
+
+def str_width(s):
+    return sum(1 + (east_asian_width(c) in 'WF') for c in s)
 
 
 def expand_year_month(before, after, year, month):
@@ -63,7 +87,7 @@ class TinyCal(object):
 
         self.months = [
                 Month(
-                    title = fdt.strftime('%B %Y'),
+                    title = '{m} {y}'.format(m=LANG['month'][conf.lang][fdt.month], y=fdt.year),
                     wks = get_wks(fdt),
                     weeks = [[Day(date=dt, filled=(dt.month != fdt.month)) for dt in row]
                              for row in monthdates(fdt.year, fdt.month)],
@@ -81,7 +105,13 @@ class TinyCal(object):
                     setattr(conf, k, Color(''))
 
         # `render_title`
-        self.render_title = lambda title: conf.color_title('{:^{}}'.format(title, self.cell_width))
+        def _render_title(title):
+            pad_total = self.cell_width - str_width(title)
+            pad_l = (pad_total // 2) * ' '
+            pad_r = (pad_total // 2 + (pad_total % 2)) * ' '
+            return conf.color_title('{}{}{}'.format(pad_l, title, pad_r))
+
+        self.render_title = _render_title
 
         # `render_wk`
         if conf.wk:
@@ -100,16 +130,16 @@ class TinyCal(object):
                 if day.date == today:
                     c = conf.color_today
                 else:
-                    c = getattr(conf, 'color_%s' % LANG['lower'][day.date.weekday()])
+                    c = getattr(conf, 'color_%s' % LANG['weekday']['full'][day.date.weekday()])
             return c('{:2}'.format(day.date.day))
 
         self.render_week = lambda week: list(map(render_day, week))
 
         # `render_weekdays`
         def render_weekday(idx):
-            color_name = 'color_weekday_%s' % LANG['lower'][idx]
+            color_name = 'color_weekday_%s' % LANG['weekday']['full'][idx]
             color = getattr(conf, color_name)
-            string = LANG[conf.lang][idx]
+            string = LANG['weekday'][conf.lang][idx]
             return color(string) + conf.color_weekday.code if color else string
 
         if conf.wk:
