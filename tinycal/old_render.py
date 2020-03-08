@@ -57,9 +57,9 @@ class TinyCal(object):
         "conclude todo base on `config` and `args`, and set todo as property"
 
         # `conf` -- updated by `args`
-        for k in vars(conf):
-            if k in vars(args) and getattr(args, k) is not None:
-                setattr(conf, k , getattr(args, k))
+        # for k in vars(conf):
+        #     if k in vars(args) and getattr(args, k) is not None:
+        #         setattr(conf, k , getattr(args, k))
         self.conf = conf
 
         # `months`
