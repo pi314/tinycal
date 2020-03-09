@@ -1,5 +1,7 @@
 from unicodedata import east_asian_width
 
+from .config import Color
+
 '''
     ┌───────────────────────────┬───────────────────────────┐
     │        March 2020         │         April 2020        │
@@ -32,39 +34,61 @@ def str_width(s):
 
 
 class Cell:
-    def __init__(self, title):
-        assert isinstance(title, str)
-
-        self.title = title
-        self._month = []
+    def __init__(self, config):
+        self.config = config
+        self.title = None
         self._wk = []
         self._lines = []
 
     def append(self, month='', wk='', days=[]):
         assert isinstance(days, list) and len(days) == 7
 
-        self._month.append(str(month))
         self._wk.append('{:>2}'.format(wk))
         self._lines.append(' '.join(days))
 
     @property
+    def width(self):
+        # Cell width:
+        # 7 (days per week) x 2 (spaces per day) +
+        # 6 (paddings between days)
+        # 5 (spaces for WK)
+        # 2 (cell padding)
+        return 7 * 2 + 6 + (self.config.wk) * (5) + 2
+
+    @property
     def height(self):
-        return len(self._lines)
+        return len(self._wk)
 
-    def wk(self, idx):
-        try:
-            return self._wk[idx]
-        except IndexError:
-            return '  '
+    def __iter__(self):
+        '''
+        Each line of a Cell is contructed by the following parts:
+            Title
+            Cell Internal border - title (if enabled)
+            Weekdays
+            Days
+        '''
 
-    def line(self, idx):
-        try:
-            return self._lines[idx]
-        except IndexError:
-            return ' ' * (7 * 2 + 6)
+        if self.title is None:
+            return
+
+        # Title
+        pad_total = self.width - str_width(self.title)
+        pad = (pad_total // 2) * ' '
+        self.title = pad + self.title + pad + (pad_total % 2) * ' '
+        yield self.title
+
+        # Cell Internal border - title (if enabled)
+        yield ' ' + '-' * (self.width - 2) + ' '
+
+        # Weekdays
+        yield ' ' + ('WK | ' if self.config.wk else '') + ' '.join(self.weekday) + ' '
+
+        # Days
+        for wk, line in zip(self._wk, self._lines):
+            yield ' ' + (wk + ' | ' if self.config.wk else '') + line + ' '
 
 
-class Grid:
+class TinyCalRenderer:
     def __init__(self, config):
         self.config = config
         self.cells = []
@@ -81,70 +105,29 @@ class Grid:
         # If month range < config.col, don't use empty cells to fill up
         effective_col = min(self.config.col, len(self.cells))
 
-        # Cell width:
-        # 7 (days per week) x 2 (spaces per day) +
-        # 6 (paddings between days)
-        # 2 (spaces for WK)
-        cell_width = 7 * 2 + 6 + (self.config.wk) * (3)
-
         def list_to_grid(seq, col):
             if len(seq) > col:
                 return [seq[:col]] + list_to_grid(seq[col:], col)
             else:
-                return [seq + [None] * (col - len(seq))]
-
-        def render_title(title):
-            pad_total = cell_width - str_width(title)
-            pad_l = (pad_total // 2) * ' '
-            pad_r = (pad_total // 2 + (pad_total % 2)) * ' '
-            return self.config.color_title('{}{}{}'.format(pad_l, title, pad_r))
+                return [seq + [Cell(self.config)] * (col - len(seq))]
 
         grid = list_to_grid(self.cells, effective_col)
 
         ret = ''
 
         # Top line
-        ret += '.-' + '---'.join(((cell_width * '-') for cell in grid[0])) + '-.' + '\n'
+        ret += '.' + '-'.join([self.cells[0].width * '-'] * effective_col) + '.' + '\n'
 
         for row_idx, row in enumerate(grid):
-            '''
-            For each row (month list), construct the output line by line.
-            Each line is contructed by the following parts:
-                Title
-                Cell Internal line (if enabled)
-                Weekdays
-                Days
-            '''
-
             if row_idx > 0:
                 # Internal line
-                ret += '|-' + '-|-'.join(((cell_width * '-') for cell in row)) + '-|' + '\n'
-
-            # Title
-            ret += '| ' + ' | '.join([render_title(cell.title) for cell in row]) + ' |' + '\n'
-
-            # Cell Internal line
-            # Weekdays
+                ret += '|' + '+'.join(((self.cells[0].width * '-') for cell in row)) + '|' + '\n'
 
             # Days
-            row_height = max(cell.height for cell in row)
-            for line in range(row_height):
-                ret += '| '
-                for col, cell in enumerate(row):
-
-                    if col == 0:
-                        pass
-                    else:
-                        ret += ' | '
-
-                    if self.config.wk:
-                        ret += cell.wk(line) + ' '
-
-                    ret += cell.line(line)
-
-                ret += ' |\n'
+            for lines in zip_longest(*row, fillvalue=' ' * self.cells[0].width):
+                ret += '|' + '|'.join(lines) + '|\n'
 
         # Bottom line
-        ret += "'-" + '---'.join(((cell_width * '-') for cell in grid[0])) + "-'" + '\n'
+        ret += "'" + '-'.join([self.cells[0].width * '-'] * effective_col) + "'" + '\n'
 
         return ret.rstrip('\n')

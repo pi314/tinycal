@@ -9,8 +9,7 @@ from datetime import date
 
 from . import CALRCS
 from .cli import parser
-from .grid import Grid
-from .grid import Cell
+from .render import TinyCalRenderer, Cell
 from .config import TinyCalConfig, Color
 
 
@@ -60,9 +59,6 @@ def main():
         if k in vars(args) and getattr(args, k) is not None:
             setattr(conf, k , getattr(args, k))
 
-    # Create Grid object for rendering
-    grid = Grid(conf)
-
     calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
     monthdates = calendar.monthdatescalendar
 
@@ -80,16 +76,24 @@ def main():
         before, after = (1, 1) if args.a1b1 else (conf.before, conf.after)
         month_leading_dates = calculate_month_range(before, after, year, month)
 
-    # Put the months into grid
+    # Create TinyCalRenderer object for rendering
+    renderer = TinyCalRenderer(conf)
+
+    # Put the days into cells (month), and cells into renderer
     for ld in month_leading_dates:
-        cell = Cell(title='{m} {y}'.format(m=LANG['month'][conf.lang][ld.month], y=ld.year))
+        cell = Cell(conf)
+        cell.title = '{m} {y}'.format(m=LANG['month'][conf.lang][ld.month], y=ld.year)
+        cell.weekday = LANG['weekday'][conf.lang]
 
         for idx, row in enumerate(monthdates(ld.year, ld.month)):
             cell.append(
-                    month='',
                     wk=calculate_week_of_the_year(ld) + idx,
-                    days=['{:>2}'.format(day.day) for day in row])
+                    days=[
+                        str(day.day).rjust(2) if day.month == ld.month else '  '
+                        for day in row
+                        ]
+                    )
 
-        grid.append(cell)
+        renderer.append(cell)
 
-    print(grid.render())
+    print(renderer.render())
