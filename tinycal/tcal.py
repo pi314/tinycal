@@ -6,6 +6,7 @@ from __future__ import print_function
 
 from calendar import Calendar, SUNDAY, MONDAY
 from datetime import date
+from sys import stdout
 
 from . import CALRCS
 from .cli import parser
@@ -58,6 +59,12 @@ def main():
     for k in vars(conf):
         if k in vars(args) and getattr(args, k) is not None:
             setattr(conf, k , getattr(args, k))
+
+    # enable/disable coloring
+    if (args.color == 'never') or (args.color == 'auto' and not stdout.isatty()):
+        for k in vars(conf):
+            if k.startswith('color_'):
+                setattr(conf, k, Color(''))
 
     calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
     monthdates = calendar.monthdatescalendar
