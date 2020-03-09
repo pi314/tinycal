@@ -101,37 +101,38 @@ class Grid:
 
         grid = list_to_grid(self.cells, effective_col)
 
-        # Top line
-
         ret = ''
-        for row in grid:
+
+        # Top line
+        ret += '.-' + '---'.join(((cell_width * '-') for cell in grid[0])) + '-.' + '\n'
+
+        for row_idx, row in enumerate(grid):
             '''
             For each row (month list), construct the output line by line.
             Each line is contructed by the following parts:
-                Top line (if enabled)
                 Title
-                Internal line (if enabled)
+                Cell Internal line (if enabled)
                 Weekdays
                 Days
-                Bottom line (if enabled)
             '''
 
-            # Top line
-            ret += '.-' + '---'.join(((cell_width * '-') for cell in row)) + '-.' + '\n'
+            if row_idx > 0:
+                # Internal line
+                ret += '|-' + '-|-'.join(((cell_width * '-') for cell in row)) + '-|' + '\n'
 
             # Title
             ret += '| ' + ' | '.join([render_title(cell.title) for cell in row]) + ' |' + '\n'
 
-            # Internal line
+            # Cell Internal line
             # Weekdays
 
             # Days
             row_height = max(cell.height for cell in row)
             for line in range(row_height):
                 ret += '| '
-                for idx, cell in enumerate(row):
+                for col, cell in enumerate(row):
 
-                    if idx == 0:
+                    if col == 0:
                         pass
                     else:
                         ret += ' | '
@@ -143,7 +144,7 @@ class Grid:
 
                 ret += ' |\n'
 
-            # Bottom line
-            ret += "'-" + '---'.join(((cell_width * '-') for cell in row)) + "-'" + '\n'
+        # Bottom line
+        ret += "'-" + '---'.join(((cell_width * '-') for cell in grid[0])) + "-'" + '\n'
 
         return ret.rstrip('\n')
