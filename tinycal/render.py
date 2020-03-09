@@ -37,6 +37,8 @@ class Cell:
     def __init__(self, config):
         self.config = config
         self.title = None
+        self.weekday_line = ''
+        self.wk = 'WK'
         self._wk = []
         self._lines = []
         self._height = 0
@@ -44,17 +46,24 @@ class Cell:
     def append(self, month='', wk='', days=[]):
         assert isinstance(days, list) and len(days) == 7
 
-        self._wk.append('{:>2}'.format(wk))
+        self._wk.append(wk)
         self._lines.append(' '.join(days))
 
     @property
     def width(self):
+        # 2 (cell padding)
+        return self.internal_width + 2
+
+    def padding(self, s):
+        return ' ' + s + ' '
+
+    @property
+    def internal_width(self):
         # Cell width:
         # 7 (days per week) x 2 (spaces per day) +
         # 6 (paddings between days)
         # 5 (spaces for WK)
-        # 2 (cell padding)
-        return 7 * 2 + 6 + (self.config.wk) * (5) + 2
+        return 7 * 2 + 6 + (self.config.wk) * (5)
 
     @property
     def height(self):
@@ -78,23 +87,23 @@ class Cell:
             return
 
         # Title
-        pad_total = self.width - str_width(self.title)
+        pad_total = self.internal_width - str_width(self.title)
         pad = (pad_total // 2) * ' '
         self.title = pad + self.title + pad + (pad_total % 2) * ' '
-        yield self.title
+        yield self.padding(self.config.color_title(self.title))
 
         # Cell internal border - title (if enabled)
-        yield ' ' + '-' * (self.width - 2) + ' '
+        yield self.padding('-' * (self.width - 2))
 
         # Weekdays
-        yield ' ' + ('WK | ' if self.config.wk else '') + ' '.join(self.weekday) + ' '
+        yield self.padding(((self.wk + ' | ') if self.config.wk else '') + self.weekday_line)
 
         # Days
         for wk, line in zip(self._wk, self._lines):
-            yield ' ' + (wk + ' | ' if self.config.wk else '') + line + ' '
+            yield self.padding((wk + ' | ' if self.config.wk else '') + line)
 
         for i in range(len(self._wk), self._height):
-            yield ' ' + ('   | ' if self.config.wk else '') + ' ' * (7 * 2 + 6) + ' '
+            yield self.padding(('   | ' if self.config.wk else '') + ' ' * (7 * 2 + 6))
 
 
 class TinyCalRenderer:

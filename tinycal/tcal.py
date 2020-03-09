@@ -79,19 +79,48 @@ def main():
     # Create TinyCalRenderer object for rendering
     renderer = TinyCalRenderer(conf)
 
+    # Colors are calculated *outside* the renderer
+    # It's for contiguous mode
+    def render_weekday(idx):
+        color_name = 'color_weekday_%s' % LANG['weekday']['full'][idx]
+        color = getattr(conf, color_name)
+        string = LANG['weekday'][conf.lang][idx]
+        return color(string) + conf.color_weekday.code if color else string
+
+    def render_wk(wk):
+        return conf.color_wk('%2s' % wk)
+
+    def render_day(day):
+        if day.month != ld.month:
+            if conf.fill:
+                c = conf.color_fill
+            else:
+                c = lambda s: '  '
+        else:
+            if day == today:
+                c = conf.color_today
+            else:
+                c = getattr(conf, 'color_%s' % LANG['weekday']['full'][day.weekday()])
+
+        return c('{:>2}'.format(day.day))
+
     # Put the days into cells (month), and cells into renderer
     for ld in month_leading_dates:
         cell = Cell(conf)
         cell.title = '{m} {y}'.format(m=LANG['month'][conf.lang][ld.month], y=ld.year)
-        cell.weekday = LANG['weekday'][conf.lang]
 
-        for idx, row in enumerate(monthdates(ld.year, ld.month)):
+        cell.weekday_line = conf.color_weekday(' '.join(map(render_weekday, calendar.iterweekdays())))
+
+        cell.wk = render_wk('WK')
+
+        for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
+            days = []
+            for day in weeks:
+                days.append(render_day(day))
+
             cell.append(
-                    wk=calculate_week_of_the_year(ld) + idx,
-                    days=[
-                        str(day.day).rjust(2) if day.month == ld.month else '  '
-                        for day in row
-                        ]
+                    wk=render_wk(calculate_week_of_the_year(ld) + idx),
+                    days=days
                     )
 
         renderer.append(cell)
