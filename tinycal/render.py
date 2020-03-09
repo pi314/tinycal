@@ -39,6 +39,7 @@ class Cell:
         self.title = None
         self._wk = []
         self._lines = []
+        self._height = 0
 
     def append(self, month='', wk='', days=[]):
         assert isinstance(days, list) and len(days) == 7
@@ -57,13 +58,18 @@ class Cell:
 
     @property
     def height(self):
+        # Only count dynamic part, i.e. no need to count title line
         return len(self._wk)
+
+    @height.setter
+    def height(self, val):
+        self._height = val
 
     def __iter__(self):
         '''
         Each line of a Cell is contructed by the following parts:
             Title
-            Cell Internal border - title (if enabled)
+            Cell internal border - title (if enabled)
             Weekdays
             Days
         '''
@@ -77,7 +83,7 @@ class Cell:
         self.title = pad + self.title + pad + (pad_total % 2) * ' '
         yield self.title
 
-        # Cell Internal border - title (if enabled)
+        # Cell internal border - title (if enabled)
         yield ' ' + '-' * (self.width - 2) + ' '
 
         # Weekdays
@@ -86,6 +92,9 @@ class Cell:
         # Days
         for wk, line in zip(self._wk, self._lines):
             yield ' ' + (wk + ' | ' if self.config.wk else '') + line + ' '
+
+        for i in range(len(self._wk), self._height):
+            yield ' ' + ('   | ' if self.config.wk else '') + ' ' * (7 * 2 + 6) + ' '
 
 
 class TinyCalRenderer:
@@ -113,21 +122,27 @@ class TinyCalRenderer:
 
         grid = list_to_grid(self.cells, effective_col)
 
+        cell_width = self.cells[0].width
+
         ret = ''
 
         # Top line
-        ret += '.' + '-'.join([self.cells[0].width * '-'] * effective_col) + '.' + '\n'
+        ret += '.' + '-'.join([cell_width * '-'] * effective_col) + '.' + '\n'
 
         for row_idx, row in enumerate(grid):
+            row_height = max(cell.height for cell in row)
+            for cell in row:
+                cell.height = row_height
+
             if row_idx > 0:
-                # Internal line
-                ret += '|' + '+'.join(((self.cells[0].width * '-') for cell in row)) + '|' + '\n'
+                # Inter-cell border
+                ret += '|' + '+'.join(((cell_width * '-') for cell in row)) + '|' + '\n'
 
             # Days
-            for lines in zip_longest(*row, fillvalue=' ' * self.cells[0].width):
+            for lines in zip_longest(*row, fillvalue=' ' * cell_width):
                 ret += '|' + '|'.join(lines) + '|\n'
 
         # Bottom line
-        ret += "'" + '-'.join([self.cells[0].width * '-'] * effective_col) + "'" + '\n'
+        ret += "'" + '-'.join([cell_width * '-'] * effective_col) + "'" + '\n'
 
         return ret.rstrip('\n')
