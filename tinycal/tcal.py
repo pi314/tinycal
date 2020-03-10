@@ -91,16 +91,16 @@ def main():
 
     # Colors are calculated *outside* the renderer
     # It's for contiguous mode
-    def render_weekday(idx):
+    def colorize_weekday(idx):
         color_name = 'color_weekday_%s' % LANG['weekday']['full'][idx]
         color = getattr(conf, color_name)
         string = LANG['weekday'][conf.lang][idx]
         return color(string) + conf.color_weekday.code if color else string
 
-    def render_wk(wk):
+    def colorize_wk(wk):
         return conf.color_wk('%2s' % wk)
 
-    def render_day(day):
+    def colorize_day(day):
         if day.month != ld.month:
             if conf.fill:
                 c = conf.color_fill
@@ -119,17 +119,17 @@ def main():
         cell = Cell(conf)
         cell.title = '{m} {y}'.format(m=LANG['month'][conf.lang][ld.month], y=ld.year)
 
-        cell.weekday_line = conf.color_weekday(' '.join(map(render_weekday, calendar.iterweekdays())))
+        cell.weekday_line = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
 
-        cell.wk = render_wk('WK')
+        cell.wk = colorize_wk('WK')
 
         for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
             days = []
             for day in weeks:
-                days.append(render_day(day))
+                days.append(colorize_day(day))
 
             cell.append(
-                    wk=render_wk(calculate_week_of_the_year(ld) + idx),
+                    wk=colorize_wk(calculate_week_of_the_year(ld) + idx),
                     days=days
                     )
 
