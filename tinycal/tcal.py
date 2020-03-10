@@ -13,30 +13,32 @@ from .cli import parser
 from .render import TinyCalRenderer, Cell
 from .config import TinyCalConfig, Color
 
+weekday_codes = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
 
 LANG = {
-        'weekday': {
-            'jp': ['月', '火', '水', '木', '金', '土', '日'],
-            'zh': ['一', '二', '三', '四', '五', '六', '日'],
-            'en': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
-            'full': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
-            },
-        'month': {
-            'jp': ['<Error>',
-                '睦月 (１月)', '如月 (２月)', '彌生 (３月)',
-                '卯月 (４月)', '皐月 (５月)', '水無月 (６月)',
-                '文月 (７月)', '葉月 (８月)', '長月 (９月)',
-                '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
-            'zh': ['<Error>',
-                '１月', '２月', '３月',
-                '４月', '５月', '６月',
-                '７月', '８月', '９月',
-                '１０月', '１１月', '１２月'],
-            'en': ['<Error>',
+        'en': {
+            'weekday': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'WK'],
+            'month': ['<Error>',
                 'January', 'February', 'March',
                 'April', 'May', 'June',
                 'July', 'August', 'September',
                 'October', 'November', 'December'],
+            },
+        'zh': {
+            'weekday': ['一', '二', '三', '四', '五', '六', '日', '週'],
+            'month': ['<Error>',
+                '１月', '２月', '３月',
+                '４月', '５月', '６月',
+                '７月', '８月', '９月',
+                '１０月', '１１月', '１２月'],
+            },
+        'jp': {
+            'weekday': ['月', '火', '水', '木', '金', '土', '日', '週'],
+            'month': ['<Error>',
+                '睦月 (１月)', '如月 (２月)', '彌生 (３月)',
+                '卯月 (４月)', '皐月 (５月)', '水無月 (６月)',
+                '文月 (７月)', '葉月 (８月)', '長月 (９月)',
+                '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
             },
         }
 
@@ -92,13 +94,16 @@ def main():
     # Colors are calculated *outside* the renderer
     # It's for contiguous mode
     def colorize_weekday(idx):
-        color_name = 'color_weekday_%s' % LANG['weekday']['full'][idx]
+        color_name = 'color_weekday_%s' % weekday_codes[idx]
         color = getattr(conf, color_name)
-        string = LANG['weekday'][conf.lang][idx]
+        string = LANG[conf.lang]['weekday'][idx]
         return color(string) + conf.color_weekday.code if color else string
 
     def colorize_wk(wk):
-        return conf.color_wk('%2s' % wk)
+        if isinstance(wk, int):
+            return conf.color_wk('{:>2}'.format(wk))
+
+        return conf.color_wk(wk)
 
     def colorize_day(day):
         if day.month != ld.month:
@@ -110,18 +115,18 @@ def main():
             if day == today:
                 c = conf.color_today
             else:
-                c = getattr(conf, 'color_%s' % LANG['weekday']['full'][day.weekday()])
+                c = getattr(conf, 'color_%s' % weekday_codes[day.weekday()])
 
         return c('{:>2}'.format(day.day))
 
     # Put the days into cells (month), and cells into renderer
     for ld in month_leading_dates:
         cell = Cell(conf)
-        cell.title = '{m} {y}'.format(m=LANG['month'][conf.lang][ld.month], y=ld.year)
+        cell.title = '{m} {y}'.format(m=LANG[conf.lang]['month'][ld.month], y=ld.year)
 
         cell.weekday_line = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
 
-        cell.wk = colorize_wk('WK')
+        cell.wk = colorize_wk(LANG[conf.lang]['weekday'][-1])
 
         for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
             days = []
