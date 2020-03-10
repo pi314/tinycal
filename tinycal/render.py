@@ -193,29 +193,58 @@ class TinyCalRenderer:
 
         # Top line
         if self.config.border != 'off':
-            ret += bs[0][0] + bs[0][-2].join([cell_width * bs[0][1]] * effective_col) + bs[0][-1] + '\n'
+            if self.config.border_weld:
+                joiner = bs[0][-2]
+            else:
+                joiner = bs[0][-1] + bs[0][0]
+
+            ret += bs[0][0] + joiner.join([cell_width * bs[0][1]] * effective_col) + bs[0][-1] + '\n'
 
         for row_idx, row in enumerate(grid):
             row_height = max(cell.height for cell in row)
             for cell in row:
                 cell.height = row_height
 
-            if row_idx > 0 and self.config.border != 'off':
+            if row_idx > 0:
                 # Inter-cell border
-                if self.config.border != 'off':
-                    ret += bs[-2][0] + bs[-2][-2].join(((cell_width * bs[-2][1]) for cell in row)) + bs[-2][-1] + '\n'
+                if self.config.border == 'off':
+                    ret += '\n'
+                else:
+                    if self.config.border_weld:
+                        ret += (bs[-2][0] +
+                                bs[-2][-2].join(((cell_width * bs[-2][1]) for cell in row)) +
+                                bs[-2][-1] + '\n')
+                    else:
+                        ret += (bs[-1][0] +
+                                (bs[-1][-1] + bs[-1][0]).join(((cell_width * bs[-2][1]) for cell in row)) +
+                                bs[-1][-1] + '\n')
+                        ret += (bs[0][0] +
+                                (bs[0][-1] + bs[0][0]).join(((cell_width * bs[-2][1]) for cell in row)) +
+                                bs[0][-1] + '\n')
 
             # Days
             for line_nr, lines in enumerate(zip_longest(*row, fillvalue=' ' * cell_width)):
                 border_idx = min([3, line_nr]) + 1
                 if self.config.border != 'off':
-                    ret += bs[border_idx][0] + bs[border_idx][-2].join(lines) + bs[border_idx][-1] + '\n'
+                    if self.config.border_weld:
+                        ret += (bs[border_idx][0] +
+                                bs[border_idx][-2].join(lines) +
+                                bs[border_idx][-1] + '\n')
+                    else:
+                        ret += (bs[border_idx][0] +
+                                (bs[border_idx][-1] + bs[border_idx][0]).join(lines) +
+                                bs[border_idx][-1] + '\n')
 
                 else:
                     ret += ' '.join(lines) +'\n'
 
         # Bottom line
         if self.config.border != 'off':
-            ret += bs[-1][0] + bs[-1][-2].join([cell_width * bs[-1][1]] * effective_col) + bs[-1][-1] + '\n'
+            if self.config.border_weld:
+                joiner = bs[-1][-2]
+            else:
+                joiner = bs[-1][-1] + bs[-1][0]
+
+            ret += bs[-1][0] + joiner.join([cell_width * bs[-1][1]] * effective_col) + bs[-1][-1] + '\n'
 
         return ret.rstrip('\n')

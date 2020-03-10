@@ -188,7 +188,7 @@ class TinyCalConfig:
     before = IntegerField(default=0, validators=[greater_than(-1)])
     wk = BoolField(default=False)
     fill = BoolField(default=False)
-    border = SelectorField(['true', 'full', 'basic', 'off'], default='full')
+    border = SelectorField(['true', 'full', 'basic', 'off', 'false'], default='full')
     border_style = SelectorField(['ascii', 'single', 'bold', 'double'], default='single')
     border_weld = BoolField(default=True)
     start_monday = BoolField(default=False)

@@ -48,7 +48,7 @@ def border_style_comma_separated_str(s):
     return res
 
 parser.add_argument('-b', '--border', type=border_style_comma_separated_str,
-                    default='full', const='full', nargs='?',
+                    default=[], const='full', nargs='?',
                     help='Comma separated keywords to describe borders.\nValid keywords: '+ ','.join(border_choices))
 
 parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=None,

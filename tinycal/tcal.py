@@ -58,11 +58,11 @@ def main():
     args = parser.parse_args()
 
     border_args = args.border
-    args.border = 'full'
-    args.border_style = 'single'
-    args.border_weld = 'true'
+    args.border = None
+    args.border_style = None
+    args.border_weld = None
     for i in border_args:
-        if i in ('full', 'basic', 'off'):
+        if i in ('full', 'basic', 'off', 'false'):
             args.border = i
         elif i in ('ascii', 'single', 'bold', 'double'):
             args.border_style = i
@@ -76,6 +76,8 @@ def main():
 
     if conf.border == 'true':
         conf.border = 'full'
+    elif conf.border == 'false':
+        conf.border = 'off'
 
     # enable/disable coloring
     if (args.color == 'never') or (args.color == 'auto' and not stdout.isatty()):
