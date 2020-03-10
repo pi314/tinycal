@@ -40,17 +40,22 @@ parser.add_argument('-s', '--sep', action='store_true', dest='sep', default=None
 parser.add_argument('-S', '--no-sep', action='store_false', dest='sep', default=None,
                     help='Don`t display separation lines.')
 
-parser.add_argument('-b', '--border', action='store_true', dest='border', default=None,
+parser.add_argument('-b', '--border', choices=['full', 'basic', 'off'], type=str,
+                    default='full', const='full', nargs='?',
                     help='Display border lines.')
-parser.add_argument('-nb', '--no-border', action='store_false', dest='border', default=None,
-                    help='Don`t display border lines.')
+parser.add_argument('--border-style', choices=['ascii', 'unicode', 'bold', 'doubled'], type=str,
+                    help='Display border lines.')
+parser.add_argument('--border-weld', choices=['true', 'false'], type=str,
+                    default='true', const='true', nargs='?',
+                    help='Display border lines.')
 
 parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=None,
                     help='Fill every month into rectangle with previous/next month dates.')
 parser.add_argument('-F', '--no-fill', action='store_false', dest='fill', default=None,
                     help='Don`t fill month into rectangle.')
 
-parser.add_argument('--color', choices=['never', 'always', 'auto'], type=str, default='auto',
+parser.add_argument('--color', choices=['never', 'always', 'auto'], type=str,
+                    default='auto', const='auto', nargs='?',
                     help='Enable/disable VT100 color output.')
 parser.add_argument('-c', action='store_const', const='always', dest='color',
                     help='Enable VT100 color output, equals to --color=always')

@@ -60,6 +60,9 @@ def main():
         if k in vars(args) and getattr(args, k) is not None:
             setattr(conf, k , getattr(args, k))
 
+    if conf.border == 'true':
+        conf.border = 'full'
+
     # enable/disable coloring
     if (args.color == 'never') or (args.color == 'auto' and not stdout.isatty()):
         for k in vars(conf):

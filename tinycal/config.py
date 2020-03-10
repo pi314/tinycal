@@ -191,7 +191,9 @@ class TinyCalConfig(Config):
     wk = BoolField(default=False)
     sep = BoolField(default=True)
     fill = BoolField(default=False)
-    border = BoolField(default=True)
+    border = SelectorField(['true', 'full', 'basic', 'off'], default='full')
+    border_style = SelectorField(['ascii', 'unicode', 'bold', 'doubled'], default='ascii')
+    border_weld = BoolField(default=True)
     start_monday = BoolField(default=False)
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
 
