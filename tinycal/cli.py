@@ -35,14 +35,21 @@ parser.add_argument('-w', action='store_true', dest='wk', default=None,
 parser.add_argument('-W', action='store_false', dest='wk', default=None,
                     help='Don`t display week number.')
 
-parser.add_argument('-b', '--border', choices=['full', 'basic', 'off'], type=str,
+border_choices = ('full', 'basic', 'off', 'ascii', 'single', 'bold', 'double', 'weld', 'noweld')
+def border_style_comma_separated_str(s):
+    res = []
+    for i in s.strip().split(','):
+        if i in border_choices:
+            res.append(i)
+        else:
+            raise ArgumentTypeError(
+                    "invalid choice: '" + i + "'\n    (choose from " + repr(border_choices) + ")")
+
+    return res
+
+parser.add_argument('-b', '--border', type=border_style_comma_separated_str,
                     default='full', const='full', nargs='?',
-                    help='Display border lines.')
-parser.add_argument('--border-style', choices=['ascii', 'single', 'bold', 'double'], type=str,
-                    help='Display border lines.')
-parser.add_argument('--border-weld', choices=['true', 'false'], type=str,
-                    default='true', const='true', nargs='?',
-                    help='Display border lines.')
+                    help='Comma separated keywords to describe borders.\nValid keywords: '+ ','.join(border_choices))
 
 parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=None,
                     help='Fill every month into rectangle with previous/next month dates.')
@@ -77,7 +84,7 @@ parser.add_argument('-M', action='store_false', dest='start_monday', default=Non
 def full_date_str(today_str):
     try:
         return date(*map(int, today_str.split('/')))
-    except ValueError as e:
+    except (TypeError, ValueError) as e:
         raise ArgumentTypeError("format should be yyyy/mm/dd")
 
 parser.add_argument('--today', type=full_date_str, default=None,

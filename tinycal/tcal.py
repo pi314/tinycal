@@ -57,6 +57,18 @@ def main():
     conf = TinyCalConfig.parse_conf(CALRCS)
     args = parser.parse_args()
 
+    border_args = args.border
+    args.border = 'full'
+    args.border_style = 'single'
+    args.border_weld = 'true'
+    for i in border_args:
+        if i in ('full', 'basic', 'off'):
+            args.border = i
+        elif i in ('ascii', 'single', 'bold', 'double'):
+            args.border_style = i
+        elif i in ('weld', 'noweld'):
+            args.border_weld = (i == 'weld')
+
     # Merge args and conf in-place into conf
     for k in vars(conf):
         if k in vars(args) and getattr(args, k) is not None:
@@ -123,9 +135,7 @@ def main():
     for ld in month_leading_dates:
         cell = Cell(conf)
         cell.title = '{m} {y}'.format(m=LANG[conf.lang]['month'][ld.month], y=ld.year)
-
         cell.weekday_line = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
-
         cell.wk = colorize_wk(LANG[conf.lang]['weekday'][-1])
 
         for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
