@@ -46,9 +46,7 @@ class ValueField(object):
         assert len(args) == arg_count
         return super(ValueField, cls).__new__(cls)
 
-    def __init__(self, key=None, default=None, validators=()):
-        # TOOD: assert `key` must a valid variable name in Python
-        self.map_key = lambda name: name if key is None else key(name) if callable(key) else key
+    def __init__(self, default=None, validators=()):
         self.default = default
         self.validators = validators
 
@@ -102,17 +100,3 @@ class SelectorField(ValueField):
         if value not in self.choices:
             raise ValidationError('xxxx')
         super(SelectorField, self).validate(key, value)
-
-
-class Config(object):
-    def __init__(self, attrs):
-        assert isinstance(attrs, dict)
-        assert all(isinstance(k, str) and isinstance(v, str) for k,v in attrs.items())
-
-        for name, field in vars(self.__class__).items():
-            if isinstance(field, ValueField):
-                key = field.map_key(name)
-                setattr(self, name, field.clean(key, attrs.get(key)))
-
-    def __repr__(self):
-        return "%s(%s)" % (self.__class__.__name__, ','.join('%s=%s' % attr for attr in sorted(vars(self).items())))

@@ -28,7 +28,7 @@ import re
 import os.path
 
 from .declarative_config import (
-        Config, ValueField, ValidationError,
+        ValueField, ValidationError,
         IntegerField, BoolField, SelectorField,
         )
 
@@ -173,8 +173,6 @@ class Color:
 
 class ColorField(ValueField):
     def __init__(self, *args, **kwargs):
-        if 'key' not in kwargs:
-            kwargs['key'] = lambda name: '.'.join((lambda t: t[1:]+t[0:1])(name.split('_')))
         super(ColorField, self).__init__(*args, **kwargs)
 
     def to_python(self, text):
@@ -184,7 +182,7 @@ class ColorField(ValueField):
             raise ValidationError('%r not match color setting pattern' % text)
 
 
-class TinyCalConfig(Config):
+class TinyCalConfig:
     col = IntegerField(default=3, validators=[greater_than(0)])
     after = IntegerField(default=0, validators=[greater_than(-1)])
     before = IntegerField(default=0, validators=[greater_than(-1)])
@@ -215,6 +213,23 @@ class TinyCalConfig(Config):
     color_friday = ColorField(default=Color('none:none'))
     color_saturday = ColorField(default=Color('none:none'))
     color_today = ColorField(default=Color('none:white'))
+
+    def __init__(self, attrs):
+        assert isinstance(attrs, dict)
+        assert all(isinstance(k, str) and isinstance(v, str) for k,v in attrs.items())
+
+        tmp = {}
+        for k, v in attrs.items():
+            if k.endswith('.color'):
+                tmp[ '_'.join(['color'] + k.split('.')[:-1]) ] = v
+            else:
+                tmp['_'.join(k.split('.'))] = v
+
+        attrs = tmp
+
+        for name, field in vars(self.__class__).items():
+            if isinstance(field, ValueField):
+                setattr(self, name, field.clean(name, attrs.get(name)))
 
     @classmethod
     def parse_conf(cls, calrcs):
