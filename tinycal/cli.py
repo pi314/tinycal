@@ -35,11 +35,6 @@ parser.add_argument('-w', action='store_true', dest='wk', default=None,
 parser.add_argument('-W', action='store_false', dest='wk', default=None,
                     help='Don`t display week number.')
 
-parser.add_argument('-s', '--sep', action='store_true', dest='sep', default=None,
-                    help='Display separation lines.')
-parser.add_argument('-S', '--no-sep', action='store_false', dest='sep', default=None,
-                    help='Don`t display separation lines.')
-
 parser.add_argument('-b', '--border', choices=['full', 'basic', 'off'], type=str,
                     default='full', const='full', nargs='?',
                     help='Display border lines.')
