@@ -43,7 +43,7 @@ parser.add_argument('-S', '--no-sep', action='store_false', dest='sep', default=
 parser.add_argument('-b', '--border', choices=['full', 'basic', 'off'], type=str,
                     default='full', const='full', nargs='?',
                     help='Display border lines.')
-parser.add_argument('--border-style', choices=['ascii', 'unicode', 'bold', 'doubled'], type=str,
+parser.add_argument('--border-style', choices=['ascii', 'single', 'bold', 'double'], type=str,
                     help='Display border lines.')
 parser.add_argument('--border-weld', choices=['true', 'false'], type=str,
                     default='true', const='true', nargs='?',

@@ -2,56 +2,60 @@ from unicodedata import east_asian_width
 
 from .config import Color
 
-'''
-    ┌───────────────────────────┬───────────────────────────┐
-    │        March 2020         │         April 2020        │
-    ├────┬──────────────────────┼────┬──────────────────────┤
-    ├ WK ┼ Su Mo Tu We Th Fr Sa ┼ WK ┼ Su Mo Tu We Th Fr Sa ┤
-    │ 10 │  1  2  3  4  5  6  7 │ 14 │           1  2  3  4 │
-    │ 11 │  8  9 10 11 12 13 14 │ 15 │  5  6  7  8  9 10 11 │
-    │ 12 │ 15 16 17 18 19 20 21 │ 16 │ 12 13 14 15 16 17 18 │
-    │ 13 │ 22 23 24 25 26 27 28 │ 17 │ 19 20 21 22 23 24 25 │
-    │ 14 │ 29 30 31             │ 18 │ 26 27 28 29 30       │
-    └────┴──────────────────────┴────┴──────────────────────┘
-    ┌───────────────────────────────┐
-    │             2020              │
-    ├───┬────┬──────────────────────┤
-    │   ├ WK ┼ Su Mo Tu We Th Fr Sa ┤
-    │Mar│ 10 │  1  2  3  4  5  6  7 │
-    │   │ 11 │  8  9 10 11 12 13 14 │
-    │   │ 12 │ 15 16 17 18 19 20 21 │
-    │   │ 13 │ 22 23 24 25 26 27 28 │
-    │Apr│ 14 │ 29 30 31  1  2  3  4 │
-    │   │ 15 │  5  6  7  8  9 10 11 │
-    │   │ 16 │ 12 13 14 15 16 17 18 │
-    │   │ 17 │ 19 20 21 22 23 24 25 │
-    │   │ 18 │ 26 27 28 29 30       │
-    └───┴────┴──────────────────────┘
-    ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
-    ┃        March 2020         ┃         April 2020        ┃
-    ┣━━━━┳━━━━━━━━━━━━━━━━━━━━━━╋━━━━┳━━━━━━━━━━━━━━━━━━━━━━┫
-    ┣ WK ╋ Su Mo Tu We Th Fr Sa ╋ WK ╋ Su Mo Tu We Th Fr Sa ┫
-    ┃ 10 ┃  1  2  3  4  5  6  7 ┃ 14 ┃           1  2  3  4 ┃
-    ┃ 11 ┃  8  9 10 11 12 13 14 ┃ 15 ┃  5  6  7  8  9 10 11 ┃
-    ┃ 12 ┃ 15 16 17 18 19 20 21 ┃ 16 ┃ 12 13 14 15 16 17 18 ┃
-    ┃ 13 ┃ 22 23 24 25 26 27 28 ┃ 17 ┃ 19 20 21 22 23 24 25 ┃
-    ┃ 14 ┃ 29 30 31             ┃ 18 ┃ 26 27 28 29 30       ┃
-    ┗━━━━┻━━━━━━━━━━━━━━━━━━━━━━┻━━━━┻━━━━━━━━━━━━━━━━━━━━━━┛
-    ╔═══════════════════════════════╗
-    ║             2020              ║
-    ╟───┬────┬──────────────────────╢
-    ║   ├ WK ┼ Su Mo Tu We Th Fr Sa ╢
-    ║Mar│ 10 │  1  2  3  4  5  6  7 ║
-    ║   │ 11 │  8  9 10 11 12 13 14 ║
-    ║   │ 12 │ 15 16 17 18 19 20 21 ║
-    ║   │ 13 │ 22 23 24 25 26 27 28 ║
-    ║Apr│ 14 │ 29 30 31  1  2  3  4 ║
-    ║   │ 15 │  5  6  7  8  9 10 11 ║
-    ║   │ 16 │ 12 13 14 15 16 17 18 ║
-    ║   │ 17 │ 19 20 21 22 23 24 25 ║
-    ║   │ 18 │ 26 27 28 29 30       ║
-    ╚═══╧════╧══════════════════════╝
-'''
+border_style = {
+        'ascii': [
+            '.----------------------------.',
+            '|           Title           ||',
+            '| ------------------------- ||',
+            '| WK | 日 月 火 水 木 金 土 ||',
+            '| 10 |  1  2  3  4  5  6  7 ||',
+            '| 11 |  8  9 10 11 12 13 14 ||',
+            '| 12 | 15 16 17 18 19 20 21 ||',
+            '| 13 | 22 23 24 25 26 27 28 ||',
+            '| 14 | 29 30 31  1  2  3  4 ||',
+            '|    |                      ||',
+            '|---------------------------+|',
+            "'----------------------------'",
+            ],
+        'single': [
+            '┌───────────────────────────┬┐',
+            '│        March 2020         ││',
+            '│────┬──────────────────────││',
+            '│ WK ┼ Su Mo Tu We Th Fr Sa ││',
+            '│ 10 │  1  2  3  4  5  6  7 ││',
+            '│ 11 │  8  9 10 11 12 13 14 ││',
+            '│ 12 │ 15 16 17 18 19 20 21 ││',
+            '│ 13 │ 22 23 24 25 26 27 28 ││',
+            '│ 14 │ 29 30 31             ││',
+            '├───────────────────────────┼┤',
+            '└───────────────────────────┴┘',
+            ],
+        'bold': [
+            '┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳┓',
+            '┃        March 2020         ┃┃',
+            '┃━━━━┳━━━━━━━━━━━━━━━━━━━━━━┃┫',
+            '┃ WK ╋ Su Mo Tu We Th Fr Sa ┃┃',
+            '┃ 10 ┃  1  2  3  4  5  6  7 ┃┃',
+            '┃ 11 ┃  8  9 10 11 12 13 14 ┃┃',
+            '┃ 12 ┃ 15 16 17 18 19 20 21 ┃┃',
+            '┃ 13 ┃ 22 23 24 25 26 27 28 ┃┃',
+            '┃ 14 ┃ 29 30 31             ┃┃',
+            '┣━━━━━━━━━━━━━━━━━━━━━━━━━━━╋┫',
+            '┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻┛',
+            ],
+        'double': [
+            '╔═══════════════════════════╦╗',
+            '║         2020              ║║',
+            '║────┬──────────────────────║║',
+            '║ WK ┼ Su Mo Tu We Th Fr Sa ║║',
+            '║ 10 │  1  2  3  4  5  6  7 ║║',
+            '║ 11 │  8  9 10 11 12 13 14 ║║',
+            '║ 12 │ 15 16 17 18 19 20 21 ║║',
+            '║ 13 │ 22 23 24 25 26 27 28 ║║',
+            '╠═══════════════════════════╬╣',
+            '╚═══════════════════════════╩╝',
+            ],
+        }
 
 def str_width(s):
     return sum(1 + (east_asian_width(c) in 'WF') for c in s)
@@ -66,6 +70,7 @@ class Cell:
         self._wk = []
         self._lines = []
         self._height = 0
+        self.border_style = None
 
     def append(self, month='', wk='', days=[]):
         assert isinstance(days, list) and len(days) == 7
@@ -110,6 +115,9 @@ class Cell:
         if self.title is None:
             return
 
+        assert self.border_style
+        bs = self.border_style
+
         # Title
         pad_total = self.internal_width - str_width(self.title)
         pad = (pad_total // 2) * ' '
@@ -118,27 +126,30 @@ class Cell:
 
         # Cell internal border - title (if enabled)
         if self.config.border == 'full':
-            yield self.padding('-' * (self.width - 2))
+            yield (bs[2][1] +
+                    (bs[2][2] * 3 + bs[2][5] + bs[2][6] if self.config.wk else '') +
+                    bs[2][6] * (7 * 2 + 6) +
+                    bs[2][-3])
 
-        def _render_wk(wk):
+        def _render_wk(wk, wk_line):
             if not self.config.wk:
                 return ''
 
             wk += ' '
             if self.config.border == 'full':
-                wk += '| '
+                wk += bs[3 + int(not wk_line)][5] + ' '
 
             return wk
 
         # Weekdays
-        yield self.padding(_render_wk(self.wk) + self.weekday_line)
+        yield self.padding(_render_wk(self.wk, True) + self.weekday_line)
 
         # Days
         for wk, line in zip(self._wk, self._lines):
-            yield self.padding(_render_wk(wk) + line)
+            yield self.padding(_render_wk(wk, False) + line)
 
         for i in range(len(self._wk), self._height):
-            yield self.padding(_render_wk('  ') + ' ' * (7 * 2 + 6))
+            yield self.padding(_render_wk('  ', False) + ' ' * (7 * 2 + 6))
 
 
 class TinyCalRenderer:
@@ -154,6 +165,16 @@ class TinyCalRenderer:
             from itertools import zip_longest
         except:
             from itertools import izip_longest as zip_longest
+
+        # Select border style
+        if self.config.border_style not in border_style:
+            self.config.border_style = 'ascii'
+
+        bs = border_style[self.config.border_style]
+
+        # Apply border style to every cells
+        for cell in self.cells:
+            cell.border_style = bs
 
         # If month range < config.col, don't use empty cells to fill up
         effective_col = min(self.config.col, len(self.cells))
@@ -172,7 +193,7 @@ class TinyCalRenderer:
 
         # Top line
         if self.config.border != 'off':
-            ret += '.' + '-'.join([cell_width * '-'] * effective_col) + '.' + '\n'
+            ret += bs[0][0] + bs[0][-2].join([cell_width * bs[0][1]] * effective_col) + bs[0][-1] + '\n'
 
         for row_idx, row in enumerate(grid):
             row_height = max(cell.height for cell in row)
@@ -182,18 +203,19 @@ class TinyCalRenderer:
             if row_idx > 0 and self.config.border != 'off':
                 # Inter-cell border
                 if self.config.border != 'off':
-                    ret += '|' + '+'.join(((cell_width * '-') for cell in row)) + '|' + '\n'
+                    ret += bs[-2][0] + bs[-2][-2].join(((cell_width * bs[-2][1]) for cell in row)) + bs[-2][-1] + '\n'
 
             # Days
-            for lines in zip_longest(*row, fillvalue=' ' * cell_width):
+            for line_nr, lines in enumerate(zip_longest(*row, fillvalue=' ' * cell_width)):
+                border_idx = min([3, line_nr]) + 1
                 if self.config.border != 'off':
-                    ret += '|' + '|'.join(lines) + '|\n'
+                    ret += bs[border_idx][0] + bs[border_idx][-2].join(lines) + bs[border_idx][-1] + '\n'
 
                 else:
                     ret += ' '.join(lines) +'\n'
 
         # Bottom line
         if self.config.border != 'off':
-            ret += "'" + '-'.join([cell_width * '-'] * effective_col) + "'" + '\n'
+            ret += bs[-1][0] + bs[-1][-2].join([cell_width * bs[-1][1]] * effective_col) + bs[-1][-1] + '\n'
 
         return ret.rstrip('\n')
