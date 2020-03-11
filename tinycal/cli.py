@@ -81,6 +81,9 @@ parser.add_argument('-m', action='store_true', dest='start_monday', default=None
 parser.add_argument('-M', action='store_false', dest='start_monday', default=None,
                     help='Use Sunday as first weekday.')
 
+parser.add_argument('--cont', action='store_true', dest='cont', default=False,
+                    help='Show the calendar in contiguous mode.')
+
 def full_date_str(today_str):
     try:
         return date(*map(int, today_str.split('/')))

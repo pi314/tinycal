@@ -53,6 +53,10 @@ def calculate_month_range(before, after, year, month):
            [date(year + (month + i > 12), (month - 1 + i) % 12 + 1, 1) for i in range(1, after+1)]
 
 
+def calculate_week_of_the_year(first_date_of_year, target_date):
+    return (target_date - first_date_of_year).days // 7 + 1
+
+
 def main():
     conf = TinyCalConfig.parse_conf(CALRCS)
     args = parser.parse_args()
@@ -85,12 +89,6 @@ def main():
             if k.startswith('color_'):
                 setattr(conf, k, Color(''))
 
-    calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
-    monthdates = calendar.monthdatescalendar
-
-    def calculate_week_of_the_year(date):
-        return (date - monthdates(date.year, 1)[0][0]).days // 7 + 1
-
     today = args.today if args.today else date.today()
 
     # Calculate display range (from which month to which month)
@@ -101,6 +99,10 @@ def main():
         month = args.month or today.month
         before, after = (1, 1) if args.a1b1 else (conf.before, conf.after)
         month_leading_dates = calculate_month_range(before, after, year, month)
+
+
+    calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
+    monthdates = calendar.monthdatescalendar
 
     # Create TinyCalRenderer object for rendering
     renderer = TinyCalRenderer(conf)
@@ -113,18 +115,20 @@ def main():
         string = LANG[conf.lang]['weekday'][idx]
         return color(string) + conf.color_weekday.code if color else string
 
+    weekday_text = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
+
     def colorize_wk(wk):
         if isinstance(wk, int):
             return conf.color_wk('{:>2}'.format(wk))
 
         return conf.color_wk(wk)
 
+    wk_text = colorize_wk(LANG[conf.lang]['weekday'][-1])
+
+    month_range = [ld.month for ld in month_leading_dates]
     def colorize_day(day):
-        if day.month != ld.month:
-            if conf.fill:
-                c = conf.color_fill
-            else:
-                c = lambda s: '  '
+        if (not args.cont and day.month != ld.month) or (args.cont and day.month not in month_range):
+            c = (conf.color_fill) if (conf.fill) else (lambda s: '  ')
         else:
             if day == today:
                 c = conf.color_today
@@ -133,23 +137,52 @@ def main():
 
         return c('{:>2}'.format(day.day))
 
-    # Put the days into cells (month), and cells into renderer
-    for ld in month_leading_dates:
-        cell = Cell(conf)
-        cell.title = '{m} {y}'.format(m=LANG[conf.lang]['month'][ld.month], y=ld.year)
-        cell.weekday_line = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
-        cell.wk = colorize_wk(LANG[conf.lang]['weekday'][-1])
+    if args.cont:
+        # For contiguous mode, only 1 Cell obj needed
+        cells = [Cell(conf)]
+        f = month_leading_dates[0]
+        t = month_leading_dates[-1]
+        if f == t:
+            cell[0].title = '{m} {y}'.format(m=LANG[conf.lang]['month'][f.month], y=f.year)
+        else:
+            cells[0].title = '{}/{:02} ~ {}/{:02}'.format(f.year, f.month, t.year, t.month)
+        cells[0].weekday_text = weekday_text
+        cells[0].wk_text = wk_text
 
+    else:
+        # For non-contiguous mode, every month has its own Cell obj
+        cells = []
+        for ld in month_leading_dates:
+            cell = Cell(conf)
+            cell.title = '{m} {y}'.format(m=LANG[conf.lang]['month'][ld.month], y=ld.year)
+            cell.weekday_text = weekday_text
+            cell.wk_text = wk_text
+            cells.append(cell)
+
+    # Put the days into cells, and cells into renderer
+    last_cell = None
+    last_wk = None
+    for ld in month_leading_dates:
         for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
             days = []
             for day in weeks:
                 days.append(colorize_day(day))
 
-            cell.append(
-                    wk=colorize_wk(calculate_week_of_the_year(ld) + idx),
-                    days=days
-                    )
+            week = calculate_week_of_the_year(monthdates(ld.year, 1)[0][0], ld) + idx
 
-        renderer.append(cell)
+            # Dont append days into the same cell twice (ok for different cell)
+            if (last_cell, last_wk) != (cells[0], week):
+                cells[0].append(
+                        wk=colorize_wk(week),
+                        days=days
+                        )
+                last_wk = week
+                last_cell = cells[0]
+
+        if len(cells) > 1:
+            renderer.append(cells.pop(0))
+
+    assert len(cells) == 1
+    renderer.append(cells[0])
 
     print(renderer.render())

@@ -65,8 +65,8 @@ class Cell:
     def __init__(self, config):
         self.config = config
         self.title = None
-        self.weekday_line = ''
-        self.wk = 'WK'
+        self.weekday_text = ''
+        self.wk_text = 'WK'
         self._wk = []
         self._lines = []
         self._height = 0
@@ -142,7 +142,7 @@ class Cell:
             return wk
 
         # Weekdays
-        yield self.padding(_render_wk(self.wk, True) + self.weekday_line)
+        yield self.padding(_render_wk(self.wk_text, True) + self.weekday_text)
 
         # Days
         for wk, line in zip(self._wk, self._lines):
