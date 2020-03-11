@@ -143,7 +143,7 @@ def main():
         f = month_leading_dates[0]
         t = month_leading_dates[-1]
         if f == t:
-            cell[0].title = '{m} {y}'.format(m=LANG[conf.lang]['month'][f.month], y=f.year)
+            cells[0].title = '{m} {y}'.format(m=LANG[conf.lang]['month'][f.month], y=f.year)
         else:
             cells[0].title = '{}/{:02} ~ {}/{:02}'.format(f.year, f.month, t.year, t.month)
         cells[0].weekday_text = weekday_text
