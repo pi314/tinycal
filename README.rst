@@ -53,9 +53,9 @@ A snapshot of help page here:
 
 ::
 
-  usage: tcal [-h] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W] [-s] [-S]
-              [-b] [-nb] [-f] [-F] [-c] [-C] [-l {jp,zh,en}] [-j] [-z] [-e] [-m]
-              [-M]
+  usage: tcal [-h] [--version] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W]
+              [-b [BORDER]] [-f] [-F] [--color [{never,always,auto}]] [-c] [-C]
+              [-l {jp,zh,en}] [-j] [-z] [-e] [-m] [-M] [--cont] [--today TODAY]
               [year] [month]
 
   tinycal: A Python implementation of cal utility.
@@ -66,20 +66,22 @@ A snapshot of help page here:
 
   optional arguments:
     -h, --help            show this help message and exit
+    --version, -v         show program's version number and exit
     --col COL             Specify the column numbers.
     -A AFTER              Display the number of months after the current month.
     -B BEFORE             Display the number of months before the current month.
     -3                    Equals to -A 1 -B 1.
     -w                    Display week number.
     -W                    Don`t display week number.
-    -s, --sep             Display separation lines.
-    -S, --no-sep          Don`t display separation lines.
-    -b, --border          Display border lines.
-    -nb, --no-border      Don`t display border lines.
+    -b [BORDER], --border [BORDER]
+                          Comma separated keywords to describe borders.
+                          Valid keywords: full,basic,off,ascii,single,bold,double,weld,noweld
     -f, --fill            Fill every month into rectangle with previous/next month dates.
     -F, --no-fill         Don`t fill month into rectangle.
-    -c                    Enable VT100 color output.
-    -C                    Disable VT100 color output.
+    --color [{never,always,auto}]
+                          Enable/disable VT100 color output.
+    -c                    Enable VT100 color output, equals to --color=always
+    -C                    Disable VT100 color output, equals to --color=never
     -l {jp,zh,en}, --lang {jp,zh,en}
                           Select the language used to display weekday.
     -j                    Enable Japanese weekday names, equals to --lang=jp.
@@ -87,10 +89,10 @@ A snapshot of help page here:
     -e                    Enable Chinese weekday names, equals to --lang=en.
     -m                    Use Monday as first weekday.
     -M                    Use Sunday as first weekday.
+    --cont                Show the calendar in contiguous mode.
+    --today TODAY         Date that treated as today in format yyyy/mm/dd, used for debugging.
 
-  Configuration files:
-  1st: ~/.config/calrc
-  2nd: ~/.calrc
+  Configuration files: ('~/.config/calrc', '~/.calrc')
 
 Example usage:
 
@@ -116,7 +118,9 @@ Here is the full set of configurable options, with default values:
   wk = false
   sep = true
   fill = false
-  border = true
+  border = full
+  border.style = single
+  border.weld = true
   start_monday = false
   lang = en
 
@@ -158,7 +162,7 @@ For example, this configuration:
   col = 5
   sep = true
   wk = true
-  border = true
+  border = basic
   fill = true
 
   title.color = black:cyan
