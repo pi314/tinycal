@@ -6,7 +6,7 @@ border_style = {
         'template': [
             '┏━──────────────────────────┳┓',
             '┃        March 2020         ┃┃',
-            '┃━━──┳━────────────────────━┃┃',
+            '┃━━──┳─────────────────────━┃┃',
             '┃ WK ╋ Su Mo Tu We Th Fr Sa ┃┃',
             '┃ 10 ┃  1  2  3  4  5  6  7 ┃┃',
             '│ 11 │  8  9 10 11 12 13 14 ││',
@@ -78,18 +78,14 @@ class Cell:
     def __init__(self, config):
         self.config = config
         self.title = None
-        self.weekday_text = ''
-        self.wk_text = 'WK'
-        self._wk = []
-        self._lines = []
-        self._height = 0
+        self.weekday_title = ''
+        self.wk_title = 'WK'
+        self.lines = []
+        self.assigned_height = 0
         self.border_style = None
 
-    def append(self, month='', wk='', days=[]):
-        assert isinstance(days, list) and len(days) == 7
-
-        self._wk.append(wk)
-        self._lines.append(' '.join(days))
+    def append(self, wk='', days=' ' * (7 * 2 + 6), month=''):
+        self.lines.append((wk, days, month))
 
     @property
     def width(self):
@@ -105,16 +101,26 @@ class Cell:
         # 7 (days per week) x 2 (spaces per day) +
         # 6 (paddings between days)
         # 5 (spaces for WK)
-        return 7 * 2 + 6 + (self.config.wk) * (3 + 2 * (self.config.border == 'full'))
+        mcw = self.month_col_width
+        return (
+                (7 * 2) +
+                6 +
+                (self.config.wk) * (3 + 2 * (self.config.border == 'full')) +
+                mcw + (3 if mcw else 0)
+                )
+
+    @property
+    def month_col_width(self):
+        return max([str_width(line[2]) for line in self.lines])
 
     @property
     def height(self):
         # Only count dynamic part, i.e. no need to count title line
-        return len(self._wk)
+        return len(self.lines)
 
     @height.setter
     def height(self, val):
-        self._height = val
+        self.assigned_height = val
 
     def __iter__(self):
         '''
@@ -137,12 +143,16 @@ class Cell:
         self.title = pad + self.title + pad + (pad_total % 2) * ' '
         yield self.padding(self.config.color_title(self.title))
 
+        mcw = self.month_col_width
+
         # Cell internal border - title (if enabled)
         if self.config.border == 'full':
             yield (bs[2][1] +
-                    (bs[2][2] * 3 + bs[2][5] + bs[2][6] if self.config.wk else '') +
-                    bs[2][6] * (7 * 2 + 6) +
-                    bs[2][-3])
+                    ('' if not self.config.wk else bs[2][2] * 3 + bs[2][5] + bs[2][2]) +
+                    bs[2][2] * (7 * 2 + 6) +
+                    ('' if not mcw else bs[2][2] + bs[2][5] + (mcw + 1) * bs[2][2]) +
+                    bs[2][-3]
+                    )
 
         def _render_wk(wk, wk_line):
             if not self.config.wk:
@@ -154,14 +164,21 @@ class Cell:
 
             return wk
 
+        def _render_month(month):
+            if mcw == 0:
+                return ''
+            else:
+                rpad = mcw - str_width(month)
+                return ' ' + bs[4][5] + ' ' + month + (rpad * ' ')
+
         # Weekdays
-        yield self.padding(_render_wk(self.wk_text, True) + self.weekday_text)
+        yield self.padding(_render_wk(self.wk_title, True) + self.weekday_title + _render_month(''))
 
         # Days
-        for wk, line in zip(self._wk, self._lines):
-            yield self.padding(_render_wk(wk, False) + line)
+        for wk, line, month in self.lines:
+            yield self.padding(_render_wk(wk, False) + line + _render_month(month))
 
-        for i in range(len(self._wk), self._height):
+        for i in range(len(self.lines), self.assigned_height):
             yield self.padding(_render_wk('  ', False) + ' ' * (7 * 2 + 6))
 
 

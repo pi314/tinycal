@@ -23,6 +23,11 @@ LANG = {
                 'April', 'May', 'June',
                 'July', 'August', 'September',
                 'October', 'November', 'December'],
+            'month_abbr': ['<Error>',
+                'Jan', 'Feb', 'Mar',
+                'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep',
+                'Oct', 'Nov', 'Dec'],
             },
         'zh': {
             'weekday': ['一', '二', '三', '四', '五', '六', '日', '週'],
@@ -115,7 +120,7 @@ def main():
         string = LANG[conf.lang]['weekday'][idx]
         return color(string) + conf.color_weekday.code if color else string
 
-    weekday_text = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
+    weekday_title = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
 
     def colorize_wk(wk):
         if isinstance(wk, int):
@@ -123,9 +128,14 @@ def main():
 
         return conf.color_wk(wk)
 
-    wk_text = colorize_wk(LANG[conf.lang]['weekday'][-1])
+    wk_title = colorize_wk(LANG[conf.lang]['weekday'][-1])
 
     month_range = [ld.month for ld in month_leading_dates]
+
+    month_abbr = {}
+    for m in range(1, 13):
+        month_abbr[m] = (LANG[conf.lang].get('month_abbr') or LANG[conf.lang]['month'])[m].split() + [''] * 4
+
     def colorize_day(day):
         if (not args.cont and day.month != ld.month) or (args.cont and day.month not in month_range):
             c = (conf.color_fill) if (conf.fill) else (lambda s: '  ')
@@ -137,6 +147,13 @@ def main():
 
         return c('{:>2}'.format(day.day))
 
+    def get_month_abbr(month):
+        if month not in month_range:
+            return ''
+        else:
+            return month_abbr[weeks[-1].month].pop(0)
+
+
     if args.cont:
         # For contiguous mode, only 1 Cell obj needed
         cells = [Cell(conf)]
@@ -146,8 +163,8 @@ def main():
             cells[0].title = '{m} {y}'.format(m=LANG[conf.lang]['month'][f.month], y=f.year)
         else:
             cells[0].title = '{}/{:02} ~ {}/{:02}'.format(f.year, f.month, t.year, t.month)
-        cells[0].weekday_text = weekday_text
-        cells[0].wk_text = wk_text
+        cells[0].weekday_title = weekday_title
+        cells[0].wk_title = wk_title
 
     else:
         # For non-contiguous mode, every month has its own Cell obj
@@ -155,26 +172,26 @@ def main():
         for ld in month_leading_dates:
             cell = Cell(conf)
             cell.title = '{m} {y}'.format(m=LANG[conf.lang]['month'][ld.month], y=ld.year)
-            cell.weekday_text = weekday_text
-            cell.wk_text = wk_text
+            cell.weekday_title = weekday_title
+            cell.wk_title = wk_title
             cells.append(cell)
+
+        def get_month_abbr(month):
+            return ''
 
     # Put the days into cells, and cells into renderer
     last_cell = None
     last_wk = None
     for ld in month_leading_dates:
         for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
-            days = []
-            for day in weeks:
-                days.append(colorize_day(day))
-
             week = calculate_week_of_the_year(monthdates(ld.year, 1)[0][0], ld) + idx
 
             # Dont append days into the same cell twice (ok for different cell)
             if (last_cell, last_wk) != (cells[0], week):
                 cells[0].append(
                         wk=colorize_wk(week),
-                        days=days
+                        days=' '.join([colorize_day(day) for day in weeks]),
+                        month=get_month_abbr(weeks[-1].month),
                         )
                 last_wk = week
                 last_cell = cells[0]
