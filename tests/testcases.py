@@ -157,6 +157,19 @@ class ContiguousModeTestcase(TinyCalTestCase):
         self.expect_output(['-3'], 'cont 3months')
 
 
+class WeldTestcase(TinyCalTestCase):
+    @property
+    def calrc(self):
+        return StringIO('')
+
+    @property
+    def args(self):
+        return ['--border=single,noweld', '--color=never', '--today=2020/03/14', '--fill', '--wk']
+
+    def test_noweld(self):
+        self.expect_output(['2020'], 'noweld')
+
+
 class LangTestcase(TinyCalTestCase):
     @property
     def calrc(self):
