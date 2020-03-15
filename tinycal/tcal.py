@@ -7,7 +7,7 @@ from __future__ import print_function
 from calendar import Calendar, SUNDAY, MONDAY
 from datetime import date
 from os.path import expanduser
-from sys import stdout
+from sys import stdout, stderr
 
 from . import CALRCS
 from .cli import parser
@@ -98,12 +98,15 @@ def main(argv):
 
     elif conf.marks:
         # Read date marking file
-        with open(expanduser(conf.marks)) as marks_file:
-            for line in marks_file:
-                line = line.split('#')[0].strip()
-                mark_date, mark_color = line.split()
-                mark_date = date(*map(int, mark_date.split('/')))
-                date_marks[mark_date] = Color(mark_color)
+        try:
+            with open(expanduser(conf.marks)) as marks_file:
+                for line in marks_file:
+                    line = line.split('#')[0].strip()
+                    mark_date, mark_color = line.split()
+                    mark_date = date(*map(int, mark_date.split('/')))
+                    date_marks[mark_date] = Color(mark_color)
+        except FileNotFoundError:
+            print('Warning: Mark file "{}" does not exist'.format(conf.marks), file=stderr)
 
     today = args.today if args.today else date.today()
 
