@@ -6,6 +6,7 @@ from __future__ import print_function
 
 from calendar import Calendar, SUNDAY, MONDAY
 from datetime import date
+from os.path import expanduser
 from sys import stdout
 
 from . import CALRCS
@@ -88,11 +89,21 @@ def main(argv):
     elif conf.border == 'false':
         conf.border = 'off'
 
-    # enable/disable coloring
+    date_marks = {}
     if (args.color == 'never') or (args.color == 'auto' and not stdout.isatty()):
+        # Disable coloring
         for k in vars(conf):
             if k.startswith('color_'):
                 setattr(conf, k, Color(''))
+
+    elif conf.marks:
+        # Read date marking file
+        with open(expanduser(conf.marks)) as marks_file:
+            for line in marks_file:
+                line = line.split('#')[0].strip()
+                mark_date, mark_color = line.split()
+                mark_date = date(*map(int, mark_date.split('/')))
+                date_marks[mark_date] = Color(mark_color)
 
     today = args.today if args.today else date.today()
 
@@ -142,6 +153,8 @@ def main(argv):
         else:
             if day == today:
                 c = conf.color_today
+            elif day in date_marks:
+                c = date_marks[day]
             else:
                 c = getattr(conf, 'color_%s' % weekday_codes[day.weekday()])
 

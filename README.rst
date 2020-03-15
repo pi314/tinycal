@@ -55,7 +55,8 @@ A snapshot of help page here:
 
   usage: tcal [-h] [--version] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W]
               [-b [BORDER]] [-f] [-F] [--color [{never,always,auto}]] [-c] [-C]
-              [-l {jp,zh,en}] [-j] [-z] [-e] [-m] [-M] [--cont] [--today TODAY]
+              [-l {jp,zh,en}] [-j] [-z] [-e] [-m] [-M] [--cont] [--marks MARKS]
+              [--today TODAY]
               [year] [month]
 
   tinycal: A Python implementation of cal utility.
@@ -71,8 +72,8 @@ A snapshot of help page here:
     -A AFTER              Display the number of months after the current month.
     -B BEFORE             Display the number of months before the current month.
     -3                    Equals to -A 1 -B 1.
-    -w                    Display week number.
-    -W                    Don`t display week number.
+    -w, --wk              Display week number.
+    -W, --no-wk           Don`t display week number.
     -b [BORDER], --border [BORDER]
                           Comma separated keywords to describe borders.
                           Valid keywords: full,basic,off,ascii,single,bold,double,weld,noweld
@@ -90,6 +91,7 @@ A snapshot of help page here:
     -m                    Use Monday as first weekday.
     -M                    Use Sunday as first weekday.
     --cont                Show the calendar in contiguous mode.
+    --marks MARKS         Specify the date marking file.
     --today TODAY         Date that treated as today in format yyyy/mm/dd, used for debugging.
 
   Configuration files: ('~/.config/calrc', '~/.calrc')

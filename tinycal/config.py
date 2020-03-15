@@ -42,6 +42,12 @@ def greater_than(n):
             }
 
 
+file_exists = {
+            'condition': (lambda f: exists(expanduser(f))),
+            'message_template': 'File "{value}" does not exist',
+            }
+
+
 class Color:
     definition = {
             'black': '0', 'red': '1', 'green': '2', 'yellow': '3',
@@ -195,6 +201,7 @@ class TinyCalConfig:
     border_weld = BoolField(default=True)
     start_monday = BoolField(default=False)
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
+    marks = ValueField(default=None, validators=[file_exists])
 
     color_wk = ColorField(default=Color('BLACK'))
     color_fill = ColorField(default=Color('BLACK'))

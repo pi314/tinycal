@@ -3,7 +3,7 @@ Define command line options
 """
 
 from datetime import date
-from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError
+from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError, FileType
 
 from . import CALRCS
 from . import __version__
@@ -83,6 +83,9 @@ parser.add_argument('-M', action='store_false', dest='start_monday', default=Non
 
 parser.add_argument('--cont', action='store_true', dest='cont', default=False,
                     help='Show the calendar in contiguous mode.')
+
+parser.add_argument('--marks', type=FileType('r'), dest='marks', default=None,
+                    help='Specify the date marking file.')
 
 def full_date_str(today_str):
     try:
