@@ -24,8 +24,10 @@ Color('BLACK:None')
 Color('None:white')
 """
 
+import configparser
 import re
-import os.path
+
+from os.path import expanduser, exists
 
 from .declarative_config import (
         ValueField, ValidationError,
@@ -233,20 +235,26 @@ class TinyCalConfig:
 
     @classmethod
     def parse_conf(cls, calrcs):
-        calrcs = [rc for rc in map(os.path.expanduser, calrcs) if os.path.exists(rc)]
-        if calrcs:
-            content = '[_]\n' + open(calrcs[0]).read()
-            try:
-                import configparser
+        for rc in calrcs:
+            if isinstance(rc, str):
+                rc = expanduser(rc)
+                with open(rc) as f:
+                    content = '[_]\n' + f.read()
+                    c = configparser.ConfigParser()
+                    c.read_string(content)
+                    return cls(dict(c['_']))
+
+            elif isinstance(rc, dict):
+                return cls(rc)
+
+            elif callable(getattr(rc, 'read', None)):
+                content = '[_]\n' + rc.read()
                 c = configparser.ConfigParser()
                 c.read_string(content)
-                kv = dict(c['_'])
-            except:
-                import ConfigParser, io
-                c = ConfigParser.ConfigParser()
-                c.readfp(io.BytesIO(content))
-                kv = dict(c.items('_'))
-        else:
-            kv = {}
+                return cls(dict(c['_']))
 
-        return cls(kv)
+            else:
+                raise TypeError('Dont know how to handle', rc)
+
+
+        return cls({})

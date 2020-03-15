@@ -62,9 +62,9 @@ def calculate_week_of_the_year(first_date_of_year, target_date):
     return (target_date - first_date_of_year).days // 7 + 1
 
 
-def main():
+def main(argv):
     conf = TinyCalConfig.parse_conf(CALRCS)
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     border_args = args.border
     args.border = None
@@ -161,8 +161,12 @@ def main():
         t = month_leading_dates[-1]
         if f == t:
             cells[0].title = '{m} {y}'.format(m=LANG[conf.lang]['month'][f.month], y=f.year)
+            def get_month_abbr(month):
+                return ''
+
         else:
             cells[0].title = '{}/{:02} ~ {}/{:02}'.format(f.year, f.month, t.year, t.month)
+
         cells[0].weekday_title = weekday_title
         cells[0].wk_title = wk_title
 
