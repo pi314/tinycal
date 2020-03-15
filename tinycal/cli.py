@@ -30,9 +30,9 @@ parser.add_argument('-B', dest='before', default=None, type=int,
 parser.add_argument('-3', action='store_true', dest='a1b1', default=None,
                     help='Equals to -A 1 -B 1.')
 
-parser.add_argument('-w', action='store_true', dest='wk', default=None,
+parser.add_argument('-w', '--wk', action='store_true', dest='wk', default=None,
                     help='Display week number.')
-parser.add_argument('-W', action='store_false', dest='wk', default=None,
+parser.add_argument('-W', '--no-wk', action='store_false', dest='wk', default=None,
                     help='Don`t display week number.')
 
 border_choices = ('full', 'basic', 'off', 'ascii', 'single', 'bold', 'double', 'weld', 'noweld')

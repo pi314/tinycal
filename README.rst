@@ -181,6 +181,13 @@ If it looks ugly, I'm sorry :(
 But you can design your own configuration anyway :)
 
 
+Test
+-------------------------------------------------------------------------------
+::
+
+  python -m unittest -v tests/testcases.py
+
+
 License
 -------------------------------------------------------------------------------
 This software is released under 2-clause BSD license, please refer to LICENSE.txt.
