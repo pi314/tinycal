@@ -120,10 +120,17 @@ Here is the full set of configurable options, with default values:
   wk = false
   sep = true
   fill = false
+
+  # Single choice: full / basic / off
   border = full
+
+  # Single choice: ascii / single / bold / double
   border.style = single
+
   border.weld = true
   start_monday = false
+
+  # Single choice: en / zh / jp
   lang = en
 
   wk.color = BLACK
