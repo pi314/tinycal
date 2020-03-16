@@ -236,6 +236,9 @@ class TinyCalConfig:
         for rc in calrcs:
             if isinstance(rc, str):
                 rc = expanduser(rc)
+                if not exists(rc):
+                    continue
+
                 with open(rc) as f:
                     content = '[_]\n' + f.read()
                     c = configparser.ConfigParser()
