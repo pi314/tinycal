@@ -4,6 +4,8 @@ Core function of `tcal` command
 
 from __future__ import print_function
 
+import re
+
 from calendar import Calendar, SUNDAY, MONDAY
 from datetime import date
 from os.path import expanduser
@@ -47,6 +49,8 @@ LANG = {
                 '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
             },
         }
+
+date_mark_regex = re.compile(r'^(\d\d\d\d/\d\d/\d\d) +(\w+) *')
 
 
 def calculate_month_range(before, after, year, month):
@@ -101,10 +105,17 @@ def main(argv):
         try:
             with open(expanduser(conf.marks)) as marks_file:
                 for line in marks_file:
-                    line = line.split('#')[0].strip()
-                    mark_date, mark_color = line.split()
-                    mark_date = date(*map(int, mark_date.split('/')))
-                    date_marks[mark_date] = Color(mark_color)
+                    m = date_mark_regex.match(line.strip())
+                    if not m:
+                        # Silently ignore invalid lines
+                        continue
+
+                    mark_date, mark_color = date(*map(int, m.group(1).split('/'))), m.group(2)
+                    try:
+                        date_marks[mark_date] = Color(mark_color)
+                    except ValueError:
+                        pass
+
         except FileNotFoundError:
             print('Warning: Mark file "{}" does not exist'.format(conf.marks), file=stderr)
 

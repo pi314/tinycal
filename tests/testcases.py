@@ -244,7 +244,11 @@ marks = MOCK_MARKS
     def test_color(self):
         def precise_mock_open(fname, *args, **kwargs):
             if fname == 'MOCK_MARKS':
-                return StringIO('2020/03/18 BLUE')
+                return StringIO('''
+2020/03/18 BLUE # comment
+2020/03/19
+2020/03/20 invalid:color
+''')
 
             else:
                 return open(*args, **kwargs)
@@ -269,7 +273,7 @@ col = 0
 before = before?
 after = -1
 border = double
-today.color = what:color
+today.color = invalid:color
                 ''')
 
     @property
