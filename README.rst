@@ -98,7 +98,7 @@ A snapshot of help page here:
 
 Example usage:
 
-..  image:: screenshot.png
+..  image:: gallery/vanilla.png
 
 
 Configuration File
@@ -152,7 +152,7 @@ For color settings, use ``foreground:background`` format to describe colors.
 
 Recognized colors: ``black``, ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``.
 
-If every letter in foreground is capitalized, the color will be bright.
+If every letter in foreground is capitalized (e.g. ``RED``), the color will be bright.
 
 Several color configuration may refer to the same day (like today & saturday).
 The more specific setting overrides the other.
@@ -161,26 +161,25 @@ For example, this configuration:
 
 ::
 
-  col = 5
+  col = 4
   sep = true
   wk = true
-  border = basic
+  border = full
+  border.style = double
   fill = true
 
   title.color = black:cyan
   wk.color = black:white
-  today.color = RED
+  today.color = black:white
   weekday.color = YELLOW
   weekday.sunday.color = GREEN
   weekday.saturday.color = GREEN
+  sunday.color = RED
+  saturday.color = RED
 
 looks like this:
 
-..  image:: screenshot-config-example.png
-
-If it looks ugly, I'm sorry :(
-
-But you can design your own configuration anyway :)
+..  image:: gallery/my-setting.png
 
 
 Test
