@@ -46,17 +46,19 @@ class ValueField(object):
         assert len(args) == arg_count
         return super(ValueField, cls).__new__(cls)
 
-    def __init__(self, default=None, validators=()):
+    def __init__(self, default=None, limiters=()):
         self.default = default
-        self.validators = validators
+        self.limiters = limiters
 
     def to_python(self, text):
         return text
 
-    def validate(self, key, value):
-        for v in self.validators:
-            if not v['condition'](value):
-                raise Exception(v['message_template'].format(**locals()))
+    def limit(self, value):
+        for lmtr in self.limiters:
+            if not lmtr['condition'](value):
+                return self.default
+
+        return value
 
     def clean(self, key, text):
         if text is None:
@@ -64,8 +66,13 @@ class ValueField(object):
 
         assert isinstance(text, str)
 
-        value = self.to_python(text)
-        self.validate(key, value)
+        try:
+            value = self.to_python(text)
+        except ValueError as e:
+            value = self.default
+
+        value = self.limit(value)
+
         return value
 
 
@@ -74,7 +81,8 @@ class IntegerField(ValueField):
         try:
             value = int(text)
         except ValueError as e:
-            raise ValidationError('....')
+            return self.default
+
         return value
 
 
@@ -96,7 +104,8 @@ class SelectorField(ValueField):
         self.choices = choices
         super(SelectorField, self).__init__(*args, **kwargs)
 
-    def validate(self, key, value):
+    def limit(self, value):
         if value not in self.choices:
-            raise ValidationError('xxxx')
-        super(SelectorField, self).validate(key, value)
+            return self.default
+
+        return super(SelectorField, self).limit(value)

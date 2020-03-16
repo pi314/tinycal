@@ -64,7 +64,7 @@ class Color:
         """
         m = self.patt.match(color_setting)
         if m is None:
-            raise ValueError
+            raise ValueError('{} does not match color setting pattern'.format(text))
         self.highlight, self.fg, self.bg = self.clean(*m.groups())
 
     def __len__(self):
@@ -178,16 +178,13 @@ class ColorField(ValueField):
         super(ColorField, self).__init__(*args, **kwargs)
 
     def to_python(self, text):
-        try:
-            return Color(text)
-        except ValueError as e:
-            raise ValidationError('%r not match color setting pattern' % text)
+        return Color(text)
 
 
 class TinyCalConfig:
-    col = IntegerField(default=3, validators=[greater_than(0)])
-    after = IntegerField(default=0, validators=[greater_than(-1)])
-    before = IntegerField(default=0, validators=[greater_than(-1)])
+    col = IntegerField(default=3, limiters=[greater_than(0)])
+    after = IntegerField(default=0, limiters=[greater_than(-1)])
+    before = IntegerField(default=0, limiters=[greater_than(-1)])
     wk = BoolField(default=False)
     fill = BoolField(default=False)
     border = SelectorField(['true', 'full', 'basic', 'off', 'false'], default='full')

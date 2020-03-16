@@ -259,3 +259,22 @@ marks = MOCK_MARKS
             stdout = self.run_with_args([])
 
         self.check_output('color', stdout)
+
+
+class InvalidConfigTestcase(TinyCalTestCase):
+    @property
+    def calrc(self):
+        return StringIO('''
+col = 0
+before = before?
+after = -1
+border = double
+today.color = what:color
+                ''')
+
+    @property
+    def args(self):
+        return ['--border=single,full', '--color=always', '--today=2020/03/14', '--wk']
+
+    def test_load_invalid_config(self):
+        stdout = self.run_with_args([])

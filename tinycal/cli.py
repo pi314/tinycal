@@ -21,10 +21,20 @@ parser.add_argument('--version', '-v', action='version', version=__version__)
 parser.add_argument('--col', dest='col', default=None, type=int,
                     help='Specify the column numbers.')
 
-parser.add_argument('-A', dest='after', default=None, type=int,
+def type_int_greater_than(limit):
+    def int_greater_than(v):
+        ret = int(v)
+        if ret <= limit:
+            raise ArgumentTypeError('Should be greater than {}'.format(limit))
+
+        return ret
+
+    return int_greater_than
+
+parser.add_argument('-A', dest='after', default=None, type=type_int_greater_than(-1),
                     help='Display the number of months after the current month.')
 
-parser.add_argument('-B', dest='before', default=None, type=int,
+parser.add_argument('-B', dest='before', default=None, type=type_int_greater_than(-1),
                     help='Display the number of months before the current month.')
 
 parser.add_argument('-3', action='store_true', dest='a1b1', default=None,
