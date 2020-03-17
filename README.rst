@@ -98,7 +98,7 @@ A snapshot of help page here:
 
 Example usage:
 
-..  image:: screenshot.png
+..  image:: gallery/vanilla.png
 
 
 Configuration File
@@ -118,11 +118,19 @@ Here is the full set of configurable options, with default values:
   wk = false
   sep = true
   fill = false
+
+  # Single choice: full / basic / off
   border = full
+
+  # Single choice: ascii / single / bold / double
   border.style = single
+
   border.color = none:none
   border.weld = true
+
   start_monday = false
+
+  # Single choice: en / zh / jp
   lang = en
 
   wk.color = BLACK
@@ -154,7 +162,7 @@ For color settings, use ``foreground:background`` format to describe colors.
 
 Recognized colors: ``black``, ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``.
 
-If every letter in foreground is capitalized, the color will be bright.
+If every letter in foreground is capitalized (e.g. ``RED``), the color will be bright.
 
 Several color configurations may refer to a same day (like ``today`` and ``saturday``).
 The more specific setting overrides the other.
@@ -163,26 +171,49 @@ For example, this configuration:
 
 ::
 
-  col = 5
+  col = 4
   sep = true
   wk = true
-  border = basic
+  border = full
+  border.style = double
   fill = true
 
   title.color = black:cyan
   wk.color = black:white
-  today.color = RED
+  today.color = black:white
   weekday.color = YELLOW
   weekday.sunday.color = GREEN
   weekday.saturday.color = GREEN
+  sunday.color = RED
+  saturday.color = RED
 
 looks like this:
 
-..  image:: screenshot-config-example.png
+..  image:: gallery/my-setting.png
 
-If it looks ugly, I'm sorry :(
 
-But you can design your own configuration anyway :)
+Gallery
+-------------------------------------------------------------------------------
+
+Classical ASCII border:
+
+..  image:: gallery/border=ascii.png
+
+
+Bold border:
+
+..  image:: gallery/border=bold.png
+
+
+Single-lined border, with ``noweld`` option:
+
+..  image:: gallery/border=single,noweld.png
+
+
+Doubled-lined border:
+
+..  image:: gallery/border=double.png
+
 
 
 Test
