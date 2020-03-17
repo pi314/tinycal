@@ -93,6 +93,14 @@ def main(argv):
     elif conf.border == 'false':
         conf.border = 'off'
 
+    if conf.color_today_wk == TinyCalConfig.color_today_wk.default:
+        # If today.wk.color is not configured, and wk.color.fg is configured
+        # Re-assign today.wk.color to a brighter version of wk.color
+        if conf.color_wk.fg != None and conf.color_wk.bg == None:
+            conf.color_today_wk = conf.color_wk.upper()
+        else:
+            conf.color_today_wk = conf.color_wk
+
     date_marks = {}
     if (args.color == 'never') or (args.color == 'auto' and not stdout.isatty()):
         # Disable coloring
@@ -119,7 +127,11 @@ def main(argv):
         except FileNotFoundError:
             print('Warning: Mark file "{}" does not exist'.format(conf.marks), file=stderr)
 
+    calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
+    monthdates = calendar.monthdatescalendar
+
     today = args.today if args.today else date.today()
+    today_wk = calculate_week_of_the_year(monthdates(today.year, 1)[0][0], today)
 
     # Calculate display range (from which month to which month)
     if args.year is not None and args.month is None:
@@ -129,10 +141,6 @@ def main(argv):
         month = args.month or today.month
         before, after = (1, 1) if args.a1b1 else (conf.before, conf.after)
         month_leading_dates = calculate_month_range(before, after, year, month)
-
-
-    calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
-    monthdates = calendar.monthdatescalendar
 
     # Create TinyCalRenderer object for rendering
     renderer = TinyCalRenderer(conf)
@@ -149,7 +157,12 @@ def main(argv):
 
     def colorize_wk(wk):
         if isinstance(wk, int):
-            return conf.color_wk('{:>2}'.format(wk))
+            if wk == today_wk:
+                c = conf.color_today_wk
+            else:
+                c = conf.color_wk
+
+            return c('{:>2}'.format(wk))
 
         return conf.color_wk(wk)
 

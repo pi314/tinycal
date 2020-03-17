@@ -67,6 +67,14 @@ class Color:
             raise ValueError('{} does not match color setting pattern'.format(text))
         self.highlight, self.fg, self.bg = self.clean(*m.groups())
 
+    def upper(self):
+        if str(self) == 'BLACK:none':
+            return Color('white:none')
+
+        return Color('{}:{}'.format(
+            'none' if not self.fg else self.fg.upper(),
+            'none' if not self.bg else self.bg.lower()))
+
     def __len__(self):
         # use `__len__` instead of `__bool__` for Python 2/3 compatible
         return False if self.fg == self.bg == None else True
@@ -99,12 +107,12 @@ class Color:
     def __str__(self):
         r"""
         >>> '%s' % Color('')
-        'None:None'
+        'none:none'
         >>> '%s' % Color('BLACK:WHITE')
         'BLACK:white'
         """
-        fg = self.fg.upper() if self.fg is not None and self.highlight else self.fg
-        bg = self.bg
+        fg = self.fg.upper() if (self.fg is not None and self.highlight) else str(self.fg).lower()
+        bg = str(self.bg).lower()
         return '%s:%s' % (fg, bg)
 
     def __lshift__(self, new):
@@ -214,6 +222,7 @@ class TinyCalConfig:
     color_friday = ColorField(default=Color('none:none'))
     color_saturday = ColorField(default=Color('none:none'))
     color_today = ColorField(default=Color('none:white'))
+    color_today_wk = ColorField(default=Color('none:none'))
 
     def __init__(self, attrs):
         assert isinstance(attrs, dict)

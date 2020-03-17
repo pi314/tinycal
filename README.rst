@@ -147,6 +147,9 @@ Here is the full set of configurable options, with default values:
   saturday.color = none:none
   today.color = none:white
 
+  # Note: the default value is actually brighter version of wk.color
+  today.wk.color = none:none
+
 The ordering is not important.
 
 For color settings, use ``foreground:background`` format to describe colors.

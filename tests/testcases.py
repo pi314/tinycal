@@ -235,6 +235,7 @@ weekday.saturday.color = GREEN
 sunday.color = RED
 saturday.color = RED
 border.color = magenta
+today.wk.color = white
 marks = MOCK_MARKS
                 ''')
 
