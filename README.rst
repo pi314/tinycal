@@ -189,6 +189,30 @@ looks like this:
 ..  image:: gallery/my-setting.png
 
 
+Gallery
+-------------------------------------------------------------------------------
+
+Classical ASCII border:
+
+..  image:: gallery/border=ascii.png
+
+
+Bold border:
+
+..  image:: gallery/border=bold.png
+
+
+Single-lined border, with ``noweld`` option:
+
+..  image:: gallery/border=single noweld.png
+
+
+Doubled-lined border:
+
+..  image:: gallery/border=double.png
+
+
+
 Test
 -------------------------------------------------------------------------------
 ::
