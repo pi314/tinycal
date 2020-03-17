@@ -46,8 +46,8 @@ It's just an example, you can decide which place to put.
 
 Usage
 -------------------------------------------------------------------------------
-tinycal comes with a command utility ``tcal``.
-It's command line argument design is mostly based on traditional ``cal``.
+Tinycal comes with a command utility ``tcal``.
+It's command line argument design is mostly based on the classical ``cal``.
 
 A snapshot of help page here:
 
@@ -103,9 +103,7 @@ Example usage:
 
 Configuration File
 -------------------------------------------------------------------------------
-Hey, you still reading :D
-
-tinycal finds its configuration file in this order:
+Tinycal finds its configuration file in the following order:
 
 1.  ``~/.config/calrc``
 2.  ``~/.calrc``
@@ -158,7 +156,7 @@ Recognized colors: ``black``, ``red``, ``green``, ``yellow``, ``blue``, ``magent
 
 If every letter in foreground is capitalized, the color will be bright.
 
-Several color configuration may refer to the same day (like today & saturday).
+Several color configurations may refer to a same day (like ``today`` and ``saturday``).
 The more specific setting overrides the other.
 
 For example, this configuration:
