@@ -156,9 +156,7 @@ Here is the full set of configurable options, with default values:
   friday.color = none:none
   saturday.color = none:none
   today.color = none:white
-
-  # Note: the default value is actually brighter version of wk.color
-  today.wk.color = none:none
+  today.wk.color = (brighter version of wk.color)
 
 The ordering is not important.
 
@@ -184,7 +182,6 @@ For example, this configuration:
   marks = ~/.calmarks
 
   title.color = black:cyan
-  wk.color = black:white
   today.color = black:white
   weekday.color = YELLOW
   weekday.sunday.color = GREEN
