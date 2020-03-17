@@ -11,14 +11,12 @@ It's hard to see which day is today.
 
 I found the other ``cal`` implementation in a single C file.
 After modify it's source code a little bit, I was able to build it.
+It worked well for a long period of time.
 
-And it worked for a long period of time.
+Sometimes I need to know the week number of a day, but ``cal`` didn't provide such argument.
+I have to check my employee badge over and over again.
 
-One day I need to know the week number of a day.
-But ``cal`` didn't provide such argument, so I have to flip my badge over and
-over again.
-
-"NO, we RD exists to solve problems! At least our own problems..."
+"NO, we programmers exists to solve problems! At least our own problems."
 
 Here comes tinycal.
 
