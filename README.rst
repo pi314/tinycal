@@ -205,7 +205,7 @@ Classical ASCII border:
 ..  image:: gallery/border=ascii.png
 
 
-Bold border (with some configurations):
+Bold border (with tweaks):
 
 ..  image:: gallery/border=bold,green.png
 
