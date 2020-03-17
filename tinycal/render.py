@@ -2,7 +2,7 @@ from unicodedata import east_asian_width
 
 from .config import Color
 
-border_style = {
+border_template = {
         'template': [
             '┏━──────────────────────────┳┓',
             '┃        March 2020         ┃┃',
@@ -82,7 +82,6 @@ class Cell:
         self.wk_title = 'WK'
         self.lines = []
         self.assigned_height = 0
-        self.border_style = None
 
     def append(self, wk='', days=' ' * (7 * 2 + 6), month=''):
         self.lines.append((wk, days, month))
@@ -134,8 +133,8 @@ class Cell:
         if self.title is None:
             return
 
-        assert self.border_style
-        bs = self.border_style
+        bs = border_template[self.config.border_style]
+        bc = self.config.color_border
 
         # Title
         pad_total = self.internal_width - str_width(self.title)
@@ -147,7 +146,7 @@ class Cell:
 
         # Cell internal border - title (if enabled)
         if self.config.border == 'full':
-            yield (bs[2][1] +
+            yield bc(bs[2][1] +
                     ('' if not self.config.wk else bs[2][2] * 3 + bs[2][5] + bs[2][2]) +
                     bs[2][2] * (7 * 2 + 6) +
                     ('' if not mcw else bs[2][2] + bs[2][5] + (mcw + 1) * bs[2][2]) +
@@ -160,7 +159,7 @@ class Cell:
 
             wk += ' '
             if self.config.border == 'full':
-                wk += bs[3 + int(not wk_line)][5] + ' '
+                wk += bc(bs[3 + int(not wk_line)][5]) + ' '
 
             return wk
 
@@ -169,7 +168,7 @@ class Cell:
                 return ''
             else:
                 rpad = mcw - str_width(month)
-                return ' ' + bs[4][5] + ' ' + month + (rpad * ' ')
+                return ' ' + bc(bs[4][5]) + ' ' + month + (rpad * ' ')
 
         # Weekdays
         yield self.padding(_render_wk(self.wk_title, True) + self.weekday_title + _render_month(''))
@@ -197,14 +196,11 @@ class TinyCalRenderer:
             from itertools import izip_longest as zip_longest
 
         # Select border style
-        if self.config.border_style not in border_style:
+        if self.config.border_style not in border_template:
             self.config.border_style = 'ascii'
 
-        bs = border_style[self.config.border_style]
-
-        # Apply border style to every cells
-        for cell in self.cells:
-            cell.border_style = bs
+        bs = border_template[self.config.border_style]
+        bc = self.config.color_border
 
         # If month range < config.col, don't use empty cells to fill up
         effective_col = min(self.config.col, len(self.cells))
@@ -228,7 +224,7 @@ class TinyCalRenderer:
             else:
                 joiner = bs[0][-1] + bs[0][0]
 
-            ret += bs[0][0] + joiner.join([cell_width * bs[0][1]] * effective_col) + bs[0][-1] + '\n'
+            ret += bc(bs[0][0] + joiner.join([cell_width * bs[0][1]] * effective_col) + bs[0][-1]) + '\n'
 
         for row_idx, row in enumerate(grid):
             row_height = max(cell.height for cell in row)
@@ -241,29 +237,29 @@ class TinyCalRenderer:
                     ret += '\n'
                 else:
                     if self.config.border_weld:
-                        ret += (bs[-2][0] +
+                        ret += bc(bs[-2][0] +
                                 bs[-2][-2].join(((cell_width * bs[-2][1]) for cell in row)) +
-                                bs[-2][-1] + '\n')
+                                bs[-2][-1]) + '\n'
                     else:
-                        ret += (bs[-1][0] +
+                        ret += bc(bs[-1][0] +
                                 (bs[-1][-1] + bs[-1][0]).join(((cell_width * bs[-2][1]) for cell in row)) +
-                                bs[-1][-1] + '\n')
-                        ret += (bs[0][0] +
+                                bs[-1][-1]) + '\n'
+                        ret += bc(bs[0][0] +
                                 (bs[0][-1] + bs[0][0]).join(((cell_width * bs[-2][1]) for cell in row)) +
-                                bs[0][-1] + '\n')
+                                bs[0][-1]) + '\n'
 
             # Days
             for line_nr, lines in enumerate(zip_longest(*row, fillvalue=' ' * cell_width)):
                 border_idx = min([3, line_nr]) + 1
                 if self.config.border != 'off':
                     if self.config.border_weld:
-                        ret += (bs[border_idx][0] +
-                                bs[border_idx][-2].join(lines) +
-                                bs[border_idx][-1] + '\n')
+                        ret += (bc(bs[border_idx][0]) +
+                                bc(bs[border_idx][-2]).join(lines) +
+                                bc(bs[border_idx][-1]) + '\n')
                     else:
-                        ret += (bs[border_idx][0] +
-                                (bs[border_idx][-1] + bs[border_idx][0]).join(lines) +
-                                bs[border_idx][-1] + '\n')
+                        ret += (bc(bs[border_idx][0]) +
+                                bc(bs[border_idx][-1] + bs[border_idx][0]).join(lines) +
+                                bc(bs[border_idx][-1]) + '\n')
 
                 else:
                     ret += ' '.join(lines) +'\n'
@@ -275,6 +271,6 @@ class TinyCalRenderer:
             else:
                 joiner = bs[-1][-1] + bs[-1][0]
 
-            ret += bs[-1][0] + joiner.join([cell_width * bs[-1][1]] * effective_col) + bs[-1][-1] + '\n'
+            ret += bc(bs[-1][0] + joiner.join([cell_width * bs[-1][1]] * effective_col) + bs[-1][-1]) + '\n'
 
         return ret.rstrip('\n')

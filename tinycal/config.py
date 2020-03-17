@@ -194,6 +194,7 @@ class TinyCalConfig:
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
     marks = ValueField(default=None)
 
+    color_border = ColorField(default=Color('none:none'))
     color_wk = ColorField(default=Color('BLACK'))
     color_fill = ColorField(default=Color('BLACK'))
     color_title = ColorField(default=Color('none:none'))

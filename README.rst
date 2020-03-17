@@ -122,6 +122,7 @@ Here is the full set of configurable options, with default values:
   fill = false
   border = full
   border.style = single
+  border.color = none:none
   border.weld = true
   start_monday = false
   lang = en
