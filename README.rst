@@ -204,7 +204,7 @@ Bold border:
 
 Single-lined border, with ``noweld`` option:
 
-..  image:: gallery/border=single noweld.png
+..  image:: gallery/border=single,noweld.png
 
 
 Doubled-lined border:
