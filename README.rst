@@ -130,6 +130,10 @@ Here is the full set of configurable options, with default values:
 
   start_monday = false
 
+  # The path to date marking file.
+  marks = <no-default>
+  # Format: yyyy/mm/dd color
+
   # Single choice: en / zh / jp
   lang = en
 
@@ -172,11 +176,12 @@ For example, this configuration:
 ::
 
   col = 4
-  sep = true
   wk = true
   border = full
   border.style = double
   fill = true
+
+  marks = ~/.calmarks
 
   title.color = black:cyan
   wk.color = black:white
@@ -189,7 +194,7 @@ For example, this configuration:
 
 looks like this:
 
-..  image:: gallery/my-setting.png
+..  image:: gallery/my-color-setting.png
 
 
 Gallery
@@ -200,9 +205,9 @@ Classical ASCII border:
 ..  image:: gallery/border=ascii.png
 
 
-Bold border:
+Bold border (with some configurations):
 
-..  image:: gallery/border=bold.png
+..  image:: gallery/border=bold,green.png
 
 
 Single-lined border, with ``noweld`` option:
