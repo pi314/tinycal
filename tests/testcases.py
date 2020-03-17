@@ -221,6 +221,14 @@ class LangTestcase(TinyCalTestCase):
         stdout = self.run_with_args(['--lang=jp', '--cont', '2020'])
         self.check_output('lang=jp cont', stdout)
 
+    def test_cont_across_year_first(self):
+        stdout = self.run_with_args(['--today=2020/01/01', '-3', '--cont'])
+        self.check_output('cont 20200101', stdout)
+
+    def test_cont_across_year_last(self):
+        stdout = self.run_with_args(['--today=2019/12/31', '-3', '--cont'])
+        self.check_output('cont 20191231', stdout)
+
 
 class ColorTestcase(TinyCalTestCase):
     @property

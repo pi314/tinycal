@@ -155,9 +155,9 @@ def main(argv):
 
     weekday_title = conf.color_weekday(' '.join(map(colorize_weekday, calendar.iterweekdays())))
 
-    def colorize_wk(wk):
+    def colorize_wk(wk, contain_today=False):
         if isinstance(wk, int):
-            if wk == today_wk:
+            if contain_today:
                 c = conf.color_today_wk
             else:
                 c = conf.color_wk
@@ -172,7 +172,7 @@ def main(argv):
 
     month_abbr = {}
     for m in range(1, 13):
-        month_abbr[m] = (LANG[conf.lang].get('month_abbr') or LANG[conf.lang]['month'])[m].split() + [''] * 4
+        month_abbr[m] = (LANG[conf.lang].get('month_abbr') or LANG[conf.lang]['month'])[m].split() + [''] * 5
 
     def colorize_day(day):
         if (not args.cont and day.month != ld.month) or (args.cont and day.month not in month_range):
@@ -191,7 +191,7 @@ def main(argv):
         if month not in month_range:
             return ''
         else:
-            return month_abbr[weeks[-1].month].pop(0)
+            return month_abbr[month].pop(0)
 
 
     if args.cont:
@@ -225,19 +225,31 @@ def main(argv):
 
     # Put the days into cells, and cells into renderer
     last_cell = None
-    last_wk = None
+    last_week_leading_date = None
     for ld in month_leading_dates:
-        for idx, weeks in enumerate(monthdates(ld.year, ld.month)):
-            week = calculate_week_of_the_year(monthdates(ld.year, 1)[0][0], ld) + idx
+        for week in monthdates(ld.year, ld.month):
+            # calculate week number
+            if args.cont and ld.month != week[-1].month and ld.year != today.year:
+                # Edge case, sometimes wk53 needs to be changed to wk01
+                wk = calculate_week_of_the_year(monthdates(week[-1].year, 1)[0][-1], week[-1])
+            else:
+                # Normal case
+                wk = calculate_week_of_the_year(monthdates(ld.year, 1)[0][0], week[0])
+
+            # Highlight current week
+            if (not args.cont and today.month != ld.month) or (args.cont and today.month not in month_range):
+                wk_contain_today = False
+            else:
+                wk_contain_today = today in week
 
             # Dont append days into the same cell twice (ok for different cell)
-            if (last_cell, last_wk) != (cells[0], week):
+            if (last_cell, last_week_leading_date) != (cells[0], week[0]):
                 cells[0].append(
-                        wk=colorize_wk(week),
-                        days=' '.join([colorize_day(day) for day in weeks]),
-                        month=get_month_abbr(weeks[-1].month),
+                        wk=colorize_wk(wk, contain_today=wk_contain_today),
+                        days=' '.join([colorize_day(day) for day in week]),
+                        month=get_month_abbr(week[-1].month),
                         )
-                last_wk = week
+                last_week_leading_date = week[0]
                 last_cell = cells[0]
 
         if len(cells) > 1:
