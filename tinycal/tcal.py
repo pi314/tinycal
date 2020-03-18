@@ -5,6 +5,7 @@ Core function of `tcal` command
 from __future__ import print_function
 
 import re
+import sys
 
 from calendar import Calendar, SUNDAY, MONDAY
 from datetime import date
@@ -67,9 +68,9 @@ def calculate_week_of_the_year(first_date_of_year, target_date):
     return (target_date - first_date_of_year).days // 7 + 1
 
 
-def main(argv):
+def main():
     conf = TinyCalConfig.parse_conf(CALRCS)
-    args = parser.parse_args(argv)
+    args = parser.parse_args()
 
     border_args = args.border
     args.border = None

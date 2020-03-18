@@ -1,6 +1,7 @@
 import unittest
 
 import datetime
+import sys
 
 from io import StringIO
 from unittest.mock import patch, mock_open
@@ -23,7 +24,8 @@ class TinyCalTestCase(unittest.TestCase):
     @patch('sys.stdout', new_callable=StringIO)
     def run_with_args(self, args, stdout):
         tcal.CALRCS = [self.calrc]
-        tcal.main(self.args + args)
+        sys.argv = ['tcal'] + self.args + args
+        tcal.main()
         return stdout
 
     def check_output(self, answer_file, stdout):

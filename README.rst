@@ -220,7 +220,7 @@ Test
 -------------------------------------------------------------------------------
 ::
 
-  python -m unittest -v tests/testcases.py
+  $ python -m unittest -v tests/testcases.py
 
 
 License
