@@ -11,14 +11,12 @@ It's hard to see which day is today.
 
 I found the other ``cal`` implementation in a single C file.
 After modify it's source code a little bit, I was able to build it.
+It worked well for a long period of time.
 
-And it worked for a long period of time.
+Sometimes I need to know the week number of a day, but ``cal`` didn't provide such argument.
+I have to check my employee badge over and over again.
 
-One day I need to know the week number of a day.
-But ``cal`` didn't provide such argument, so I have to flip my badge over and
-over again.
-
-"NO, we RD exists to solve problems! At least our own problems..."
+"NO, we programmers exists to solve problems! At least our own problems."
 
 Here comes tinycal.
 
@@ -46,16 +44,17 @@ It's just an example, you can decide which place to put.
 
 Usage
 -------------------------------------------------------------------------------
-tinycal comes with a command utility ``tcal``.
-It's command line argument design is mostly based on traditional ``cal``.
+Tinycal comes with a command utility ``tcal``.
+It's command line argument design is mostly based on the classical ``cal``.
 
 A snapshot of help page here:
 
 ::
 
-  usage: tcal [-h] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W] [-s] [-S]
-              [-b] [-nb] [-f] [-F] [-c] [-C] [-l {jp,zh,en}] [-j] [-z] [-e] [-m]
-              [-M]
+  usage: tcal [-h] [--version] [--col COL] [-A AFTER] [-B BEFORE] [-3] [-w] [-W]
+              [-b [BORDER]] [-f] [-F] [--color [{never,always,auto}]] [-c] [-C]
+              [-l {jp,zh,en}] [-j] [-z] [-e] [-m] [-M] [--cont] [--marks MARKS]
+              [--today TODAY]
               [year] [month]
 
   tinycal: A Python implementation of cal utility.
@@ -66,20 +65,22 @@ A snapshot of help page here:
 
   optional arguments:
     -h, --help            show this help message and exit
+    --version, -v         show program's version number and exit
     --col COL             Specify the column numbers.
     -A AFTER              Display the number of months after the current month.
     -B BEFORE             Display the number of months before the current month.
     -3                    Equals to -A 1 -B 1.
-    -w                    Display week number.
-    -W                    Don`t display week number.
-    -s, --sep             Display separation lines.
-    -S, --no-sep          Don`t display separation lines.
-    -b, --border          Display border lines.
-    -nb, --no-border      Don`t display border lines.
+    -w, --wk              Display week number.
+    -W, --no-wk           Don`t display week number.
+    -b [BORDER], --border [BORDER]
+                          Comma separated keywords to describe borders.
+                          Valid keywords: full,basic,off,ascii,single,bold,double,weld,noweld
     -f, --fill            Fill every month into rectangle with previous/next month dates.
     -F, --no-fill         Don`t fill month into rectangle.
-    -c                    Enable VT100 color output.
-    -C                    Disable VT100 color output.
+    --color [{never,always,auto}]
+                          Enable/disable VT100 color output.
+    -c                    Enable VT100 color output, equals to --color=always
+    -C                    Disable VT100 color output, equals to --color=never
     -l {jp,zh,en}, --lang {jp,zh,en}
                           Select the language used to display weekday.
     -j                    Enable Japanese weekday names, equals to --lang=jp.
@@ -87,21 +88,20 @@ A snapshot of help page here:
     -e                    Enable Chinese weekday names, equals to --lang=en.
     -m                    Use Monday as first weekday.
     -M                    Use Sunday as first weekday.
+    --cont                Show the calendar in contiguous mode.
+    --marks MARKS         Specify the date marking file.
+    --today TODAY         Date that treated as today in format yyyy/mm/dd, used for debugging.
 
-  Configuration files:
-  1st: ~/.config/calrc
-  2nd: ~/.calrc
+  Configuration files: ('~/.config/calrc', '~/.calrc')
 
 Example usage:
 
-..  image:: screenshot.png
+..  image:: gallery/vanilla.png
 
 
 Configuration File
 -------------------------------------------------------------------------------
-Hey, you still reading :D
-
-tinycal finds its configuration file in this order:
+Tinycal finds its configuration file in the following order:
 
 1.  ``~/.config/calrc``
 2.  ``~/.calrc``
@@ -116,8 +116,23 @@ Here is the full set of configurable options, with default values:
   wk = false
   sep = true
   fill = false
-  border = true
+
+  # Single choice: full / basic / off
+  border = full
+
+  # Single choice: ascii / single / bold / double
+  border.style = single
+
+  border.color = none:none
+  border.weld = true
+
   start_monday = false
+
+  # The path to date marking file.
+  marks = <no-default>
+  # Format: yyyy/mm/dd color
+
+  # Single choice: en / zh / jp
   lang = en
 
   wk.color = BLACK
@@ -139,6 +154,7 @@ Here is the full set of configurable options, with default values:
   friday.color = none:none
   saturday.color = none:none
   today.color = none:white
+  today.wk.color = (brighter version of wk.color)
 
 The ordering is not important.
 
@@ -146,35 +162,65 @@ For color settings, use ``foreground:background`` format to describe colors.
 
 Recognized colors: ``black``, ``red``, ``green``, ``yellow``, ``blue``, ``magenta``, ``cyan``, ``white``.
 
-If every letter in foreground is capitalized, the color will be bright.
+If every letter in foreground is capitalized (e.g. ``RED``), the color will be bright.
 
-Several color configuration may refer to the same day (like today & saturday).
+Several color configurations may refer to a same day (like ``today`` and ``saturday``).
 The more specific setting overrides the other.
 
 For example, this configuration:
 
 ::
 
-  col = 5
-  sep = true
+  col = 4
   wk = true
-  border = true
+  border = full
+  border.style = double
   fill = true
 
+  marks = ~/.calmarks
+
   title.color = black:cyan
-  wk.color = black:white
-  today.color = RED
+  today.color = black:white
   weekday.color = YELLOW
   weekday.sunday.color = GREEN
   weekday.saturday.color = GREEN
+  sunday.color = RED
+  saturday.color = RED
 
 looks like this:
 
-..  image:: screenshot-config-example.png
+..  image:: gallery/my-color-setting.png
 
-If it looks ugly, I'm sorry :(
 
-But you can design your own configuration anyway :)
+Gallery
+-------------------------------------------------------------------------------
+
+Classical ASCII border:
+
+..  image:: gallery/border=ascii.png
+
+
+Bold border (with tweaks):
+
+..  image:: gallery/border=bold,green.png
+
+
+Single-lined border, with ``noweld`` option:
+
+..  image:: gallery/border=single,noweld.png
+
+
+Doubled-lined border:
+
+..  image:: gallery/border=double.png
+
+
+
+Test
+-------------------------------------------------------------------------------
+::
+
+  python -m unittest -v tests/testcases.py
 
 
 License

@@ -24,11 +24,13 @@ Color('BLACK:None')
 Color('None:white')
 """
 
+import configparser
 import re
-import os.path
+
+from os.path import expanduser, exists
 
 from .declarative_config import (
-        Config, ValueField, ValidationError,
+        ValueField, ValidationError,
         IntegerField, BoolField, SelectorField,
         )
 
@@ -62,8 +64,16 @@ class Color:
         """
         m = self.patt.match(color_setting)
         if m is None:
-            raise ValueError
+            raise ValueError('{} does not match color setting pattern'.format(text))
         self.highlight, self.fg, self.bg = self.clean(*m.groups())
+
+    def upper(self):
+        if str(self) == 'BLACK:none':
+            return Color('white:none')
+
+        return Color('{}:{}'.format(
+            'none' if not self.fg else self.fg.upper(),
+            'none' if not self.bg else self.bg.lower()))
 
     def __len__(self):
         # use `__len__` instead of `__bool__` for Python 2/3 compatible
@@ -97,12 +107,12 @@ class Color:
     def __str__(self):
         r"""
         >>> '%s' % Color('')
-        'None:None'
+        'none:none'
         >>> '%s' % Color('BLACK:WHITE')
         'BLACK:white'
         """
-        fg = self.fg.upper() if self.fg is not None and self.highlight else self.fg
-        bg = self.bg
+        fg = self.fg.upper() if (self.fg is not None and self.highlight) else str(self.fg).lower()
+        bg = str(self.bg).lower()
         return '%s:%s' % (fg, bg)
 
     def __lshift__(self, new):
@@ -173,28 +183,26 @@ class Color:
 
 class ColorField(ValueField):
     def __init__(self, *args, **kwargs):
-        if 'key' not in kwargs:
-            kwargs['key'] = lambda name: '.'.join((lambda t: t[1:]+t[0:1])(name.split('_')))
         super(ColorField, self).__init__(*args, **kwargs)
 
     def to_python(self, text):
-        try:
-            return Color(text)
-        except ValueError as e:
-            raise ValidationError('%r not match color setting pattern' % text)
+        return Color(text)
 
 
-class TinyCalConfig(Config):
-    col = IntegerField(default=3, validators=[greater_than(0)])
-    after = IntegerField(default=0, validators=[greater_than(-1)])
-    before = IntegerField(default=0, validators=[greater_than(-1)])
+class TinyCalConfig:
+    col = IntegerField(default=3, limiters=[greater_than(0)])
+    after = IntegerField(default=0, limiters=[greater_than(-1)])
+    before = IntegerField(default=0, limiters=[greater_than(-1)])
     wk = BoolField(default=False)
-    sep = BoolField(default=True)
     fill = BoolField(default=False)
-    border = BoolField(default=True)
+    border = SelectorField(['true', 'full', 'basic', 'off', 'false'], default='full')
+    border_style = SelectorField(['ascii', 'single', 'bold', 'double'], default='single')
+    border_weld = BoolField(default=True)
     start_monday = BoolField(default=False)
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
+    marks = ValueField(default=None)
 
+    color_border = ColorField(default=Color('none:none'))
     color_wk = ColorField(default=Color('BLACK'))
     color_fill = ColorField(default=Color('BLACK'))
     color_title = ColorField(default=Color('none:none'))
@@ -214,23 +222,50 @@ class TinyCalConfig(Config):
     color_friday = ColorField(default=Color('none:none'))
     color_saturday = ColorField(default=Color('none:none'))
     color_today = ColorField(default=Color('none:white'))
+    color_today_wk = ColorField(default=Color('none:none'))
+
+    def __init__(self, attrs):
+        assert isinstance(attrs, dict)
+        assert all(isinstance(k, str) and isinstance(v, str) for k,v in attrs.items())
+
+        tmp = {}
+        for k, v in attrs.items():
+            if k.endswith('.color'):
+                tmp[ '_'.join(['color'] + k.split('.')[:-1]) ] = v
+            else:
+                tmp['_'.join(k.split('.'))] = v
+
+        attrs = tmp
+
+        for name, field in vars(self.__class__).items():
+            if isinstance(field, ValueField):
+                setattr(self, name, field.clean(name, attrs.get(name)))
 
     @classmethod
     def parse_conf(cls, calrcs):
-        calrcs = [rc for rc in map(os.path.expanduser, calrcs) if os.path.exists(rc)]
-        if calrcs:
-            content = '[_]\n' + open(calrcs[0]).read()
-            try:
-                import configparser
+        for rc in calrcs:
+            if isinstance(rc, str):
+                rc = expanduser(rc)
+                if not exists(rc):
+                    continue
+
+                with open(rc) as f:
+                    content = '[_]\n' + f.read()
+                    c = configparser.ConfigParser()
+                    c.read_string(content)
+                    return cls(dict(c['_']))
+
+            elif isinstance(rc, dict):
+                return cls(rc)
+
+            elif callable(getattr(rc, 'read', None)):
+                content = '[_]\n' + rc.read()
                 c = configparser.ConfigParser()
                 c.read_string(content)
-                kv = dict(c['_'])
-            except:
-                import ConfigParser, io
-                c = ConfigParser.ConfigParser()
-                c.readfp(io.BytesIO(content))
-                kv = dict(c.items('_'))
-        else:
-            kv = {}
+                return cls(dict(c['_']))
 
-        return cls(kv)
+            else:
+                raise TypeError('Dont know how to handle', rc)
+
+
+        return cls({})

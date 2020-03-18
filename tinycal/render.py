@@ -1,212 +1,276 @@
-# -*- coding: utf-8 -*-
-
-"""
-Render calendar
-"""
-
-from calendar import Calendar, SUNDAY, MONDAY
-from datetime import date
 from unicodedata import east_asian_width
 
 from .config import Color
 
-
-LANG = {
-        'weekday': {
-            'jp': ['月', '火', '水', '木', '金', '土', '日'],
-            'zh': ['一', '二', '三', '四', '五', '六', '日'],
-            'en': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su'],
-            'full': ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'],
-            },
-        'month': {
-            'jp': ['<Error>',
-                '睦月 (１月)', '如月 (２月)', '彌生 (３月)',
-                '卯月 (４月)', '皐月 (５月)', '水無月 (６月)',
-                '文月 (７月)', '葉月 (８月)', '長月 (９月)',
-                '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
-            'zh': ['<Error>',
-                '１月', '２月', '３月',
-                '４月', '５月', '６月',
-                '７月', '８月', '９月',
-                '１０月', '１１月', '１２月'],
-            'en': ['<Error>',
-                'January', 'February', 'March',
-                'April', 'May', 'June',
-                'July', 'August', 'September',
-                'October', 'November', 'December'],
-            },
+border_template = {
+        'template': [
+            '┏━──────────────────────────┳┓',
+            '┃        March 2020         ┃┃',
+            '┃━━──┳─────────────────────━┃┃',
+            '┃ WK ╋ Su Mo Tu We Th Fr Sa ┃┃',
+            '┃ 10 ┃  1  2  3  4  5  6  7 ┃┃',
+            '│ 11 │  8  9 10 11 12 13 14 ││',
+            '│ 12 │ 15 16 17 18 19 20 21 ││',
+            '│ 13 │ 22 23 24 25 26 27 28 ││',
+            '│ 14 │ 29 30 31             ││',
+            '┣━──────────────────────────╋┫',
+            '┗━──────────────────────────┻┛',
+            ],
+        'ascii': [
+            '.----------------------------.',
+            '|           Title           ||',
+            '| ------------------------- ||',
+            '| WK | 日 月 火 水 木 金 土 ||',
+            '| 10 |  1  2  3  4  5  6  7 ||',
+            '| 11 |  8  9 10 11 12 13 14 ||',
+            '| 12 | 15 16 17 18 19 20 21 ||',
+            '| 13 | 22 23 24 25 26 27 28 ||',
+            '| 14 | 29 30 31             ||',
+            '|---------------------------+|',
+            "'----------------------------'",
+            ],
+        'single': [
+            '┌───────────────────────────┬┐',
+            '│        March 2020         ││',
+            '│────┬──────────────────────││',
+            '│ WK ┼ Su Mo Tu We Th Fr Sa ││',
+            '│ 10 │  1  2  3  4  5  6  7 ││',
+            '│ 11 │  8  9 10 11 12 13 14 ││',
+            '│ 12 │ 15 16 17 18 19 20 21 ││',
+            '│ 13 │ 22 23 24 25 26 27 28 ││',
+            '│ 14 │ 29 30 31             ││',
+            '├───────────────────────────┼┤',
+            '└───────────────────────────┴┘',
+            ],
+        'bold': [
+            '┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳┓',
+            '┃        March 2020         ┃┃',
+            '┃━━━━┳━━━━━━━━━━━━━━━━━━━━━━┃┃',
+            '┃ WK ╋ Su Mo Tu We Th Fr Sa ┃┃',
+            '┃ 10 ┃  1  2  3  4  5  6  7 ┃┃',
+            '┃ 11 ┃  8  9 10 11 12 13 14 ┃┃',
+            '┃ 12 ┃ 15 16 17 18 19 20 21 ┃┃',
+            '┃ 13 ┃ 22 23 24 25 26 27 28 ┃┃',
+            '┃ 14 ┃ 29 30 31             ┃┃',
+            '┣━━━━━━━━━━━━━━━━━━━━━━━━━━━╋┫',
+            '┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻┛',
+            ],
+        'double': [
+            '╔═══════════════════════════╦╗',
+            '║         2020              ║║',
+            '║────┬──────────────────────║║',
+            '║ WK ┼ Su Mo Tu We Th Fr Sa ║║',
+            '║ 10 │  1  2  3  4  5  6  7 ║║',
+            '║ 11 │  8  9 10 11 12 13 14 ║║',
+            '║ 12 │ 15 16 17 18 19 20 21 ║║',
+            '║ 13 │ 22 23 24 25 26 27 28 ║║',
+            '║ 14 │ 29 30 31             ║║',
+            '╠═══════════════════════════╬╣',
+            '╚═══════════════════════════╩╝',
+            ],
         }
-
 
 def str_width(s):
     return sum(1 + (east_asian_width(c) in 'WF') for c in s)
 
 
-def expand_year_month(before, after, year, month):
-    r"""
-    >>> expand_year_month(1, 1, 2018, 1)
-    [datetime.date(2017, 12, 1), datetime.date(2018, 1, 1), datetime.date(2018, 2, 1)]
-    """
-    return [date(year - (month <= i), (month - 1 - i) % 12 + 1, 1) for i in range(before, 0, -1)] + \
-           [date(year, month, 1)] + \
-           [date(year + (month + i > 12), (month - 1 + i) % 12 + 1, 1) for i in range(1, after+1)]
+class Cell:
+    def __init__(self, config):
+        self.config = config
+        self.title = None
+        self.weekday_title = ''
+        self.wk_title = 'WK'
+        self.lines = []
+        self.assigned_height = 0
 
+    def append(self, wk='', days=' ' * (7 * 2 + 6), month=''):
+        self.lines.append((wk, days, month))
 
-class TinyCal(object):
-    def __init__(self, conf, args):
-        "conclude todo base on `config` and `args`, and set todo as property"
+    @property
+    def width(self):
+        # 2 (cell padding)
+        return self.internal_width + 2
 
-        # `conf` -- updated by `args`
-        for k in vars(conf):
-            if k in vars(args) and getattr(args, k) is not None:
-                setattr(conf, k , getattr(args, k))
-        self.conf = conf
+    def padding(self, s):
+        return ' ' + s + ' '
 
-        # `months`
-        from collections import namedtuple
+    @property
+    def internal_width(self):
+        # Cell width:
+        # 7 (days per week) x 2 (spaces per day) +
+        # 6 (paddings between days)
+        # 5 (spaces for WK)
+        mcw = self.month_col_width
+        return (
+                (7 * 2) +
+                6 +
+                (self.config.wk) * (3 + 2 * (self.config.border == 'full')) +
+                mcw + (3 if mcw else 0)
+                )
 
-        calendar = Calendar(MONDAY if conf.start_monday else SUNDAY)
-        monthdates = calendar.monthdatescalendar
+    @property
+    def month_col_width(self):
+        return max([str_width(line[2]) for line in self.lines])
 
-        today = args.today if args.today else date.today()
+    @property
+    def height(self):
+        # Only count dynamic part, i.e. no need to count title line
+        return len(self.lines)
 
-        if args.year is not None and args.month is None:
-            first_month_dates = [date(args.year, month, 1) for month in range(1, 13)]
-        else:
-            year = args.year or today.year
-            month = args.month or today.month
-            before, after = (1, 1) if args.a1b1 else (conf.before, conf.after)
-            first_month_dates = expand_year_month(before, after, year, month)
+    @height.setter
+    def height(self, val):
+        self.assigned_height = val
 
-        def get_wks(fdt):
-            wk_start = (monthdates(fdt.year, fdt.month)[0][0] - monthdates(fdt.year, 1)[0][0]).days // 7 + 1
-            return list(range(wk_start, wk_start + len(monthdates(fdt.year, fdt.month))))
+    def __iter__(self):
+        '''
+        Each line of a Cell is contructed by the following parts:
+            Title
+            Cell internal border - title (if enabled)
+            Weekdays
+            Days
+        '''
 
-        Month = namedtuple('Month', ['title', 'wks', 'weeks'])
-        Day = namedtuple('Day', ['date', 'filled'])
+        if self.title is None:
+            return
 
-        self.months = [
-                Month(
-                    title = '{m} {y}'.format(m=LANG['month'][conf.lang][fdt.month], y=fdt.year),
-                    wks = get_wks(fdt),
-                    weeks = [[Day(date=dt, filled=(dt.month != fdt.month)) for dt in row]
-                             for row in monthdates(fdt.year, fdt.month)],
+        bs = border_template[self.config.border_style]
+        bc = self.config.color_border
+
+        # Title
+        pad_total = self.internal_width - str_width(self.title)
+        pad = (pad_total // 2) * ' '
+        self.title = pad + self.title + pad + (pad_total % 2) * ' '
+        yield self.padding(self.config.color_title(self.title))
+
+        mcw = self.month_col_width
+
+        # Cell internal border - title (if enabled)
+        if self.config.border == 'full':
+            yield bc(bs[2][1] +
+                    ('' if not self.config.wk else bs[2][2] * 3 + bs[2][5] + bs[2][2]) +
+                    bs[2][2] * (7 * 2 + 6) +
+                    ('' if not mcw else bs[2][2] + bs[2][5] + (mcw + 1) * bs[2][2]) +
+                    bs[2][-3]
                     )
-                for fdt in first_month_dates
-                ]
 
-        # `cell_width`
-        self.cell_width = 7 * 2 + 6 + (3 if conf.wk else 0)
+        def _render_wk(wk, wk_line):
+            if not self.config.wk:
+                return ''
 
-        # enable/disable coloring
-        if not args.color:
-            for k in vars(conf):
-                if k.startswith('color_'):
-                    setattr(conf, k, Color(''))
+            wk += ' '
+            if self.config.border == 'full':
+                wk += bc(bs[3 + int(not wk_line)][5]) + ' '
 
-        # `render_title`
-        def _render_title(title):
-            pad_total = self.cell_width - str_width(title)
-            pad_l = (pad_total // 2) * ' '
-            pad_r = (pad_total // 2 + (pad_total % 2)) * ' '
-            return conf.color_title('{}{}{}'.format(pad_l, title, pad_r))
+            return wk
 
-        self.render_title = _render_title
-
-        # `render_wk`
-        if conf.wk:
-            self.render_wk = lambda wk: [conf.color_wk('%2s' % wk)]
-        else:
-            self.render_wk = lambda wk: []
-
-        # `render_day`
-        def render_day(day):
-            if day.filled:
-                if conf.fill:
-                    c = conf.color_fill
-                else:
-                    c = lambda s: '  '
+        def _render_month(month):
+            if mcw == 0:
+                return ''
             else:
-                if day.date == today:
-                    c = conf.color_today
-                else:
-                    c = getattr(conf, 'color_%s' % LANG['weekday']['full'][day.date.weekday()])
-            return c('{:2}'.format(day.date.day))
+                rpad = mcw - str_width(month)
+                return ' ' + bc(bs[4][5]) + ' ' + month + (rpad * ' ')
 
-        self.render_week = lambda week: list(map(render_day, week))
+        # Weekdays
+        yield self.padding(_render_wk(self.wk_title, True) + self.weekday_title + _render_month(''))
 
-        # `render_weekdays`
-        def render_weekday(idx):
-            color_name = 'color_weekday_%s' % LANG['weekday']['full'][idx]
-            color = getattr(conf, color_name)
-            string = LANG['weekday'][conf.lang][idx]
-            return color(string) + conf.color_weekday.code if color else string
+        # Days
+        for wk, line, month in self.lines:
+            yield self.padding(_render_wk(wk, False) + line + _render_month(month))
 
-        if conf.wk:
-            self.render_weekdays = lambda: conf.color_wk('WK') + conf.color_weekday(
-                    ' ' + ' '.join(map(render_weekday, calendar.iterweekdays()))
-                    )
-        else:
-            self.render_weekdays = lambda: conf.color_weekday(
-                    ' '.join(map(render_weekday, calendar.iterweekdays()))
-                    )
+        for i in range(len(self.lines), self.assigned_height):
+            yield self.padding(_render_wk('  ', False) + ' ' * (7 * 2 + 6))
 
-    @property
-    def colored(self):
-        return [
-            [self.render_title(title), self.render_weekdays()] + [
-                ' '.join(self.render_wk(wk) + self.render_week(week))
-                for wk, week in zip(wks, weeks)
-                ]
-            for title, wks, weeks in self.months
-            ]
 
-    @property
-    def framed(self):
+class TinyCalRenderer:
+    def __init__(self, config):
+        self.config = config
+        self.cells = []
+
+    def append(self, cell):
+        self.cells.append(cell)
+
+    def render(self):
         try:
             from itertools import zip_longest
         except:
             from itertools import izip_longest as zip_longest
 
-        def to_matrix(seq, col, dummy):
+        # Select border style
+        if self.config.border_style not in border_template:
+            self.config.border_style = 'ascii'
+
+        bs = border_template[self.config.border_style]
+        bc = self.config.color_border
+
+        # If month range < config.col, don't use empty cells to fill up
+        effective_col = min(self.config.col, len(self.cells))
+
+        def list_to_grid(seq, col):
             if len(seq) > col:
-                return [seq[:col]] + to_matrix(seq[col:], col, dummy)
+                return [seq[:col]] + list_to_grid(seq[col:], col)
             else:
-                return [seq + [dummy] * (col - len(seq))]
+                return [seq + [Cell(self.config)] * (col - len(seq))]
 
-        col = min(self.conf.col, len(self.months))
+        grid = list_to_grid(self.cells, effective_col)
 
-        if self.conf.sep:
-            sep_v = ' | '
-            sep_h_int = '-+-'
-            sep_h_line = '-'
-        else:
-            sep_v = '  '
-            sep_h_int = '  '
-            sep_h_line = ' '
+        cell_width = self.cells[0].width
 
-        sep_h = sep_h_int.join([sep_h_line * self.cell_width] * col)
+        ret = ''
 
-        if self.conf.border:
-            top = ('.-' + ('-' * len(sep_h)) + '-.')
-            bottom = ("'-" + ('-' * len(sep_h)) + "-'")
+        # Top line
+        if self.config.border != 'off':
+            if self.config.border_weld:
+                joiner = bs[0][-2]
+            else:
+                joiner = bs[0][-1] + bs[0][0]
 
-            wrap = lambda lines: [top] + lines + [bottom]
-            left, right = '| ', ' |'
-            hr = ('|' + sep_h[0] + sep_h + sep_h[0] + '|')
-        else:
-            wrap = lambda lines: lines
-            left = right = ''
-            hr = sep_h
+            ret += bc(bs[0][0] + joiner.join([cell_width * bs[0][1]] * effective_col) + bs[0][-1]) + '\n'
 
-        matrix = to_matrix(self.colored, col, [])
+        for row_idx, row in enumerate(grid):
+            row_height = max(cell.height for cell in row)
+            for cell in row:
+                cell.height = row_height
 
-        lines_of_rows = [
-                [left + sep_v.join(slices) + right for slices in zip_longest(*row, fillvalue=' ' * self.cell_width)]
-                for row in matrix
-                ]
-        framed_lines = wrap(sum(([hr] + lines for lines in lines_of_rows[1:]), lines_of_rows[0]))
-        return framed_lines
+            if row_idx > 0:
+                # Inter-cell border
+                if self.config.border == 'off':
+                    ret += '\n'
+                else:
+                    if self.config.border_weld:
+                        ret += bc(bs[-2][0] +
+                                bs[-2][-2].join(((cell_width * bs[-2][1]) for cell in row)) +
+                                bs[-2][-1]) + '\n'
+                    else:
+                        ret += bc(bs[-1][0] +
+                                (bs[-1][-1] + bs[-1][0]).join(((cell_width * bs[-2][1]) for cell in row)) +
+                                bs[-1][-1]) + '\n'
+                        ret += bc(bs[0][0] +
+                                (bs[0][-1] + bs[0][0]).join(((cell_width * bs[-2][1]) for cell in row)) +
+                                bs[0][-1]) + '\n'
 
-    def render(self):
-        return '\n'.join(self.framed)
+            # Days
+            for line_nr, lines in enumerate(zip_longest(*row, fillvalue=' ' * cell_width)):
+                border_idx = min([3, line_nr]) + 1
+                if self.config.border != 'off':
+                    if self.config.border_weld:
+                        ret += (bc(bs[border_idx][0]) +
+                                bc(bs[border_idx][-2]).join(lines) +
+                                bc(bs[border_idx][-1]) + '\n')
+                    else:
+                        ret += (bc(bs[border_idx][0]) +
+                                bc(bs[border_idx][-1] + bs[border_idx][0]).join(lines) +
+                                bc(bs[border_idx][-1]) + '\n')
+
+                else:
+                    ret += ' '.join(lines) +'\n'
+
+        # Bottom line
+        if self.config.border != 'off':
+            if self.config.border_weld:
+                joiner = bs[-1][-2]
+            else:
+                joiner = bs[-1][-1] + bs[-1][0]
+
+            ret += bc(bs[-1][0] + joiner.join([cell_width * bs[-1][1]] * effective_col) + bs[-1][-1]) + '\n'
+
+        return ret.rstrip('\n')
