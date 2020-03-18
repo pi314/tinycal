@@ -82,10 +82,10 @@ A snapshot of help page here:
     -c                    Enable VT100 color output, equals to --color=always
     -C                    Disable VT100 color output, equals to --color=never
     -l {jp,zh,en}, --lang {jp,zh,en}
-                          Select the language used to display weekday.
-    -j                    Enable Japanese weekday names, equals to --lang=jp.
-    -z                    Enable Chinese weekday names, equals to --lang=zh.
-    -e                    Enable Chinese weekday names, equals to --lang=en.
+                          Select the language used to display weekdays and month names.
+    -j                    Equals to --lang=jp.
+    -z                    Equals to --lang=zh.
+    -e                    Equals to --lang=en.
     -m                    Use Monday as first weekday.
     -M                    Use Sunday as first weekday.
     --cont                Show the calendar in contiguous mode.

@@ -75,16 +75,16 @@ parser.add_argument('-C', action='store_const', const='never', dest='color',
                     help='Disable VT100 color output, equals to --color=never')
 
 parser.add_argument('-l', '--lang', choices=['jp', 'zh', 'en'], type=str,
-                    help='Select the language used to display weekday.')
+                    help='Select the language used to display weekdays and month names.')
 
 parser.add_argument('-j', action='store_const', const='jp', dest='lang',
-                    help='Enable Japanese weekday names, equals to --lang=jp.')
+                    help='Equals to --lang=jp.')
 
 parser.add_argument('-z', action='store_const', const='zh', dest='lang',
-                    help='Enable Chinese weekday names, equals to --lang=zh.')
+                    help='Equals to --lang=zh.')
 
 parser.add_argument('-e', action='store_const', const='en', dest='lang',
-                    help='Enable Chinese weekday names, equals to --lang=en.')
+                    help='Equals to --lang=en.')
 
 parser.add_argument('-m', action='store_true', dest='start_monday', default=None,
                     help='Use Monday as first weekday.')
