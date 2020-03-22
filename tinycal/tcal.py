@@ -51,7 +51,7 @@ LANG = {
             },
         }
 
-date_mark_regex = re.compile(r'^(\d\d\d\d/\d\d/\d\d) +(\w+) *')
+date_mark_regex = re.compile(r'^(\d\d\d\d/\d\d/\d\d) +([\w:]+) *')
 
 
 def calculate_month_range(before, after, year, month):
