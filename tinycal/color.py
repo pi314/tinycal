@@ -4,11 +4,11 @@ class ColorValue256:
         if self.value not in range(0, 256):
             raise ValueError(s, 'out of range')
 
-    def __int__(self):
-        return self.value
-
-    def __str__(self):
-        return str(self.value)
+    def __repr__(self):
+        return '{}({})'.format(
+                self.__class__.__name__,
+                self.value,
+                )
 
 
 class ColorValueRGB:
@@ -20,6 +20,12 @@ class ColorValueRGB:
         self.r = (v & 0xff0000) >> 16
         self.g = (v & 0x00ff00) >> 8
         self.b = (v & 0x0000ff)
+
+    def __repr__(self):
+        return '{}({:0>6X})'.format(
+                self.__class__.__name__,
+                (self.r << 16) | (self.g << 8) | self.b
+                )
 
 
 class ColorValueANSI:
@@ -34,6 +40,9 @@ class ColorValueANSI:
 
         self.name = s
         self.code = self.ansi_color_def[s.lower()]
+
+    def __repr__(self):
+        return '{}({})'.format(self.__class__.__name__, self.name)
 
 
 class Color:
@@ -132,6 +141,15 @@ class Color:
         if other.bg:
             ret.bg = other.bg
 
+        if other.italic:
+            ret.italic = other.italic
+
+        if other.strike:
+            ret.strike = other.strike
+
+        if other.underline:
+            ret.underline = other.underline
+
         ret.bright += other.bright
 
         if ret.bright > 1 and ret.fg == 'black':
@@ -154,13 +172,22 @@ class Color:
         elif self.bright == -1:
             code += ';0'
 
+        if self.italic:
+            code += ';3'
+
+        if self.underline:
+            code += ';4'
+
+        if self.strike:
+            code += ';9'
+
         # Foreground: ANSI color
         if isinstance(fg, ColorValueANSI):
             code += ';3' + fg.code
 
         # Foreground: 256 color
         elif isinstance(fg, ColorValue256):
-            code += ';38;5;' + str(fg)
+            code += ';38;5;' + fg.value
 
         # Foreground: true color
         elif isinstance(fg, ColorValueRGB):
@@ -172,7 +199,7 @@ class Color:
 
         # Background: 256 color
         elif isinstance(bg, ColorValue256):
-            code += ';48;5;' + str(bg)
+            code += ';48;5;' + bg.value
 
         # Background: true color
         elif isinstance(bg, ColorValueRGB):
@@ -185,9 +212,13 @@ class Color:
 
 
     def __repr__(self):
-        return 'Color(fg={fg}{br}, bg={bg}{rev})'.format(
-                fg='' if self.fg is None else self.fg,
-                bg='' if self.bg is None else self.bg,
-                br=['-', '', '+'][self.bright + 1],
-                rev='' if not self.reverse else ', reverse'
-                )
+        return 'Color(' + ', '.join(filter(lambda x: x, [
+            '' if not self.fg else 'fg=' + repr(self.fg),
+            '' if not self.bg else 'bg=' + repr(self.bg),
+            'reverse' if self.reverse else ''
+            ])) + ')'
+                # fg='' if self.fg is None else self.fg,
+                # bg='' if self.bg is None else self.bg,
+                # br=['-', '', '+'][self.bright + 1],
+                # rev='' if not self.reverse else ', reverse'
+                # )
