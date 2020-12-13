@@ -68,11 +68,11 @@ parser.add_argument('-F', '--no-fill', action='store_false', dest='fill', defaul
 
 parser.add_argument('--color', choices=['never', 'always', 'auto'], type=str,
                     default='auto', const='auto', nargs='?',
-                    help='Enable/disable VT100 color output.')
+                    help='Enable/disable color output.')
 parser.add_argument('-c', action='store_const', const='always', dest='color',
-                    help='Enable VT100 color output, equals to --color=always')
+                    help='Enable color output, equals to --color=always')
 parser.add_argument('-C', action='store_const', const='never', dest='color',
-                    help='Disable VT100 color output, equals to --color=never')
+                    help='Disable color output, equals to --color=never')
 
 parser.add_argument('-l', '--lang', choices=['jp', 'zh', 'en'], type=str,
                     help='Select the language used to display weekdays and month names.')
@@ -111,3 +111,29 @@ parser.add_argument('year', type=int, nargs='?', default=None,
 
 parser.add_argument('month', type=int, nargs='?', default=None,
                     help='Month to display. Must specified after year.')
+
+
+def parse_args():
+    # Do some post process to make up limitation of argparse
+
+    args = parser.parse_args()
+
+    if args.a1b1:
+        args.after = 1
+        args.before = 1
+
+    delattr(args, 'a1b1')
+
+    border_args = args.border
+    args.border = None
+    args.border_style = None
+    args.border_weld = None
+    for i in border_args:
+        if i in ('full', 'basic', 'off', 'false'):
+            args.border = i
+        elif i in ('ascii', 'single', 'bold', 'double'):
+            args.border_style = i
+        elif i in ('weld', 'noweld'):
+            args.border_weld = (i == 'weld')
+
+    return args

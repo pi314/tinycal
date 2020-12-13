@@ -1,5 +1,3 @@
-import sys
+from . import core
 
-from . import tcal
-
-tcal.main()
+core.main()
