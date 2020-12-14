@@ -3,10 +3,17 @@ Define command line options
 """
 
 from datetime import date
-from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError, FileType
+from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError, FileType, Action
 
 from . import CALRCS
 from . import __version__
+
+
+class ExtendAction(Action):
+    def __call__(self, parser, namespace, values, option_string=None):
+        items = getattr(namespace, self.dest) or []
+        items.extend(values)
+        setattr(namespace, self.dest, items)
 
 
 parser = ArgumentParser(
@@ -45,21 +52,26 @@ parser.add_argument('-w', '--wk', action='store_true', dest='wk', default=None,
 parser.add_argument('-W', '--no-wk', action='store_false', dest='wk', default=None,
                     help='Don`t display week number.')
 
-border_choices = ('full', 'basic', 'off', 'ascii', 'single', 'bold', 'double', 'weld', 'noweld')
+border_richness_options = ('full', 'basic', 'off', 'false')
+border_style_options = ('ascii', 'single', 'bold', 'double')
+border_weld_options = ('weld', 'noweld')
+border_keywords = border_richness_options + border_style_options + border_weld_options
 def border_style_comma_separated_str(s):
-    res = []
+    ret = []
     for i in s.strip().split(','):
-        if i in border_choices:
-            res.append(i)
+        i = i.strip()
+        if i in border_keywords:
+            ret.append(i)
+
         else:
             raise ArgumentTypeError(
-                    "invalid choice: '" + i + "'\n    (choose from " + repr(border_choices) + ")")
+                    "invalid keyword: '" + i + "'\nAvailable keywords: " + repr(border_keywords))
 
-    return res
+    return ret
 
-parser.add_argument('-b', '--border', type=border_style_comma_separated_str,
-                    default=[], const='full', nargs='?',
-                    help='Comma separated keywords to describe borders.\nValid keywords: '+ ','.join(border_choices))
+parser.add_argument('-b', '--border', dest='border_keywords', type=border_style_comma_separated_str,
+                    default=[], const='full', nargs='?', action=ExtendAction,
+                    help='Comma separated keywords to describe borders.\nAvailable keywords: '+ ','.join(border_keywords))
 
 parser.add_argument('-f', '--fill', action='store_true', dest='fill', default=None,
                     help='Fill every month into rectangle with previous/next month dates.')
@@ -114,7 +126,8 @@ parser.add_argument('month', type=int, nargs='?', default=None,
 
 
 def parse_args():
-    # Do some post process to make up limitation of argparse
+    # Do some post process to make up limitations of argparse
+    # e.g. not easy to have multiple 'dest's
 
     args = parser.parse_args()
 
@@ -124,16 +137,17 @@ def parse_args():
 
     delattr(args, 'a1b1')
 
-    border_args = args.border
     args.border = None
     args.border_style = None
     args.border_weld = None
-    for i in border_args:
-        if i in ('full', 'basic', 'off', 'false'):
+    for i in args.border_keywords:
+        if i in border_richness_options:
             args.border = i
-        elif i in ('ascii', 'single', 'bold', 'double'):
+        elif i in border_style_options:
             args.border_style = i
-        elif i in ('weld', 'noweld'):
+        elif i in border_weld_options:
             args.border_weld = (i == 'weld')
+
+    delattr(args, 'border_keywords')
 
     return args

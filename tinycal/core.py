@@ -27,5 +27,5 @@ def main():
     today = args.today
     delattr(args, 'today')
 
-    conf.merge(args.__dict__)
+    conf.merge(vars(args))
     print(conf)
