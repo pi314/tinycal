@@ -1,17 +1,50 @@
-class Table:
-    def __init__(self, row, col):
-        pass
+class TinyCalTableTextNode:
+    def __init__(self):
+        self.color = Color('')
+        self.text = ''
+
+    def __len__(self):
+        return len(self.text)
+
+    def __str__(self):
+        return self.color(self.text)
 
 
-class Cell:
+class TinyCalTableTextRow:
+    def __init__(self):
+        self.nodes = []
+
+    def append(self, node):
+        self.nodes.append(node)
+
+
+class TinyCalTableCell:
     def __init__(self):
         self.title = ''
-        self.dates = []
+        self.rows = []
 
     @property
     def height(self):
-        pass
+        return len(self.rows)
+
+    def append(self, row):
+        self.rows.append(row)
+
+    def __iter__(self):
+
+
+class TinyCalTableRow:
+    def __init__(self):
+        self.cells = []
+
+    def __len__(self):
+        return len(self.cells)
 
     @property
-    def width(self):
-        pass
+    def height(self):
+        return max(cell.height for cell in self.cells)
+
+
+class TinyCalTable:
+    def __init__(self):
+        self.rows = []
