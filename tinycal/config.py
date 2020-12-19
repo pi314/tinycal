@@ -6,18 +6,10 @@ from .color import *
 from .fields import *
 
 
-class GreaterThanLimiter:
-    def __init__(self, n):
-        self.limit = n
-
-    def __call__(self, value):
-        return value > self.limit
-
-
 class TinyCalConfig:
     col = IntegerField(default=3, limiters=[GreaterThanLimiter(0)])
-    after = IntegerField(default=0, limiters=[GreaterThanLimiter(-1)])
-    before = IntegerField(default=0, limiters=[GreaterThanLimiter(-1)])
+    after = DisplayRangeMarginField(default=DisplayRangeMargin('0'))
+    before = DisplayRangeMarginField(default=DisplayRangeMargin('0'))
     wk = BoolField(default=False)
     fill = BoolField(default=False)
     border = SelectorField(['true', 'full', 'basic', 'off', 'false'], default='full')

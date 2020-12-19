@@ -11,11 +11,16 @@ class TinyCalTableTextNode:
 
 
 class TinyCalTableTextRow:
-    def __init__(self):
+    def __init__(self, wk):
+        self.wk = wk
         self.nodes = []
 
     def append(self, node):
         self.nodes.append(node)
+
+    def __iter__(self):
+        for node in self.nodes:
+            yield node
 
 
 class TinyCalTableCell:
@@ -31,6 +36,8 @@ class TinyCalTableCell:
         self.rows.append(row)
 
     def __iter__(self):
+        for row in self.rows:
+            yield row
 
 
 class TinyCalTableRow:
@@ -48,3 +55,6 @@ class TinyCalTableRow:
 class TinyCalTable:
     def __init__(self):
         self.rows = []
+
+    def append(self, row):
+        self.rows.append(row)

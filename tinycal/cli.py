@@ -7,6 +7,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError, Fi
 
 from . import CALRCS
 from . import __version__
+from .fields import DisplayRangeMargin
 
 
 class ExtendAction(Action):
@@ -28,20 +29,10 @@ parser.add_argument('--version', '-v', action='version', version=__version__)
 parser.add_argument('--col', dest='col', default=None, type=int,
                     help='Specify the column numbers.')
 
-def type_int_greater_than(limit):
-    def int_greater_than(v):
-        ret = int(v)
-        if ret <= limit:
-            raise ArgumentTypeError('Should be greater than {}'.format(limit))
-
-        return ret
-
-    return int_greater_than
-
-parser.add_argument('-A', dest='after', default=None, type=type_int_greater_than(-1),
+parser.add_argument('-A', dest='after', default=None, type=DisplayRangeMargin,
                     help='Display the number of months after the current month.')
 
-parser.add_argument('-B', dest='before', default=None, type=type_int_greater_than(-1),
+parser.add_argument('-B', dest='before', default=None, type=DisplayRangeMargin,
                     help='Display the number of months before the current month.')
 
 parser.add_argument('-3', action='store_true', dest='a1b1', default=None,
@@ -132,8 +123,8 @@ def parse_args():
     args = parser.parse_args()
 
     if args.a1b1:
-        args.after = 1
-        args.before = 1
+        args.after = DisplayRangeMargin('1')
+        args.before = DisplayRangeMargin('1')
 
     delattr(args, 'a1b1')
 

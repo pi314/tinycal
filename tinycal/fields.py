@@ -1,6 +1,31 @@
+import re
+
 from os.path import expanduser
 
 from .color import Color
+
+
+class GreaterThanLimiter:
+    def __init__(self, n):
+        self.limit = n
+
+    def __call__(self, value):
+        return value > self.limit
+
+
+class DisplayRangeMargin:
+    def __init__(self, value):
+        value = value.lower()
+        m = re.match(r'^(\d+)([mw])?$', value)
+
+        if not m:
+            raise ValueError('Invalid display range:', value)
+
+        self.value = int(m.group(1))
+        self.unit = {'m': 'M', 'w': 'W'}.get(m.group(2), 'M')
+
+    def __repr__(self):
+        return str(self.value) + str(self.unit)
 
 
 class ValueField:
@@ -38,9 +63,6 @@ class IntegerField(ValueField):
         self.limiters = limiters
 
     def gogo(self, value):
-        if value is None:
-            return self.default
-
         try:
             value = int(value)
             for limiter in self.limiters:
@@ -50,6 +72,11 @@ class IntegerField(ValueField):
         except ValueError as e:
             return self.default
 
+        return value
+
+
+class DisplayRangeMarginField(ValueField):
+    def gogo(self, value):
         return value
 
 
@@ -65,14 +92,14 @@ class PathField(StringField):
 
 class SelectorField(StringField):
     def __init__(self, choices, default=None):
-        self.choices = choices
         super().__init__(default=default)
+        self.choices = choices
 
     def gogo(self, value):
-        if value in self.choices:
-            return value
+        if value not in self.choices:
+            raise ValueError('Invalid value {} from choices {}'.format(value, repr(self.choices)))
 
-        return self.default
+        return value
 
 
 class ColorField(StringField):
