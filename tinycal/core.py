@@ -10,56 +10,73 @@ from . import cli
 from .config import TinyCalConfig, Color
 
 
-def number_of_days_in_month(year, month):
-    return calendar.monthrange(year, month)[1]
+class DateCursor:
+    def __init__(self, cal, year, month, day):
+        self.cal = cal
+        self.year = year
+        self.month = month
+        self.day = day
 
-
-class Date(date):
-    def __new__(cls, *args, **kwargs):
-        # Source: https://stackoverflow.com/a/45981230/3812388
-        # because __new__ creates the instance you need to pass the arguments
-        # to the superclass here and **not** in the __init__
-        if len(args) == 1 and isinstance(args[0], date):
-            d = args[0]
-            return super().__new__(cls, year=d.year, month=d.month, day=d.day)
-
-        else:
-            return super().__new__(cls, *args, **kwargs)
-
-    def __int__(self):
+    @property
+    def umn(self):
         return (self.year * 12) + (self.month - 1)
 
     @staticmethod
-    def from_um(um):
-        return {'year': um // 12, 'month': (um % 12) + 1}
+    def from_date(cal, d):
+        return DateCursor(cal, d.year, d.month, d.day)
 
-    def __sub__(self, other):
-        if isinstance(other, MonthDelta):
-            um = int(self) - int(other)
-            return Date(**Date.from_um(um), day=self.day)
+    def to_date(self):
+        if self.day == -1:
+            day = calendar.monthrange(self.year, self.month)[1]
+        else:
+            day = self.day
 
-        return super().__sub__(other)
+        return date(self.year, self.month, day)
 
-    def __add__(self, other):
-        if isinstance(other, MonthDelta):
-            um = int(self) + int(other)
-            return Date(**Date.from_um(um), day=self.day)
+    def __isub__(self, other):
+        d = date(self.year, self.month, self.day)
+        d -= timedelta(other)
+        self.year = d.year
+        self.month = d.month
+        self.day = d.day
+        return self
 
-        return super().__add__(other)
+    def __iadd__(self, other):
+        d = date(self.year, self.month, self.day)
+        d += other
+        self.year = d.year
+        self.month = d.month
+        self.day = d.day
+        return self
+
+    def move_back_n_month(self, months):
+        umn = self.umn
+        umn -= months
+        self.year = umn // 12
+        self.month = (umn % 12) + 1
+        self.day = 1
+        return self
+
+    def move_forward_n_month(self, months):
+        umn = self.umn
+        umn += months
+        self.year = umn // 12
+        self.month = (umn % 12) + 1
+        self.day = -1
+        return self
+
+    def move_to_week_begin(self):
+        d = date(self.year, self.month, self.day) - timedelta(
+                days=list(self.cal.iterweekdays()).index(
+                    self.to_date().weekday()))
+        self.year = d.year
+        self.month = d.month
+        self.day = d.day
+        return self
 
     @staticmethod
-    def closed_range(a, b):
-        for i in range(int(a), int(b) + 1):
-            yield Date(**Date.from_um(i), day=1)
-
-    def week_num(self, cal):
-        return (self - cal.monthdatescalendar(self.year, 1)[0][0]).days // 7 + 1
-
-    def week_first_day(self, cal):
-        return self - timedelta(days=list(cal.iterweekdays()).index(self.weekday()))
-
-    def week_last_day(self, cal):
-        return self + timedelta(days=6 - list(cal.iterweekdays()).index(self.weekday()))
+    def cal_week_num(cal, date):
+        return ((date - cal.monthdatescalendar(date.year, 1)[0][0]).days // 7) + 1
 
 
 class MonthDelta:
@@ -90,7 +107,7 @@ def main():
     color = args.color
     delattr(args, 'color')
 
-    today = Date(args.today or date.today())
+    today = args.today or date.today()
     delattr(args, 'today')
 
     conf.merge(vars(args))
@@ -98,22 +115,21 @@ def main():
     print()
 
     cal = Calendar(MONDAY if conf.start_monday else SUNDAY)
-    monthdates = cal.monthdatescalendar
 
     # Calculate display range
     if year is not None and month is not None:
         # given year, month
-        display_range_start = Date(year, month, 1)
-        display_range_end = Date(year, month, number_of_days_in_month(year, month))
+        display_range_start = DateCursor(cal, year, month, 1)
+        display_range_end = DateCursor(cal, year, month, -1)
 
     elif year is not None and month is None:
         # given year
-        display_range_start = Date(year, 1, 1)
-        display_range_end = Date(year, 12, 31)
+        display_range_start = DateCursor(cal, year, 1, 1)
+        display_range_end = DateCursor(cal, year, 12, 31)
 
     else:
-        display_range_start = today
-        display_range_end = today
+        display_range_start = DateCursor.from_date(cal, today)
+        display_range_end = DateCursor.from_date(cal, today)
 
     # Apply before/after
     if conf.before:
@@ -121,31 +137,45 @@ def main():
             display_range_start -= timedelta(weeks=conf.before.value)
 
         elif conf.before.unit == 'M':
-            display_range_start -= MonthDelta(conf.before.value)
+            display_range_start.move_back_n_month(conf.before.value)
 
     if conf.after:
         if conf.after.unit == 'W':
             display_range_end += timedelta(weeks=conf.after.value)
 
         elif conf.after.unit == 'M':
-            display_range_end += MonthDelta(conf.after.value)
+            display_range_end.move_forward_n_month(conf.after.value)
 
-    print('start =', display_range_start)
     print('today =', today)
-    print('end =  ', display_range_end)
     print()
 
     if not conf.cont:
-        for m in Date.closed_range(display_range_start, display_range_end):
-            print(m.year, m.month)
+        print('start =', display_range_start.to_date())
+        print('end =  ', display_range_end.to_date())
+        print()
+
+        for umn in range(display_range_start.umn, display_range_end.umn + 1):
+            year = umn // 12
+            month = (umn % 12) + 1
+            print(year, month)
             print('WK', ' '.join(map(lambda x: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'WK'][x], cal.iterweekdays())))
-            for week in monthdates(m.year, m.month):
-                wk = Date(week[0]).week_num(cal)
+            for week in cal.monthdatescalendar(year, month):
+                wk = DateCursor.cal_week_num(cal, week[0])
                 print(str(wk).rjust(2), ' '.join(str(day.day).rjust(2) for day in week))
 
             print()
 
     else:
+        display_cursor = display_range_start.move_to_week_begin().to_date()
+
         print('cont')
-        print('start =', display_range_start.week_first_day(cal))
-        print('end =  ', display_range_end.week_last_day(cal))
+        print('start =', display_cursor)
+        print('end =  ', display_range_end.to_date())
+        print()
+
+        print('WK', ' '.join(map(lambda x: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'WK'][x], cal.iterweekdays())))
+        while display_cursor <= display_range_end.to_date():
+            wk = DateCursor.cal_week_num(cal, display_cursor)
+            print(str(wk).rjust(2), ' '.join(str((display_cursor + timedelta(days=d)).day).rjust(2) for d in range(7)))
+
+            display_cursor += timedelta(days=7)
