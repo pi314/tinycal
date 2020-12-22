@@ -8,6 +8,57 @@ from datetime import date, timedelta
 from . import CALRCS
 from . import cli
 from .config import TinyCalConfig, Color
+from .render import render
+from .models import *
+
+
+class Tr:
+    data_en = {
+            'weekday': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'WK'],
+            'month': ['<Error>',
+                'January', 'February', 'March',
+                'April', 'May', 'June',
+                'July', 'August', 'September',
+                'October', 'November', 'December'],
+            'month_abbr': ['<Error>',
+                'Jan', 'Feb', 'Mar',
+                'Apr', 'May', 'Jun',
+                'Jul', 'Aug', 'Sep',
+                'Oct', 'Nov', 'Dec'],
+            }
+
+    data_zh = {
+            'weekday': ['一', '二', '三', '四', '五', '六', '日', '週'],
+            'month': ['<Error>',
+                '１月', '２月', '３月',
+                '４月', '５月', '６月',
+                '７月', '８月', '９月',
+                '１０月', '１１月', '１２月'],
+            }
+    data_jp = {
+            'weekday': ['月', '火', '水', '木', '金', '土', '日', '週'],
+            'month': ['<Error>',
+                '睦月 (１月)', '如月 (２月)', '彌生 (３月)',
+                '卯月 (４月)', '皐月 (５月)', '水無月 (６月)',
+                '文月 (７月)', '葉月 (８月)', '長月 (９月)',
+                '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
+            }
+
+    def __init__(self, lang):
+        try:
+            self.data = getattr(Tr, 'data_' + lang)
+        except AttributeError:
+            self.data = getattr(Tr, 'data_en')
+
+    def month(self, month, abbr=False):
+        if abbr and 'month_abbr' in self.data:
+            key = 'month_abbr'
+        else:
+            key = 'month'
+        return self.data[key][month]
+
+    def weekday(self, weekday):
+        return self.data['weekday'][weekday]
 
 
 class DateCursor:
@@ -91,11 +142,11 @@ def main():
     conf = TinyCalConfig.parse_conf(CALRCS)
     args = cli.parse_args()
 
-    print(conf)
-    print()
-
-    print(args)
-    print()
+    # print(conf)
+    # print()
+    #
+    # print(args)
+    # print()
 
     # Remove arguments that are no part of TinyCalConfig
     month = args.month
@@ -111,8 +162,8 @@ def main():
     delattr(args, 'today')
 
     conf.merge(vars(args))
-    print(conf)
-    print()
+    # print(conf)
+    # print()
 
     cal = Calendar(MONDAY if conf.start_monday else SUNDAY)
 
@@ -149,19 +200,48 @@ def main():
     print('today =', today)
     print()
 
+    tr = Tr(conf.lang)
+
+    # Construct output table structure
+    cal_table = TinyCalTable()
     if not conf.cont:
         print('start =', display_range_start.to_date())
         print('end =  ', display_range_end.to_date())
         print()
 
-        for umn in range(display_range_start.umn, display_range_end.umn + 1):
+        for idx, umn in enumerate(range(display_range_start.umn, display_range_end.umn + 1)):
+            if idx % conf.col == 0:
+                cal_table_row = TinyCalTableRow()
+                cal_table.append(cal_table_row)
+
             year = umn // 12
             month = (umn % 12) + 1
-            print(year, month)
-            print('WK', ' '.join(map(lambda x: ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'WK'][x], cal.iterweekdays())))
+
+            cal_table_cell = TinyCalTableCell('{m} {y}'.format(m=tr.month(month), y=year))
+
+            text_row = TinyCalTableTextRow(TinyCalTableTextNode(tr.weekday(-1)))
+
+            for idx, wkd in enumerate(cal.iterweekdays()):
+                text_row.append(TinyCalTableTextNode(tr.weekday(wkd)))
+                if idx < 6:
+                    text_row.append(TinyCalTableTextNode(' '))
+
+            cal_table_cell.append(text_row)
+
+            print(cal_table_cell.title)
+            print(str(text_row.wk) + ' ', end='')
+            for n in text_row:
+                print(n, end='')
+            print()
+
             for week in cal.monthdatescalendar(year, month):
                 wk = DateCursor.cal_week_num(cal, week[0])
+
+                text_row = TinyCalTableTextRow(wk)
+
                 print(str(wk).rjust(2), ' '.join(str(day.day).rjust(2) for day in week))
+
+                cal_table_cell.append(text_row)
 
             print()
 

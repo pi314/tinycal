@@ -1,7 +1,10 @@
+from .color import Color
+
+
 class TinyCalTableTextNode:
-    def __init__(self):
+    def __init__(self, text):
         self.color = Color('')
-        self.text = ''
+        self.text = str(text)
 
     def __len__(self):
         return len(self.text)
@@ -24,8 +27,8 @@ class TinyCalTableTextRow:
 
 
 class TinyCalTableCell:
-    def __init__(self):
-        self.title = ''
+    def __init__(self, title):
+        self.title = title
         self.rows = []
 
     @property
