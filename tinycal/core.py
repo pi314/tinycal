@@ -130,14 +130,6 @@ class DateCursor:
         return ((date - cal.monthdatescalendar(date.year, 1)[0][0]).days // 7) + 1
 
 
-class MonthDelta:
-    def __init__(self, months):
-        self.months = months
-
-    def __int__(self):
-        return self.months
-
-
 def main():
     conf = TinyCalConfig.parse_conf(CALRCS)
     args = cli.parse_args()
