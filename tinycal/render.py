@@ -1,5 +1,7 @@
 from unicodedata import east_asian_width
 
+from .color import Color
+
 
 border_template = {
         'template': [
@@ -69,9 +71,29 @@ border_template = {
             ],
         }
 
+
+class TinyCalTableTextNode:
+    def __init__(self, text):
+        self.color = Color('')
+        self.text = str(text)
+
+    def __len__(self):
+        return len(self.text)
+
+    def __str__(self):
+        return self.color(self.text)
+
+
 def str_width(s):
     return sum(1 + (east_asian_width(c) in 'WF') for c in s)
 
 
-def render():
-    pass
+def render_classic(conf, tr, cal_table):
+    for cal_row in cal_table:
+        for cal_cell in cal_row:
+            print(cal_cell.title)
+            for text_row in cal_cell:
+                print(str(text_row.wk).rjust(2), end='')
+                for n in text_row:
+                    print(n, end='')
+                print()
