@@ -1,64 +1,46 @@
 from datetime import timedelta
+from collections import namedtuple
+
+from .color import Color
 
 
-class TinyCalTableTextRow:
-    def __init__(self, wk):
-        self.wk = wk
-        self.nodes = []
+class Weekday:
+    def __init__(self, weekday):
+        self.weekday = weekday
 
-    def append(self, node):
-        self.nodes.append(node)
+    def __int__(self):
+        return self.weekday
 
-    def __iter__(self):
-        for node in self.nodes:
-            yield node
+    def __str__(self):
+        return str(self.weekday)
 
-
-class TinyCalTableCell:
-    def __init__(self, title):
-        self.title = title
-        self.rows = []
-
-    def __len__(self):
-        return len(self.rows)
-
-    def append(self, row):
-        self.rows.append(row)
-
-    def __iter__(self):
-        for row in self.rows:
-            yield row
-
-
-class TinyCalTableRow:
-    def __init__(self):
-        self.cells = []
-
-    def __len__(self):
-        return len(self.cells)
-
-    def append(self, row):
-        self.cells.append(row)
-
-    def __iter__(self):
-        for cell in self.cells:
-            yield cell
-
-    @property
-    def height(self):
-        return max(len(cell) for cell in self.cells)
+    def __repr__(self):
+        return 'Weekday({})'.format(self.weekday)
 
 
 class TinyCalTable:
     def __init__(self):
         self.rows = []
 
-    def append(self, row):
-        self.rows.append(row)
 
-    def __iter__(self):
-        for row in self.rows:
-            yield row
+class TinyCalCellRow:
+    def __init__(self):
+        self.cells = []
+
+
+class TinyCalCell:
+    def __init__(self, title):
+        self.title = title
+        self.weeks = []
+
+
+class TinyCalWeek:
+    def __init__(self, wk):
+        self.wk = wk
+        self.days = []
+
+    def append(self, node):
+        self.days.append(node)
 
 
 def cal_week_num(cal, date):
@@ -66,7 +48,20 @@ def cal_week_num(cal, date):
 
 
 def construct_table(conf, tr, cal, drange):
-    # Construct output table structure
+    ''' Construct output table structure:
+    table: [
+        row: [
+            cell: [
+                title: str
+                cal_week: [
+                    wk: int
+                    day:date x 7
+                ], ...
+            ], ...
+        ], ...
+    ]
+    '''
+
     cal_table = TinyCalTable()
 
     if not conf.cont:
@@ -76,35 +71,34 @@ def construct_table(conf, tr, cal, drange):
 
         for idx, umn in enumerate(range(drange[0].umn, drange[1].umn + 1)):
             if idx % conf.col == 0:
-                cal_row = TinyCalTableRow()
-                cal_table.append(cal_row)
+                cal_row = TinyCalCellRow()
+                cal_table.rows.append(cal_row)
 
             year = umn // 12
             month = (umn % 12) + 1
 
-            cal_cell = TinyCalTableCell('{m} {y}'.format(m=tr.month(month), y=year))
+            cal_cell = TinyCalCell('{m} {y}'.format(m=tr.month(month), y=year))
 
             # Put Weekday header
-            text_row = TinyCalTableTextRow(tr.weekday(-1))
-            text_row.append(' ')
+            cal_week = TinyCalWeek(wk=tr.weekday[-1])
             for wkd in cal.iterweekdays():
-                text_row.append(tr.weekday(wkd))
-                text_row.append(' ')
+                cal_week.append(Weekday(wkd))
 
-            cal_cell.append(text_row)
+            cal_cell.weeks.append(cal_week)
 
             # Put dates
             for week in cal.monthdatescalendar(year, month):
-                wk = cal_week_num(cal, week[0])
-                text_row = TinyCalTableTextRow(wk)
-                text_row.append(' ')
+                cal_week = TinyCalWeek(wk=cal_week_num(cal, week[0]))
                 for day in week:
-                    text_row.append(day)
-                    text_row.append(' ')
+                    cal_week.append(day)
 
-                cal_cell.append(text_row)
+                cal_cell.weeks.append(cal_week)
 
-            cal_row.append(cal_cell)
+            cal_row.cells.append(cal_cell)
+
+        # Fill the remaining cell
+        for i in range(len(cal_row.cells), conf.col):
+            cal_row.cells.append(None)
 
     else:
         print('cont')
@@ -112,39 +106,33 @@ def construct_table(conf, tr, cal, drange):
         print('end =  ', drange[1].to_date())
         print()
 
-        cal_row = TinyCalTableRow()
-        cal_table.append(cal_row)
+        cal_row = TinyCalCellRow()
+        cal_table.rows.append(cal_row)
 
-        cal_cell = TinyCalTableCell('{sy}/{sm:02} ~ {ey}/{em:02}'.format(
+        cal_cell = TinyCalCell('{sy}/{sm:02} ~ {ey}/{em:02}'.format(
             sy=drange[0].to_date().year,
             sm=drange[0].to_date().month,
             ey=drange[1].to_date().year,
             em=drange[1].to_date().month,
             ))
-        cal_row.append(cal_cell)
+        cal_row.cells.append(cal_cell)
 
         # Put Weekday header
-        text_row = TinyCalTableTextRow(tr.weekday(-1))
-        text_row.append(' ')
+        cal_week = TinyCalWeek(wk=tr.weekday[-1])
         for wkd in cal.iterweekdays():
-            text_row.append(tr.weekday(wkd))
-            text_row.append(' ')
+            cal_week.append(Weekday(tr.weekday[wkd]))
 
-        cal_cell.append(text_row)
+        cal_cell.weeks.append(cal_week)
 
         dcursor = drange[0].move_to_week_begin().to_date()
 
         while dcursor <= drange[1].to_date():
-            wk = cal_week_num(cal, dcursor)
-
-            text_row = TinyCalTableTextRow(wk)
-            text_row.append(' ')
+            cal_week = TinyCalWeek(wk=cal_week_num(cal, dcursor))
 
             for i in range(7):
-                text_row.append(dcursor + timedelta(days=i))
-                text_row.append(' ')
+                cal_week.append(dcursor + timedelta(days=i))
 
-            cal_cell.append(text_row)
+            cal_cell.weeks.append(cal_week)
 
             dcursor += timedelta(days=7)
 

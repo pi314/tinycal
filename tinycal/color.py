@@ -46,7 +46,7 @@ class ColorValueANSI:
 
 
 class Color:
-    def __init__(self, code):
+    def __init__(self, modifier):
         self.fg = None
         self.bg = None
         self.bright = 0
@@ -55,67 +55,62 @@ class Color:
         self.strike = False
         self.reverse = False
 
-        for modifier in code.split(' '):
-            modifier = modifier.strip()
+        if modifier in ('brighter', 'bright'):
+            self.bright = 1
 
-            if not modifier:
-                continue
+        elif modifier in ('darker', 'dim'):
+            self.bright = -1
 
-            if modifier in ('brighter', 'bright'):
-                self.bright = 1
+        elif modifier == 'italic':
+            self.italic = True
 
-            elif modifier in ('darker', 'dim'):
-                self.bright = -1
+        elif modifier == 'underline':
+            self.underline = True
 
-            elif modifier == 'italic':
-                self.italic = True
+        elif modifier == 'strike':
+            self.strike = True
 
-            elif modifier == 'underline':
-                self.underline = True
+        elif modifier in ('reverse', 'invert', 'inverse'):
+            self.reverse = True
 
-            elif modifier == 'strike':
-                self.strike = True
-
-            elif modifier in ('reverse', 'invert', 'inverse'):
-                self.reverse = True
+        else:
+            # Parsing
+            if ':' not in modifier:
+                self.fg = modifier
 
             else:
-                # Parsing
-                if ':' not in modifier:
-                    self.fg = modifier
+                self.fg, self.bg = modifier.split(':')
+                self.bg = self.bg.lower()
 
-                else:
-                    self.fg, self.bg = modifier.split(':')
-                    self.bg = self.bg.lower()
-
-                def value_normalize(v):
-                    # Filter out 'none' by mapping it to None
-                    if not v or v == 'none':
-                        return None
-
-                    try:
-                        return ColorValueANSI(v)
-                    except ValueError:
-                        pass
-
-                    try:
-                        return ColorValue256(v)
-                    except ValueError:
-                        pass
-
-                    try:
-                        return ColorValueRGB(v)
-                    except ValueError:
-                        pass
-
+            def value_normalize(v):
+                # Filter out 'none' by mapping it to None
+                if not v or v == 'none':
                     return None
 
-                self.fg = value_normalize(self.fg)
-                self.bg = value_normalize(self.bg)
+                try:
+                    return ColorValueANSI(v)
+                except ValueError:
+                    pass
 
-                if isinstance(self.fg, ColorValueANSI):
-                    if self.fg.name.upper() == self.fg.name:
-                        self.bright = 1
+                try:
+                    return ColorValue256(v)
+                except ValueError:
+                    pass
+
+                try:
+                    return ColorValueRGB(v)
+                except ValueError:
+                    pass
+
+                return None
+
+            self.fg = value_normalize(self.fg)
+            self.bg = value_normalize(self.bg)
+
+            if isinstance(self.fg, ColorValueANSI):
+                if self.fg.name.upper() == self.fg.name:
+                    self.bright = 1
+                    self.fg.name = self.fg.name.lower()
 
     def copy(self):
         ret = Color('')
@@ -130,6 +125,9 @@ class Color:
 
     def __add__(self, other):
         ret = self.copy()
+
+        if not isinstance(other, Color):
+            raise ValueError('Cannot add ' + other.__class__.__name__ + ' to Color')
 
         if other.reverse:
             ret.fg, ret.bg = ret.bg, ret.fg
@@ -152,14 +150,15 @@ class Color:
 
         ret.bright += other.bright
 
-        if ret.bright > 1 and ret.fg == 'black':
+        if ret.bright > 1 and isinstance(ret.fg, ColorValueANSI) and ret.fg.name.lower() == 'black':
             ret.bright = 0
-            ret.fg = 'white'
+            ret.fg = ColorValueANSI('white')
 
         return ret
 
     def __call__(self, text):
         code = ''
+        text = str(text)
 
         fg = self.fg
         bg = self.bg
@@ -167,9 +166,9 @@ class Color:
         if bg and not fg:
             fg = ColorValueANSI('black')
 
-        if self.bright == 1:
+        if self.bright >= 1:
             code += ';1'
-        elif self.bright == -1:
+        elif self.bright <= -1:
             code += ';0'
 
         if self.italic:
@@ -215,10 +214,6 @@ class Color:
         return 'Color(' + ', '.join(filter(lambda x: x, [
             '' if not self.fg else 'fg=' + repr(self.fg),
             '' if not self.bg else 'bg=' + repr(self.bg),
-            'reverse' if self.reverse else ''
+            'reverse' if self.reverse else '',
+            'bright' if self.bright else '',
             ])) + ')'
-                # fg='' if self.fg is None else self.fg,
-                # bg='' if self.bg is None else self.bg,
-                # br=['-', '', '+'][self.bright + 1],
-                # rev='' if not self.reverse else ', reverse'
-                # )

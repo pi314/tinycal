@@ -8,6 +8,7 @@ from argparse import ArgumentParser, RawTextHelpFormatter, ArgumentTypeError, Fi
 from . import CALRCS
 from . import __version__
 from .fields import DisplayRangeMargin
+from .config import TinyCalConfig
 
 
 class ExtendAction(Action):
@@ -43,8 +44,8 @@ parser.add_argument('-w', '--wk', action='store_true', dest='wk', default=None,
 parser.add_argument('-W', '--no-wk', action='store_false', dest='wk', default=None,
                     help='Don`t display week number.')
 
-border_richness_options = ('full', 'basic', 'off', 'false')
-border_style_options = ('ascii', 'single', 'bold', 'double')
+border_richness_options = TinyCalConfig.border_richness.choices
+border_style_options = TinyCalConfig.border_style.choices
 border_weld_options = ('weld', 'noweld')
 border_keywords = border_richness_options + border_style_options + border_weld_options
 def border_style_comma_separated_str(s):
@@ -128,12 +129,12 @@ def parse_args():
 
     delattr(args, 'a1b1')
 
-    args.border = None
+    args.border_richness = None
     args.border_style = None
     args.border_weld = None
     for i in args.border_keywords:
         if i in border_richness_options:
-            args.border = i
+            args.border_richness = i
         elif i in border_style_options:
             args.border_style = i
         elif i in border_weld_options:

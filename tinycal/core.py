@@ -24,14 +24,18 @@ def main():
     # print(args)
     # print()
 
-    # Remove arguments that are no part of TinyCalConfig
+    ''' Remove arguments that are not part of TinyCalConfig '''
     month = args.month
     delattr(args, 'month')
 
     year = args.year
     delattr(args, 'year')
 
-    color = args.color
+    color_enable = {
+            'never': False,
+            'always': True,
+            'auto': sys.stdout.isatty(),
+            }.get(args.color, False)
     delattr(args, 'color')
 
     today = args.today or date.today()
@@ -46,7 +50,7 @@ def main():
 
     cal = Calendar(MONDAY if conf.start_monday else SUNDAY)
 
-    # Calculate display range
+    ''' Calculate display range '''
     if year is not None and month is not None:
         # given year, month
         drange = [
@@ -67,7 +71,7 @@ def main():
             DateCursor.from_date(cal, today)
         ]
 
-    # Apply before/after
+    ''' Apply before/after '''
     if conf.before:
         if conf.before.unit == 'W':
             drange[0] -= timedelta(weeks=conf.before.value)
@@ -86,4 +90,9 @@ def main():
 
     cal_table = construct_table(conf, tr, cal, drange)
 
-    render_classic(conf, tr, cal_table)
+    if not color_enable:
+        for name, field in vars(conf.__class__).items():
+            if name.startswith('color_'):
+                setattr(conf, name, Color(''))
+
+    render_classic(conf, tr, cal_table, drange, today)

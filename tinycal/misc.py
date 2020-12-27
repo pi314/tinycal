@@ -4,6 +4,17 @@ from datetime import date, timedelta
 
 
 class Tr:
+    data_meta = {
+            'weekday': [
+                'monday', 'tuesday', 'wednesday', 'thursday', 'friday',
+                'saturday', 'sunday', 'wk'],
+            'month': [None,
+                'january', 'february', 'march',
+                'april', 'may', 'june',
+                'july', 'august', 'september',
+                'october', 'november', 'december'],
+            }
+
     data_en = {
             'weekday': ['Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa', 'Su', 'WK'],
             'month': ['<Error>',
@@ -48,8 +59,13 @@ class Tr:
             key = 'month'
         return self.data[key][month]
 
-    def weekday(self, weekday):
-        return self.data['weekday'][weekday]
+    @property
+    def weekday(self):
+        return self.data['weekday']
+
+    @property
+    def weekday_meta(self):
+        return Tr.data_meta['weekday']
 
 
 class DateCursor:
