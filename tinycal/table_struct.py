@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 from collections import namedtuple
 
 from .color import Color
@@ -16,6 +16,19 @@ class Weekday:
 
     def __repr__(self):
         return 'Weekday({})'.format(self.weekday)
+
+
+class Date(date):
+    def __new__(cls, *args, **kwargs):
+        # Source: https://stackoverflow.com/a/45981230/3812388
+        # because __new__ creates the instance you need to pass the arguments
+        # to the superclass here and **not** in the __init__
+        if len(args) == 1 and isinstance(args[0], date):
+            d = args[0]
+            return super().__new__(cls, year=d.year, month=d.month, day=d.day)
+
+    def __init__(self, date, is_fill=False):
+        self.is_fill = is_fill
 
 
 class TinyCalTable:
@@ -90,6 +103,8 @@ def construct_table(conf, tr, cal, drange):
             for week in cal.monthdatescalendar(year, month):
                 cal_week = TinyCalWeek(wk=cal_week_num(cal, week[0]))
                 for day in week:
+                    day = Date(day)
+                    day.is_fill = (day.month != month)
                     cal_week.append(day)
 
                 cal_cell.weeks.append(cal_week)
@@ -120,7 +135,7 @@ def construct_table(conf, tr, cal, drange):
         # Put Weekday header
         cal_week = TinyCalWeek(wk=tr.weekday[-1])
         for wkd in cal.iterweekdays():
-            cal_week.append(Weekday(tr.weekday[wkd]))
+            cal_week.append(Weekday(wkd))
 
         cal_cell.weeks.append(cal_week)
 
@@ -130,7 +145,9 @@ def construct_table(conf, tr, cal, drange):
             cal_week = TinyCalWeek(wk=cal_week_num(cal, dcursor))
 
             for i in range(7):
-                cal_week.append(dcursor + timedelta(days=i))
+                day = Date(dcursor + timedelta(days=i))
+                day.is_fill = (day < drange[0].to_date()) or (day > drange[1].to_date())
+                cal_week.append(day)
 
             cal_cell.weeks.append(cal_week)
 

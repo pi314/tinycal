@@ -230,6 +230,7 @@ def render_classic(conf, tr, cal_table, drange, today):
 
     # Squash color configs that won't change anymore
     conf.color_title = conf.color_default + conf.color_title
+    conf.color_fill = sum(conf.color_fill[1:], conf.color_fill[0])
 
     # bt = BorderTemplate(conf.border_style, conf.border_richness, conf.border_weld, conf.wk, conf.color_border)
     bt = BorderTemplate('example', conf.border_richness, conf.border_weld, conf.wk, conf.color_default + conf.color_border)
@@ -274,7 +275,11 @@ def render_classic(conf, tr, cal_table, drange, today):
 
                     else:
                         # Render dates
-                        day_color = conf.color_default
+                        if node.is_fill:
+                            day_color = conf.color_fill
+                        else:
+                            day_color = conf.color_default
+
                         day_color += getattr(conf, 'color_' + tr.weekday_meta[node.weekday()])
                         if node == today:
                             day_color += conf.color_today
