@@ -192,7 +192,15 @@ class Color:
         bg = self.bg
 
         if isinstance(fg, ColorValueEmpty) and not isinstance(bg, ColorValueEmpty):
+            # Special case: none:color => black:color
+            # It's because default fg is white
             fg = ColorValueANSI('black')
+
+            # Special case: black:BLACK => black:white
+            # It's because black bg is still black
+            if bg.name == 'black' and bg.bright:
+                bg.name = 'white'
+                bg.bright = 0
 
         if isinstance(self.fg, ColorValueANSI):
             if self.fg.bright >= 1:
