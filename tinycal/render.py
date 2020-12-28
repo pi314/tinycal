@@ -225,8 +225,14 @@ def cell_width(border_richness, wk):
 def render_classic(conf, tr, cal_table, drange, today):
     cw = cell_width(conf.border_richness, conf.wk)
 
+    # Squash conf.color_default into a single Color object
+    conf.color_default = sum(conf.color_default[1:], conf.color_default[0])
+
+    # Squash color configs that won't change anymore
+    conf.color_title = conf.color_default + conf.color_title
+
     # bt = BorderTemplate(conf.border_style, conf.border_richness, conf.border_weld, conf.wk, conf.color_border)
-    bt = BorderTemplate('example', conf.border_richness, conf.border_weld, conf.wk, sum(conf.color_border, start=conf.color_default))
+    bt = BorderTemplate('example', conf.border_richness, conf.border_weld, conf.wk, conf.color_default + conf.color_border)
 
     '''
     Expand TinyCalTable content into colored strings and shape them into rectangle
@@ -242,7 +248,7 @@ def render_classic(conf, tr, cal_table, drange, today):
                 continue
 
             # Render title
-            output_cell = [' ' + sum(conf.color_title, start=conf.color_default)(mjust(cal_cell.title, cw-2)) + ' ']
+            output_cell = [' ' + conf.color_title(mjust(cal_cell.title, cw-2)) + ' ']
 
             if conf.border_richness == 'full':
                 output_cell.append(bt.title_sep)
@@ -251,9 +257,9 @@ def render_classic(conf, tr, cal_table, drange, today):
                 week_buf = ' '
                 if conf.wk:
                     # Render WK
-                    wk_color = sum(conf.color_wk, start=conf.color_default)
+                    wk_color = conf.color_default + conf.color_wk
                     if today in cal_week.days:
-                        wk_color = sum(conf.color_today_wk, wk_color)
+                        wk_color += conf.color_today_wk
 
                     week_buf += wk_color(rjust(str(cal_week.wk), 2)) + ' '
                     week_buf += bt.wk_sep_line(idx) + ' '
@@ -262,21 +268,16 @@ def render_classic(conf, tr, cal_table, drange, today):
                     if isinstance(node, Weekday):
                         # Render weekdays
                         wkd = int(node)
-                        wkd_color = sum(conf.color_weekday, start=conf.color_default)
-                        wkd_color = sum(getattr(conf, 'color_weekday_' + tr.weekday_meta[wkd]), start=wkd_color)
+                        wkd_color = conf.color_default + conf.color_weekday
+                        wkd_color += getattr(conf, 'color_weekday_' + tr.weekday_meta[wkd])
                         week_buf += wkd_color(tr.weekday[wkd]) + ' '
 
                     else:
                         # Render dates
                         day_color = conf.color_default
-                        print()
-                        print(node)
-                        print(day_color)
-                        print(getattr(conf, 'color_' + tr.weekday_meta[node.weekday()]))
-                        day_color = sum(getattr(conf, 'color_' + tr.weekday_meta[node.weekday()]), day_color)
-                        print(day_color)
+                        day_color += getattr(conf, 'color_' + tr.weekday_meta[node.weekday()])
                         if node == today:
-                            day_color = sum(conf.color_today, start=day_color)
+                            day_color += conf.color_today
 
                         week_buf += day_color(rjust(str(node.day), 2)) + ' '
 

@@ -102,6 +102,6 @@ class SelectorField(StringField):
         return value
 
 
-class ColorField(StringField):
+class ColorListField(StringField):
     def gogo(self, value):
         return list(map(Color, value.split()))

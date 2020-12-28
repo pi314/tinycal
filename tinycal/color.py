@@ -1,3 +1,6 @@
+import copy
+
+
 class ColorValue256:
     def __init__(self, s):
         self.value = int(s)
@@ -38,28 +41,75 @@ class ColorValueANSI:
         if s.lower() not in self.ansi_color_def:
             raise ValueError('Unknown ANSI color name', s)
 
-        self.name = s
-        self.code = self.ansi_color_def[s.lower()]
+        self.name = s.lower()
+        self.bright = (s.upper() == s)
+
+    @property
+    def code(self):
+        return self.ansi_color_def[self.name]
 
     def __repr__(self):
-        return '{}({})'.format(self.__class__.__name__, self.name)
+        return '{}({})'.format(self.__class__.__name__, self.name.upper() if self.bright else self.name)
+
+    def __add__(self, other):
+        if isinstance(other, ColorValueEmpty):
+            return self
+
+        ret = copy.deepcopy(self)
+
+        if isinstance(other, ColorValueBrighter):
+            if ret.name == 'black' and ret.bright == 1:
+                ret.name = 'white'
+                ret.bright = 0
+            else:
+                ret.bright = min(self.bright + 1, 1)
+
+            return ret
+
+        elif isinstance(other, ColorValueDarker):
+            if ret.name == 'white' and ret.bright == 0:
+                ret.name = 'black'
+                ret.bright = 1
+            else:
+                ret.bright = max(ret.bright - 1, 0)
+
+            return ret
+
+        return other
+
+
+class ColorValueBrighter:
+    def __repr__(self):
+        return 'brighter'
+
+
+class ColorValueDarker:
+    def __repr__(self):
+        return 'darker'
+
+
+class ColorValueEmpty:
+    def __add__(self, other):
+        return other
+
+    def __repr__(self):
+        return 'empty'
 
 
 class Color:
     def __init__(self, modifier):
-        self.fg = None
-        self.bg = None
-        self.bright = 0
+        self.fg = ColorValueEmpty()
+        self.bg = ColorValueEmpty()
         self.italic = False
         self.underline = False
         self.strike = False
         self.reverse = False
 
-        if modifier in ('brighter', 'bright'):
-            self.bright = 1
+        if modifier in ('brighter', 'bright', 'brighter:', 'bright:'):
+            self.fg = ColorValueBrighter()
 
-        elif modifier in ('darker', 'dim'):
-            self.bright = -1
+        elif modifier in ('darker', 'dim', 'darker:', 'dim:'):
+            self.fg = ColorValueDarker()
 
         elif modifier == 'italic':
             self.italic = True
@@ -76,16 +126,15 @@ class Color:
         else:
             # Parsing
             if ':' not in modifier:
-                self.fg = modifier
+                fg = modifier
+                bg = None
 
             else:
-                self.fg, self.bg = modifier.split(':')
-                self.bg = self.bg.lower()
+                fg, bg = modifier.split(':')
 
             def value_normalize(v):
-                # Filter out 'none' by mapping it to None
-                if not v or v == 'none':
-                    return None
+                if not v or (v == 'none'):
+                    return ColorValueEmpty()
 
                 try:
                     return ColorValueANSI(v)
@@ -102,29 +151,17 @@ class Color:
                 except ValueError:
                     pass
 
-                return None
+                return ColorValueEmpty()
 
-            self.fg = value_normalize(self.fg)
-            self.bg = value_normalize(self.bg)
-
-            if isinstance(self.fg, ColorValueANSI):
-                if self.fg.name.upper() == self.fg.name:
-                    self.bright = 1
-                    self.fg.name = self.fg.name.lower()
-
-    def copy(self):
-        ret = Color('')
-        ret.fg = self.fg
-        ret.bg = self.bg
-        ret.bright = self.bright
-        ret.italic = self.italic
-        ret.underline = self.underline
-        ret.strike = self.strike
-        ret.reverse = self.reverse
-        return ret
+            self.fg = value_normalize(fg)
+            self.bg = value_normalize(bg)
 
     def __add__(self, other):
-        ret = self.copy()
+        ret = copy.deepcopy(self)
+
+        # List[Color]
+        if isinstance(other, list) and all(isinstance(o, Color) for o in other):
+            return sum(other, start=ret)
 
         if not isinstance(other, Color):
             raise ValueError('Cannot add ' + other.__class__.__name__ + ' to Color')
@@ -133,11 +170,8 @@ class Color:
             ret.fg, ret.bg = ret.bg, ret.fg
             return ret
 
-        if other.fg:
-            ret.fg = other.fg
-
-        if other.bg:
-            ret.bg = other.bg
+        ret.fg += other.fg
+        ret.bg += other.bg
 
         if other.italic:
             ret.italic = other.italic
@@ -148,12 +182,6 @@ class Color:
         if other.underline:
             ret.underline = other.underline
 
-        ret.bright += other.bright
-
-        if ret.bright > 1 and isinstance(ret.fg, ColorValueANSI) and ret.fg.name.lower() == 'black':
-            ret.bright = 0
-            ret.fg = ColorValueANSI('white')
-
         return ret
 
     def __call__(self, text):
@@ -163,13 +191,14 @@ class Color:
         fg = self.fg
         bg = self.bg
 
-        if bg and not fg:
+        if isinstance(fg, ColorValueEmpty) and not isinstance(bg, ColorValueEmpty):
             fg = ColorValueANSI('black')
 
-        if self.bright >= 1:
-            code += ';1'
-        elif self.bright <= -1:
-            code += ';0'
+        if isinstance(self.fg, ColorValueANSI):
+            if self.fg.bright >= 1:
+                code += ';1'
+            else:
+                code += ';0'
 
         if self.italic:
             code += ';3'
@@ -215,5 +244,4 @@ class Color:
             '' if not self.fg else 'fg=' + repr(self.fg),
             '' if not self.bg else 'bg=' + repr(self.bg),
             'reverse' if self.reverse else '',
-            'bright' if self.bright else '',
             ])) + ')'
