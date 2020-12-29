@@ -146,7 +146,6 @@ def construct_table(conf, tr, cal, drange):
 
             for i in range(7):
                 day = Date(dcursor + timedelta(days=i))
-                day.is_fill = (day < drange[0].to_date()) or (day > drange[1].to_date())
                 cal_week.append(day)
 
             cal_cell.weeks.append(cal_week)
