@@ -15,11 +15,10 @@ class TinyCalConfig:
     border_richness = SelectorField(('full', 'basic', 'off'), default='full')
     border_style = SelectorField(('ascii', 'single', 'bold', 'double'), default='single')
     border_weld = BoolField(default=True)
-    start_monday = BoolField(default=False)
+    firstweekday = SelectorField(('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'), default='sunday')
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
     marks = PathField(default=None)
     cont = BoolField(default=False)
-    start_monday = BoolField(default=False)
 
     # Color:
     # modifiers ::= modifier | modifier " " modifiers

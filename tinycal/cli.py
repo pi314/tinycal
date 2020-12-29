@@ -90,10 +90,10 @@ parser.add_argument('-z', action='store_const', const='zh', dest='lang',
 parser.add_argument('-e', action='store_const', const='en', dest='lang',
                     help='Equals to --lang=en.')
 
-parser.add_argument('-m', action='store_true', dest='start_monday', default=None,
-                    help='Use Monday as first weekday.')
-parser.add_argument('-M', action='store_false', dest='start_monday', default=None,
-                    help='Use Sunday as first weekday.')
+parser.add_argument('--firstweekday', dest='firstweekday', type=str,
+                    choices=TinyCalConfig.firstweekday.choices,
+                    default=TinyCalConfig.firstweekday.default,
+                    help='Set the first day of the week.')
 
 parser.add_argument('--cont', action='store_true', dest='cont', default=False,
                     help='Show the calendar in contiguous mode.')

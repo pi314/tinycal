@@ -2,7 +2,7 @@ import sys
 
 import calendar
 
-from calendar import Calendar, SUNDAY, MONDAY
+from calendar import Calendar, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 from datetime import date, timedelta
 
 from . import CALRCS
@@ -48,7 +48,14 @@ def main():
     print('today =', today)
     print()
 
-    cal = Calendar(MONDAY if conf.start_monday else SUNDAY)
+    cal = Calendar({
+            'monday': MONDAY,
+            'tuesday': TUESDAY,
+            'wednesday': WEDNESDAY,
+            'thursday': THURSDAY,
+            'friday': FRIDAY,
+            'saturday': SATURDAY,
+            'sunday': SUNDAY}[conf.firstweekday])
 
     ''' Calculate display range '''
     if year is not None and month is not None:
