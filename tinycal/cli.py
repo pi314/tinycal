@@ -92,12 +92,10 @@ parser.add_argument('-e', action='store_const', const='en', dest='lang',
 
 parser.add_argument('--firstweekday', dest='firstweekday', type=str,
                     choices=TinyCalConfig.firstweekday.choices,
-                    default=TinyCalConfig.firstweekday.default,
                     help='Set the first day of the week.')
 
 parser.add_argument('-m', '--mode', dest='mode', type=str,
                     choices=TinyCalConfig.mode.choices,
-                    default=TinyCalConfig.mode.default,
                     help='Set month-based or week-based calender.')
 
 parser.add_argument('--marks', type=FileType('r'), dest='marks', default=None,
