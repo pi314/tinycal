@@ -60,7 +60,7 @@ def cal_week_num(cal, date):
     return ((date - cal.monthdatescalendar(date.year, 1)[0][0]).days // 7) + 1
 
 
-def construct_table(conf, tr, cal, drange):
+def construct_table(conf, tr, cal, drange, today):
     ''' Construct output table structure:
     table: [
         row: [
@@ -101,7 +101,12 @@ def construct_table(conf, tr, cal, drange):
 
             # Put dates
             for week in cal.monthdatescalendar(year, month):
-                cal_week = TinyCalWeek(wk=cal_week_num(cal, week[0]))
+                if (week[0].year, week[0].month) != (year, month) and date(year, 1, 1) in week:
+                    wk = 1
+                else:
+                    wk = cal_week_num(cal, week[0])
+
+                cal_week = TinyCalWeek(wk=wk)
                 for day in week:
                     day = Date(day)
                     day.is_fill = (day.month != month)
@@ -142,10 +147,16 @@ def construct_table(conf, tr, cal, drange):
         dcursor = drange[0].move_to_week_begin().to_date()
 
         while dcursor <= drange[1].to_date():
-            cal_week = TinyCalWeek(wk=cal_week_num(cal, dcursor))
+            week = [Date(dcursor + timedelta(days=i)) for i in range(7)]
+            if dcursor.year != today.year and today in week:
+                wk = 1
+            else:
+                wk = cal_week_num(cal, dcursor)
 
-            for i in range(7):
-                day = Date(dcursor + timedelta(days=i))
+            cal_week = TinyCalWeek(wk=wk)
+            cal_week.comment = ''
+
+            for day in week:
                 cal_week.append(day)
 
             cal_cell.weeks.append(cal_week)

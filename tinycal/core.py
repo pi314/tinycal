@@ -88,7 +88,7 @@ def main():
 
     tr = Tr(conf.lang)
 
-    cal_table = construct_table(conf, tr, cal, drange)
+    cal_table = construct_table(conf, tr, cal, drange, today)
 
     if not color_enable:
         for name, field in vars(conf.__class__).items():

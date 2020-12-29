@@ -93,7 +93,7 @@ class DateCursor:
 
     def __isub__(self, other):
         d = date(self.year, self.month, self.day)
-        d -= timedelta(other)
+        d -= other
         self.year = d.year
         self.month = d.month
         self.day = d.day
