@@ -78,7 +78,7 @@ def construct_table(conf, tr, cal, drange, today):
 
     cal_table = TinyCalTable()
 
-    if not conf.cont:
+    if conf.mode == 'month':
         print('start =', drange[0].to_date())
         print('end =  ', drange[1].to_date())
         print()

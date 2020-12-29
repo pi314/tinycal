@@ -18,7 +18,7 @@ class TinyCalConfig:
     firstweekday = SelectorField(('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'), default='sunday')
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
     marks = PathField(default=None)
-    cont = BoolField(default=False)
+    mode = SelectorField(['month', 'week'], default='month')
 
     # Color:
     # modifiers ::= modifier | modifier " " modifiers

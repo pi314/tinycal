@@ -95,8 +95,10 @@ parser.add_argument('--firstweekday', dest='firstweekday', type=str,
                     default=TinyCalConfig.firstweekday.default,
                     help='Set the first day of the week.')
 
-parser.add_argument('--cont', action='store_true', dest='cont', default=False,
-                    help='Show the calendar in contiguous mode.')
+parser.add_argument('-m', '--mode', dest='mode', type=str,
+                    choices=TinyCalConfig.mode.choices,
+                    default=TinyCalConfig.mode.default,
+                    help='Set month-based or week-based calender.')
 
 parser.add_argument('--marks', type=FileType('r'), dest='marks', default=None,
                     help='Specify the date marking file.')
