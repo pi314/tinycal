@@ -51,6 +51,7 @@ class TinyCalWeek:
     def __init__(self, wk):
         self.wk = wk
         self.days = []
+        self.comment = ''
 
     def append(self, node):
         self.days.append(node)
@@ -148,6 +149,7 @@ def construct_table(conf, tr, cal, drange, today):
 
         while dcursor <= drange[1].to_date():
             week = [Date(dcursor + timedelta(days=i)) for i in range(7)]
+
             if dcursor.year != today.year and today in week:
                 wk = 1
             else:

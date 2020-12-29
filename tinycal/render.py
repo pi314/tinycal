@@ -279,8 +279,8 @@ def render_classic(conf, tr, cal_table, drange, today):
                             day_color = conf.color_fill
                         else:
                             day_color = conf.color_default
+                            day_color += getattr(conf, 'color_' + tr.weekday_meta[node.weekday()])
 
-                        day_color += getattr(conf, 'color_' + tr.weekday_meta[node.weekday()])
                         if node == today:
                             day_color += conf.color_today
 
