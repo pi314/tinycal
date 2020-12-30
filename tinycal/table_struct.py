@@ -27,7 +27,9 @@ class Date(date):
             d = args[0]
             return super().__new__(cls, year=d.year, month=d.month, day=d.day)
 
-    def __init__(self, date, is_fill=False):
+        return super().__new__(cls, *args, **kwargs)
+
+    def __init__(self, *args, is_fill=False, **kwargs):
         self.is_fill = is_fill
 
 

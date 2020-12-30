@@ -15,6 +15,7 @@ class TinyCalConfig:
     border_richness = SelectorField(('full', 'basic', 'off'), default='full')
     border_style = SelectorField(('ascii', 'single', 'bold', 'double'), default='single')
     border_weld = BoolField(default=True)
+    border_month_range = BoolField(default=False)
     firstweekday = SelectorField(('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'), default='sunday')
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
     marks = PathField(default=None)

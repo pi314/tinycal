@@ -1,3 +1,4 @@
+from datetime import timedelta
 from itertools import zip_longest
 from unicodedata import east_asian_width
 
@@ -27,6 +28,7 @@ class BorderTemplate:
         if weld is True, 2 will be (1, 3)
     '''
 
+    # TODO: month_range
     '''
     Currently the table border is cell-content-independent
     It cannot connect into the cell
@@ -117,12 +119,13 @@ class BorderTemplate:
             ╚═══════════════════════════╧╝
             '''
 
-
-    def __init__(self, style, richness, weld, wk, color):
+    # TODO: just receive conf obj and get necessary options itself
+    def __init__(self, style, richness, weld, wk, border_month_range, color):
         self.style = style
         self.richness = richness
         self.weld = weld
         self.wk = wk
+        self.border_month_range = border_month_range
         self.color = color
 
         try:
@@ -131,7 +134,7 @@ class BorderTemplate:
             template = getattr(BorderTemplate, 'template_example')
 
         self.template = list(map(str.strip, template.strip().split('\n')))
-        self.cell_width = cell_width(self.richness, self.wk)
+        self.cell_width = cell_width(self.richness, self.wk, self.border_month_range)
 
     @property
     def title_sep(self):
@@ -144,6 +147,10 @@ class BorderTemplate:
             ret += (t[2][2] * 3) + t[2][5] + t[2][2]
 
         ret += (t[2][2] * 20) + t[2][1]
+
+        if self.border_month_range:
+            ret += t[2][2] * 2
+
         return self.color(ret)
 
     def wk_sep_line(self, idx):
@@ -218,12 +225,14 @@ def rjust(string, width):
     return ' ' * (width - str_width(string)) + string
 
 
-def cell_width(border_richness, wk):
-    return (2 * 7 + 8) + wk * (3 + 2 * (border_richness == 'full'))
+# TODO: provide by BorderTemplate
+# TODO: dont show month range for mode=month
+def cell_width(border_richness, wk, border_month_range):
+    return (2 * 7 + 8) + (wk * (3 + 2 * (border_richness == 'full'))) + (2 * border_month_range)
 
 
 def render_classic(conf, tr, cal_table, drange, today):
-    cw = cell_width(conf.border_richness, conf.wk)
+    cw = cell_width(conf.border_richness, conf.wk, conf.border_month_range)
 
     # Squash conf.color_default into a single Color object
     conf.color_default = sum(conf.color_default[1:], conf.color_default[0])
@@ -232,8 +241,14 @@ def render_classic(conf, tr, cal_table, drange, today):
     conf.color_title = conf.color_default + conf.color_title
     conf.color_fill = sum(conf.color_fill[1:], conf.color_fill[0])
 
-    # bt = BorderTemplate(conf.border_style, conf.border_richness, conf.border_weld, conf.wk, conf.color_border)
-    bt = BorderTemplate('example', conf.border_richness, conf.border_weld, conf.wk, conf.color_default + conf.color_border)
+    conf.border_style = 'example'
+    bt = BorderTemplate(
+            conf.border_style,
+            conf.border_richness,
+            conf.border_weld,
+            conf.wk,
+            conf.border_month_range,
+            conf.color_default + conf.color_border)
 
     '''
     Expand TinyCalTable content into colored strings and shape them into rectangle
@@ -255,15 +270,36 @@ def render_classic(conf, tr, cal_table, drange, today):
                 output_cell.append(bt.title_sep)
 
             for idx, cal_week in enumerate(cal_cell.weeks):
-                week_buf = ' '
+                output_week = ' '
                 if conf.wk:
                     # Render WK
                     wk_color = conf.color_default + conf.color_wk
                     if today in cal_week.days:
                         wk_color += conf.color_today_wk
 
-                    week_buf += wk_color(rjust(str(cal_week.wk), 2)) + ' '
-                    week_buf += bt.wk_sep_line(idx) + ' '
+                    output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
+                    output_week += bt.wk_sep_line(idx)
+
+                # TODO: dont show month range for mode=month
+                if conf.border_month_range:
+                    if isinstance(cal_week.days[0], Weekday):
+                        month_range_ind = [' ', ' ']
+
+                    else:
+                        month_range_ind = []
+
+                        for d, ind in zip((cal_week.days[0], cal_week.days[6]), ('┌│└', '┐│┘')):
+                            if d.month != (d - timedelta(days=7)).month:
+                                month_range_ind.append(ind[0])
+                            elif d.month != (d + timedelta(days=7)).month:
+                                month_range_ind.append(ind[2])
+                            else:
+                                month_range_ind.append(ind[1])
+
+                else:
+                    month_range_ind = ['', '']
+
+                output_week += month_range_ind[0] + ' '
 
                 for node in cal_week.days:
                     if isinstance(node, Weekday):
@@ -271,7 +307,7 @@ def render_classic(conf, tr, cal_table, drange, today):
                         wkd = int(node)
                         wkd_color = conf.color_default + conf.color_weekday
                         wkd_color += getattr(conf, 'color_weekday_' + tr.weekday_meta[wkd])
-                        week_buf += wkd_color(tr.weekday[wkd]) + ' '
+                        output_week += wkd_color(tr.weekday[wkd]) + ' '
 
                     else:
                         # Render dates
@@ -284,9 +320,11 @@ def render_classic(conf, tr, cal_table, drange, today):
                         if node == today:
                             day_color += conf.color_today
 
-                        week_buf += day_color(rjust(str(node.day), 2)) + ' '
+                        output_week += day_color(rjust(str(node.day), 2)) + ' '
 
-                output_cell.append(week_buf)
+                output_week += month_range_ind[1]
+
+                output_cell.append(output_week)
 
             row_height = max(row_height, len(output_cell))
 
