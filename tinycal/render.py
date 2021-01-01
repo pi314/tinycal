@@ -119,22 +119,29 @@ class BorderTemplate:
             ╚═══════════════════════════╧╝
             '''
 
-    # TODO: just receive conf obj and get necessary options itself
-    def __init__(self, style, richness, weld, wk, border_month_range, color):
-        self.style = style
-        self.richness = richness
-        self.weld = weld
-        self.wk = wk
-        self.border_month_range = border_month_range
-        self.color = color
+    def __init__(self, conf):
+        self.style = conf.border_style
+        self.richness = conf.border_richness
+        self.mode = conf.mode
+        self.weld = conf.border_weld
+        self.wk = conf.wk
+        self.show_month_range = conf.border_month_range
+        self.color = conf.color_default + conf.color_border
 
         try:
-            template = getattr(BorderTemplate, 'template_' + self.style)
+            template = getattr(self.__class__, 'template_' + self.style)
         except AttributeError:
-            template = getattr(BorderTemplate, 'template_example')
+            template = getattr(self.__class__, 'template_example')
 
         self.template = list(map(str.strip, template.strip().split('\n')))
-        self.cell_width = cell_width(self.richness, self.wk, self.border_month_range)
+
+    @property
+    def cell_width(self):
+        return sum((
+                2 * 7 + 8,
+                self.wk * (3 + 2 * (self.richness == 'full')),
+                2 * self.show_month_range * (self.mode == 'week'),
+                ))
 
     @property
     def title_sep(self):
@@ -148,7 +155,7 @@ class BorderTemplate:
 
         ret += (t[2][2] * 20) + t[2][1]
 
-        if self.border_month_range:
+        if self.show_month_range and self.mode == 'week':
             ret += t[2][2] * 2
 
         return self.color(ret)
@@ -225,15 +232,7 @@ def rjust(string, width):
     return ' ' * (width - str_width(string)) + string
 
 
-# TODO: provide by BorderTemplate
-# TODO: dont show month range for mode=month
-def cell_width(border_richness, wk, border_month_range):
-    return (2 * 7 + 8) + (wk * (3 + 2 * (border_richness == 'full'))) + (2 * border_month_range)
-
-
 def render_classic(conf, tr, cal_table, drange, today):
-    cw = cell_width(conf.border_richness, conf.wk, conf.border_month_range)
-
     # Squash conf.color_default into a single Color object
     conf.color_default = sum(conf.color_default[1:], conf.color_default[0])
 
@@ -242,13 +241,8 @@ def render_classic(conf, tr, cal_table, drange, today):
     conf.color_fill = sum(conf.color_fill[1:], conf.color_fill[0])
 
     conf.border_style = 'example'
-    bt = BorderTemplate(
-            conf.border_style,
-            conf.border_richness,
-            conf.border_weld,
-            conf.wk,
-            conf.border_month_range,
-            conf.color_default + conf.color_border)
+    bt = BorderTemplate(conf)
+    cw = bt.cell_width
 
     '''
     Expand TinyCalTable content into colored strings and shape them into rectangle
@@ -280,8 +274,7 @@ def render_classic(conf, tr, cal_table, drange, today):
                     output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
                     output_week += bt.wk_sep_line(idx)
 
-                # TODO: dont show month range for mode=month
-                if conf.border_month_range:
+                if conf.border_month_range and conf.mode == 'week':
                     if isinstance(cal_week.days[0], Weekday):
                         month_range_ind = [' ', ' ']
 
