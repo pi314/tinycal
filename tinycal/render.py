@@ -126,6 +126,7 @@ class BorderTemplate:
         self.wk = conf.wk
         self.show_month_range = conf.border_month_range
         self.color = conf.color_default + conf.color_border
+        self.color_month_range = self.color + conf.color_border_month_range
 
         try:
             template = getattr(self.__class__, 'template_' + self.style)
@@ -166,7 +167,7 @@ class BorderTemplate:
         if not self._month_range_ind:
             return ''
 
-        return self.color(self._month_range_ind[left_right][idx])
+        return self.color_month_range(self._month_range_ind[left_right][idx])
 
     @property
     def title_sep(self):

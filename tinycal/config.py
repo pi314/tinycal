@@ -56,6 +56,7 @@ class TinyCalConfig:
     color_saturday = ColorListField(default=[Color('none:none')])
     color_today = ColorListField(default=[Color('reverse')])
     color_today_wk = ColorListField(default=[Color('brighter')])
+    color_border_month_range = ColorListField(default=[Color('darker')])
 
     def __init__(self):
         for name, field in vars(self.__class__).items():
@@ -97,10 +98,14 @@ class TinyCalConfig:
         attrs = tmp
 
         for key, value in attrs.items():
-            my_value = getattr(self, key)
-            field = getattr(self.__class__, key)
-            new_value = field(value)
-            if new_value is not None:
-                setattr(self, key, new_value)
+            try:
+                my_value = getattr(self, key)
+                field = getattr(self.__class__, key)
+                new_value = field(value)
+                if new_value is not None:
+                    setattr(self, key, new_value)
+
+            except AttributeError:
+                pass
 
         return self
