@@ -28,24 +28,23 @@ class BorderTemplate:
         if weld is True, 2 will be (1, 3)
     '''
 
-    # TODO: month_range
     '''
     Currently the table border is cell-content-independent
     It cannot connect into the cell
     '''
 
     template_example = '''
-            ╔═──────────────────────────╦╗
-            ║        March 2020         ║║
-            ║══──╦──────────────────────║║
-            │ WK ╬ Su Mo Tu We Th Fr Sa ││
-            │ 10 ║  1  2  3  4  5  6  7 ││
-            │ 11 │  8  9 10 11 12 13 14 ││
-            │ 12 │ 15 16 17 18 19 20 21 ││
-            │ 13 │ 22 23 24 25 26 27 28 ││
-            │ 14 │ 29 30 31             ││
-            ╠═──────────────────────────╬╣
-            ╚═──────────────────────────╩╝
+            ╔═────────────────────────────╦╗
+            ║         March 2020          ║║
+            ║══──╦────────────────────────║║
+            │ WK ╬  Su Mo Tu We Th Fr Sa  ││
+            │ 10 ║╔  1  2  3  4  5  6  7 ╗││
+            │ 11 │║  8  9 10 11 12 13 14 ║││
+            │ 12 ││ 15 16 17 18 19 20 21 │││
+            │ 13 ││ 22 23 24 25 26 27 28 ╝││
+            │ 14 │╚ 29 30 31              ││
+            ╠═────────────────────────────╬╣
+            ╚═────────────────────────────╩╝
             '''
 
     template_ascii = """
@@ -135,6 +134,26 @@ class BorderTemplate:
 
         self.template = list(map(str.strip, template.strip().split('\n')))
 
+        # Parse month range indicator from template
+        t = self.template[4:-2]
+        if all(map(lambda x: len(x) == (self.cell_width + 3), t)):
+            def _collect(idx):
+                ret = ''.join(filter(lambda x: x != ' ', (i[idx] for i in t)))
+                if len(ret) < 3:
+                    return ''
+                return ret[0] + ret[1] + ret[-1]
+
+            self._month_range_ind = tuple((_collect(6), _collect(-3)))
+
+            if not all(map(lambda x: len(x) == 3, self._month_range_ind)):
+                self._month_range_ind = None
+
+        else:
+            self._month_range_ind = None
+
+        if not self._month_range_ind:
+            self.show_month_range = False
+
     @property
     def cell_width(self):
         return sum((
@@ -142,6 +161,12 @@ class BorderTemplate:
                 self.wk * (3 + 2 * (self.richness == 'full')),
                 2 * self.show_month_range * (self.mode == 'week'),
                 ))
+
+    def month_range_ind(self, left_right, idx):
+        if not self._month_range_ind:
+            return ''
+
+        return self.color(self._month_range_ind[left_right][idx])
 
     @property
     def title_sep(self):
@@ -153,10 +178,11 @@ class BorderTemplate:
         if self.wk:
             ret += (t[2][2] * 3) + t[2][5] + t[2][2]
 
-        ret += (t[2][2] * 20) + t[2][1]
-
+        ret += (t[2][2] * 20)
         if self.show_month_range and self.mode == 'week':
             ret += t[2][2] * 2
+
+        ret += t[2][1]
 
         return self.color(ret)
 
@@ -190,7 +216,7 @@ class BorderTemplate:
         ret = [
                 None,
                 t[0][1] * cw,
-                (t[0][1] * cw,) if self.weld else (t[-1][1] * cw, t[0][1] * cw),
+                (t[-2][1] * cw,) if self.weld else (t[-1][1] * cw, t[0][1] * cw),
                 t[-1][1] * cw,
                 t[1][0],
                 t[1][-2] if self.weld else (t[1][-1] + t[1][0]),
@@ -274,23 +300,22 @@ def render_classic(conf, tr, cal_table, drange, today):
                     output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
                     output_week += bt.wk_sep_line(idx)
 
-                if conf.border_month_range and conf.mode == 'week':
-                    if isinstance(cal_week.days[0], Weekday):
-                        month_range_ind = [' ', ' ']
+                if not bt.show_month_range:
+                    month_range_ind = ('', '')
 
-                    else:
-                        month_range_ind = []
-
-                        for d, ind in zip((cal_week.days[0], cal_week.days[6]), ('┌│└', '┐│┘')):
-                            if d.month != (d - timedelta(days=7)).month:
-                                month_range_ind.append(ind[0])
-                            elif d.month != (d + timedelta(days=7)).month:
-                                month_range_ind.append(ind[2])
-                            else:
-                                month_range_ind.append(ind[1])
+                elif isinstance(cal_week.days[0], Weekday):
+                    month_range_ind = (' ', ' ')
 
                 else:
-                    month_range_ind = ['', '']
+                    month_range_ind = []
+
+                    for left_right, d in zip((0, 1), (cal_week.days[0], cal_week.days[6])):
+                        if d.month != (d - timedelta(days=7)).month:
+                            month_range_ind.append(bt.month_range_ind(left_right, 0))
+                        elif d.month != (d + timedelta(days=7)).month:
+                            month_range_ind.append(bt.month_range_ind(left_right, -1))
+                        else:
+                            month_range_ind.append(bt.month_range_ind(left_right, 1))
 
                 output_week += month_range_ind[0] + ' '
 

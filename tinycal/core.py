@@ -46,9 +46,6 @@ def main():
     print(conf)
     print()
 
-    print('today =', today)
-    print()
-
     cal = Calendar({
             'monday': MONDAY,
             'tuesday': TUESDAY,

@@ -81,10 +81,6 @@ def construct_table(conf, tr, cal, drange, today):
     cal_table = TinyCalTable()
 
     if conf.mode == 'month':
-        print('start =', drange[0].to_date())
-        print('end =  ', drange[1].to_date())
-        print()
-
         for idx, umn in enumerate(range(drange[0].umn, drange[1].umn + 1)):
             if idx % conf.col == 0:
                 cal_row = TinyCalCellRow()
@@ -124,11 +120,6 @@ def construct_table(conf, tr, cal, drange, today):
             cal_row.cells.append(None)
 
     else:
-        print('cont')
-        print('start =', drange[0].to_date())
-        print('end =  ', drange[1].to_date())
-        print()
-
         cal_row = TinyCalCellRow()
         cal_table.rows.append(cal_row)
 
