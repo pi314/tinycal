@@ -329,16 +329,22 @@ def render_classic(conf, tr, cal_table, drange, today):
 
                     else:
                         # Render dates
-                        if node.is_fill:
-                            day_color = conf.color_fill
+                        if node.is_fill and conf.fill is False:
+                            ds = '  ' + ' '
+
                         else:
-                            day_color = conf.color_default
-                            day_color += getattr(conf, 'color_' + tr.weekday_meta[node.weekday()])
+                            if node.is_fill:
+                                day_color = conf.color_fill
+                            else:
+                                day_color = conf.color_default + getattr(conf,
+                                        'color_' + tr.weekday_meta[node.weekday()])
 
-                        if node == today:
-                            day_color += conf.color_today
+                            if node == today:
+                                day_color += conf.color_today
 
-                        output_week += day_color(rjust(str(node.day), 2)) + ' '
+                            ds = day_color(rjust(str(node.day), 2)) + ' '
+
+                        output_week += ds
 
                 output_week += month_range_ind[1]
 
