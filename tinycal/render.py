@@ -47,7 +47,7 @@ class BorderTemplate:
             ╚═────────────────────────────╩╝
             '''
 
-    template_ascii = """
+    template_ascii = '''
             .----------------------------.
             |           Title           ||
             | ------------------------- ||
@@ -59,8 +59,7 @@ class BorderTemplate:
             | 14 | 29 30 31             ||
             |---------------------------+|
             '----------------------------'
-            """
-
+            '''
 
     template_single = '''
             ┌───────────────────────────┬┐
@@ -104,7 +103,7 @@ class BorderTemplate:
             ╚═══════════════════════════╩╝
             '''
 
-    template_test = '''
+    template_frame = '''
             ╔═══════════════════════════╤╗
             ║         2020              │║
             ║────┬──────────────────────│║
@@ -157,8 +156,9 @@ class BorderTemplate:
             if self._month_hint_range_ind:
                 self.month_hint_range_enable = True
 
-        self.month_hint_sep_enable = (conf.month_hint_sep and conf.month_hint_text)
-        self.month_hint_text_enable = conf.month_hint_text
+        if conf.mode == 'week':
+            self.month_hint_sep_enable = (conf.month_hint_sep and conf.month_hint_text)
+            self.month_hint_text_enable = conf.month_hint_text
 
     @property
     def cell_width(self):

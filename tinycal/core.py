@@ -18,12 +18,6 @@ def main():
     conf = TinyCalConfig.parse_conf(CALRCS)
     args = cli.parse_args()
 
-    print(conf)
-    print()
-    #
-    print(args)
-    print()
-
     ''' Remove arguments that are not part of TinyCalConfig '''
     month = args.month
     delattr(args, 'month')
@@ -42,9 +36,6 @@ def main():
     delattr(args, 'today')
 
     conf.merge(vars(args))
-
-    print(conf)
-    print()
 
     cal = Calendar({
             'monday': MONDAY,
