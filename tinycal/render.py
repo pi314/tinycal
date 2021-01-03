@@ -33,6 +33,8 @@ class BorderTemplate:
     It cannot connect into the cell
     '''
 
+    #TODO: how to define a template, how to parse a template
+
     template_example = '''
             ╔═────────────────────────────╦╗
             ║         March 2020          ║║
@@ -136,22 +138,9 @@ class BorderTemplate:
         self.month_hint_sep_enable = False
         self.month_hint_text_enable = False
 
-        #TODO: this part is a mess
         if conf.mode == 'week' and conf.month_hint_range:
             # Parse month range indicator from template
-            self._month_hint_range_ind = None
-            t = self.template[4:-2]
-            if all(map(lambda x: len(x) == (self.cell_width + 5), t)):
-                def _collect(idx):
-                    ret = ''.join(filter(lambda x: x != ' ', (i[idx] for i in t)))
-                    if len(ret) < 3:
-                        return ''
-                    return ret[0] + ret[1] + ret[-1]
-
-                self._month_hint_range_ind = tuple((_collect(6), _collect(-3)))
-
-                if not all(map(lambda x: len(x) == 3, self._month_hint_range_ind)):
-                    self._month_hint_range_ind = None
+            self._month_hint_range_ind = self._extract_month_hint_range_ind()
 
             if self._month_hint_range_ind:
                 self.month_hint_range_enable = True
@@ -159,6 +148,23 @@ class BorderTemplate:
         if conf.mode == 'week':
             self.month_hint_sep_enable = (conf.month_hint_sep and conf.month_hint_text)
             self.month_hint_text_enable = conf.month_hint_text
+
+    def _extract_month_hint_range_ind(self):
+        t = self.template[4:-2]
+
+        # Check template width, if not wide enough, it meas no month hint range int
+        if not all(map(lambda x: len(x) == (self.cell_width + 5), t)):
+            return None
+
+        l = ''.join(filter(lambda x: x != ' ', (i[6] for i in t)))
+        r = ''.join(filter(lambda x: x != ' ', (i[-3] for i in t)))
+
+        if len(l) < 3 or len(r) < 3:
+            return None
+
+        l  = l[0] + l[1] + l[-1]
+        r  = r[0] + r[1] + r[-1]
+        return (l, r)
 
     @property
     def cell_width(self):
@@ -309,10 +315,12 @@ def render_classic(conf, tr, cal_table, drange, today):
             if conf.border_richness == 'full':
                 output_cell.append(bt.title_sep)
 
+            # Render week
             for idx, cal_week in enumerate(cal_cell.weeks):
                 output_week = ' '
+
+                # Render WK
                 if conf.wk:
-                    # Render WK
                     wk_color = conf.color_default + conf.color_wk
                     if today in cal_week.days:
                         wk_color += conf.color_today_wk
@@ -320,6 +328,7 @@ def render_classic(conf, tr, cal_table, drange, today):
                     output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
                     output_week += bt.wk_sep
 
+                # Render month hint
                 if isinstance(cal_week.days[0], Weekday):
                     month_hint_range_ind = (bt.month_hint_range_ind(0, -1), bt.month_hint_range_ind(1, -1))
 
@@ -334,8 +343,11 @@ def render_classic(conf, tr, cal_table, drange, today):
                         else:
                             month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 1))
 
-                output_week += month_hint_range_ind[0] + ' '
+                output_week += month_hint_range_ind[0]
 
+                output_week += ' '
+
+                # Render days
                 for node in cal_week.days:
                     if isinstance(node, Weekday):
                         # Render weekdays
@@ -365,6 +377,7 @@ def render_classic(conf, tr, cal_table, drange, today):
 
                 output_week += month_hint_range_ind[1]
 
+                # The right side of month hint
                 if conf.mode == 'week':
                     output_week += bt.month_hint_sep
                     if conf.month_hint_text:
