@@ -15,11 +15,14 @@ class TinyCalConfig:
     border_richness = SelectorField(('full', 'basic', 'off'), default='full')
     border_style = SelectorField(('ascii', 'single', 'bold', 'double'), default='single')
     border_weld = BoolField(default=True)
-    border_month_range = BoolField(default=False)
     firstweekday = SelectorField(('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'), default='sunday')
     lang = SelectorField(['zh', 'jp', 'en'], default='en')
     marks = PathField(default=None)
     mode = SelectorField(['month', 'week'], default='month')
+
+    month_hint_range = BoolField(default=False)
+    month_hint_sep = BoolField(default=False)
+    month_hint_text = BoolField(default=False)
 
     # Color:
     # modifiers ::= modifier | modifier " " modifiers
@@ -56,7 +59,8 @@ class TinyCalConfig:
     color_saturday = ColorListField(default=[Color('none:none')])
     color_today = ColorListField(default=[Color('reverse')])
     color_today_wk = ColorListField(default=[Color('brighter')])
-    color_border_month_range = ColorListField(default=[Color('darker')])
+    color_month_hint_range = ColorListField(default=[Color('darker')])
+    color_month_hint_text = ColorListField(default=[Color('darker')])
 
     def __init__(self):
         for name, field in vars(self.__class__).items():

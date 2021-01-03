@@ -37,8 +37,8 @@ class BorderTemplate:
             ╔═────────────────────────────╦╗
             ║         March 2020          ║║
             ║══──╦────────────────────────║║
-            │ WK ╬  Su Mo Tu We Th Fr Sa  ││
-            │ 10 ║╔  1  2  3  4  5  6  7 ╗││
+            │ WK ║  Su Mo Tu We Th Fr Sa  ││
+            │ 10 │╔  1  2  3  4  5  6  7 ╗││
             │ 11 │║  8  9 10 11 12 13 14 ║││
             │ 12 ││ 15 16 17 18 19 20 21 │││
             │ 13 ││ 22 23 24 25 26 27 28 ╝││
@@ -66,7 +66,7 @@ class BorderTemplate:
             ┌───────────────────────────┬┐
             │        March 2020         ││
             │────┬──────────────────────││
-            │ WK ┼ Su Mo Tu We Th Fr Sa ││
+            │ WK │ Su Mo Tu We Th Fr Sa ││
             │ 10 │  1  2  3  4  5  6  7 ││
             │ 11 │  8  9 10 11 12 13 14 ││
             │ 12 │ 15 16 17 18 19 20 21 ││
@@ -80,7 +80,7 @@ class BorderTemplate:
             ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳┓
             ┃        March 2020         ┃┃
             ┃━━━━┳━━━━━━━━━━━━━━━━━━━━━━┃┃
-            ┃ WK ╋ Su Mo Tu We Th Fr Sa ┃┃
+            ┃ WK ┃ Su Mo Tu We Th Fr Sa ┃┃
             ┃ 10 ┃  1  2  3  4  5  6  7 ┃┃
             ┃ 11 ┃  8  9 10 11 12 13 14 ┃┃
             ┃ 12 ┃ 15 16 17 18 19 20 21 ┃┃
@@ -94,7 +94,7 @@ class BorderTemplate:
             ╔═══════════════════════════╦╗
             ║         2020              ║║
             ║────┬──────────────────────║║
-            ║ WK ┼ Su Mo Tu We Th Fr Sa ║║
+            ║ WK │ Su Mo Tu We Th Fr Sa ║║
             ║ 10 │  1  2  3  4  5  6  7 ║║
             ║ 11 │  8  9 10 11 12 13 14 ║║
             ║ 12 │ 15 16 17 18 19 20 21 ║║
@@ -108,7 +108,7 @@ class BorderTemplate:
             ╔═══════════════════════════╤╗
             ║         2020              │║
             ║────┬──────────────────────│║
-            ║ WK ┼ Su Mo Tu We Th Fr Sa │║
+            ║ WK │ Su Mo Tu We Th Fr Sa │║
             ║ 10 │  1  2  3  4  5  6  7 │║
             ║ 11 │  8  9 10 11 12 13 14 │║
             ║ 12 │ 15 16 17 18 19 20 21 │║
@@ -121,12 +121,10 @@ class BorderTemplate:
     def __init__(self, conf):
         self.style = conf.border_style
         self.richness = conf.border_richness
-        self.mode = conf.mode
         self.weld = conf.border_weld
         self.wk = conf.wk
-        self.show_month_range = conf.border_month_range
         self.color = conf.color_default + conf.color_border
-        self.color_month_range = self.color + conf.color_border_month_range
+        self.color_month_hint_range = self.color + conf.color_month_hint_range
 
         try:
             template = getattr(self.__class__, 'template_' + self.style)
@@ -135,39 +133,58 @@ class BorderTemplate:
 
         self.template = list(map(str.strip, template.strip().split('\n')))
 
-        # Parse month range indicator from template
-        t = self.template[4:-2]
-        if all(map(lambda x: len(x) == (self.cell_width + 3), t)):
-            def _collect(idx):
-                ret = ''.join(filter(lambda x: x != ' ', (i[idx] for i in t)))
-                if len(ret) < 3:
-                    return ''
-                return ret[0] + ret[1] + ret[-1]
+        self.month_hint_range_enable = False
+        self.month_hint_sep_enable = False
+        self.month_hint_text_enable = False
 
-            self._month_range_ind = tuple((_collect(6), _collect(-3)))
+        #TODO: this part is a mess
+        if conf.mode == 'week' and conf.month_hint_range:
+            # Parse month range indicator from template
+            self._month_hint_range_ind = None
+            t = self.template[4:-2]
+            if all(map(lambda x: len(x) == (self.cell_width + 5), t)):
+                def _collect(idx):
+                    ret = ''.join(filter(lambda x: x != ' ', (i[idx] for i in t)))
+                    if len(ret) < 3:
+                        return ''
+                    return ret[0] + ret[1] + ret[-1]
 
-            if not all(map(lambda x: len(x) == 3, self._month_range_ind)):
-                self._month_range_ind = None
+                self._month_hint_range_ind = tuple((_collect(6), _collect(-3)))
 
-        else:
-            self._month_range_ind = None
+                if not all(map(lambda x: len(x) == 3, self._month_hint_range_ind)):
+                    self._month_hint_range_ind = None
 
-        if not self._month_range_ind:
-            self.show_month_range = False
+            if self._month_hint_range_ind:
+                self.month_hint_range_enable = True
+
+        self.month_hint_sep_enable = (conf.month_hint_sep and conf.month_hint_text)
+        self.month_hint_text_enable = conf.month_hint_text
 
     @property
     def cell_width(self):
         return sum((
                 2 * 7 + 8,
                 self.wk * (3 + 2 * (self.richness == 'full')),
-                2 * self.show_month_range * (self.mode == 'week'),
+                2 * self.month_hint_range_enable,
+                1 * self.month_hint_sep_enable,
+                9 * self.month_hint_text_enable,
                 ))
 
-    def month_range_ind(self, left_right, idx):
-        if not self._month_range_ind:
+    @property
+    def month_hint_sep(self):
+        if not self.month_hint_sep_enable:
             return ''
 
-        return self.color_month_range(self._month_range_ind[left_right][idx])
+        return self.wk_sep
+
+    def month_hint_range_ind(self, left_right, idx):
+        if not self.month_hint_range_enable:
+            return ''
+
+        if idx == -1:
+            return ' '
+
+        return self.color_month_hint_range(self._month_hint_range_ind[left_right][idx])
 
     @property
     def title_sep(self):
@@ -177,18 +194,19 @@ class BorderTemplate:
         t = self.template
         ret = t[2][1]
         if self.wk:
-            ret += (t[2][2] * 3) + t[2][5] + t[2][2]
+            ret += (t[2][2] * 3) + t[2][5]
 
-        ret += (t[2][2] * 20)
-        if self.show_month_range and self.mode == 'week':
-            ret += t[2][2] * 2
-
-        ret += t[2][1]
+        ret += self.month_hint_range_enable * t[2][2]
+        ret += (7 * 2 + 8) * t[2][2]
+        ret += self.month_hint_range_enable * t[2][2]
+        ret += self.month_hint_sep_enable * t[2][5]
+        ret += self.month_hint_text_enable * 9 * t[2][2]
 
         return self.color(ret)
 
-    def wk_sep_line(self, idx):
-        return self.color(self.template[(3 if idx == 0 else 4)][5])
+    @property
+    def wk_sep(self):
+        return self.color(self.template[3][5])
 
     def table_corner(self, number):
         t = self.template
@@ -266,6 +284,7 @@ def render_classic(conf, tr, cal_table, drange, today):
     # Squash color configs that won't change anymore
     conf.color_title = conf.color_default + conf.color_title
     conf.color_fill = sum(conf.color_fill[1:], conf.color_fill[0])
+    conf.color_month_hint_text = conf.color_default + conf.color_month_hint_text
 
     conf.border_style = 'example'
     bt = BorderTemplate(conf)
@@ -299,26 +318,23 @@ def render_classic(conf, tr, cal_table, drange, today):
                         wk_color += conf.color_today_wk
 
                     output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
-                    output_week += bt.wk_sep_line(idx)
+                    output_week += bt.wk_sep
 
-                if not bt.show_month_range:
-                    month_range_ind = ('', '')
-
-                elif isinstance(cal_week.days[0], Weekday):
-                    month_range_ind = (' ', ' ')
+                if isinstance(cal_week.days[0], Weekday):
+                    month_hint_range_ind = (bt.month_hint_range_ind(0, -1), bt.month_hint_range_ind(1, -1))
 
                 else:
-                    month_range_ind = []
+                    month_hint_range_ind = []
 
                     for left_right, d in zip((0, 1), (cal_week.days[0], cal_week.days[6])):
                         if d.month != (d - timedelta(days=7)).month:
-                            month_range_ind.append(bt.month_range_ind(left_right, 0))
+                            month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 0))
                         elif d.month != (d + timedelta(days=7)).month:
-                            month_range_ind.append(bt.month_range_ind(left_right, -1))
+                            month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 2))
                         else:
-                            month_range_ind.append(bt.month_range_ind(left_right, 1))
+                            month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 1))
 
-                output_week += month_range_ind[0] + ' '
+                output_week += month_hint_range_ind[0] + ' '
 
                 for node in cal_week.days:
                     if isinstance(node, Weekday):
@@ -347,7 +363,12 @@ def render_classic(conf, tr, cal_table, drange, today):
 
                         output_week += ds
 
-                output_week += month_range_ind[1]
+                output_week += month_hint_range_ind[1]
+
+                if conf.mode == 'week':
+                    output_week += bt.month_hint_sep
+                    if conf.month_hint_text:
+                        output_week += ' ' + conf.color_month_hint_text(cal_week.hint.rjust(7) + ' ')
 
                 output_cell.append(output_week)
 
@@ -360,7 +381,7 @@ def render_classic(conf, tr, cal_table, drange, today):
             lc = len(cell)
             for i in range(lc, row_height):
                 if lc:
-                    cell.append((('    ' + bt.wk_sep_line(1)) * conf.wk) + (' ' * (cw - 5)))
+                    cell.append((('    ' + bt.wk_sep) * conf.wk) + (' ' * (cw - 5)))
                 else:
                     cell.append(' ' * cw)
 

@@ -53,7 +53,7 @@ class TinyCalWeek:
     def __init__(self, wk):
         self.wk = wk
         self.days = []
-        self.comment = ''
+        self.hint = ''
 
     def append(self, node):
         self.days.append(node)
@@ -123,7 +123,7 @@ def construct_table(conf, tr, cal, drange, today):
         cal_row = TinyCalCellRow()
         cal_table.rows.append(cal_row)
 
-        cal_cell = TinyCalCell('{sy}/{sm:02} ~ {ey}/{em:02}'.format(
+        cal_cell = TinyCalCell('{sy:04}/{sm:02} ~ {ey:04}/{em:02}'.format(
             sy=drange[0].to_date().year,
             sm=drange[0].to_date().month,
             ey=drange[1].to_date().year,
@@ -149,7 +149,9 @@ def construct_table(conf, tr, cal, drange, today):
                 wk = cal_week_num(cal, dcursor)
 
             cal_week = TinyCalWeek(wk=wk)
-            cal_week.comment = ''
+
+            if (week[-1].day <= 7) or len(cal_cell.weeks) == 1:
+                cal_week.hint = '{:04}/{:02}'.format(week[-1].year, week[-1].month)
 
             for day in week:
                 cal_week.append(day)
