@@ -1,8 +1,6 @@
 from datetime import timedelta, date
 from collections import namedtuple
 
-from .color import Color
-
 
 class Weekday:
     def __init__(self, weekday):

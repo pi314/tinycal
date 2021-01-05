@@ -16,6 +16,28 @@ from .render import render_classic
 from .table_struct import construct_table
 
 
+class DateMark:
+    def __init__(self, drange, color):
+        self.drange = drange
+        self.color = color
+
+    def __contains__(self, item):
+        if isinstance(item, date):
+            if self.drange[0] == self.drange[1]:
+                return item == self.drange[0]
+
+            if self.drange[0] <= item and item <= self.drange[1]:
+                return True
+
+            if isinstance(item, tuple):
+                return item[0] in self and item[1] in self
+
+        return False
+
+    def __repr__(self):
+        return '{} ~ {} {}'.format(self.drange[0], self.drange[1], self.color)
+
+
 def parse_marks_file(marks_file):
     if not marks_file or not exists(marks_file) or not isfile(marks_file):
         return []
@@ -24,7 +46,6 @@ def parse_marks_file(marks_file):
     date_range_mark_fmt = re.compile(r'^(\d\d\d\d)/(\d\d)/(\d\d) ?[~-] ?(\d\d\d\d)/(\d\d)/(\d\d) ([a-zA-Z:]+)(.*)$')
 
     date_marks = []
-    date_range_marks = []
     with open(marks_file) as f:
         for line in f:
             line = line.rstrip()
@@ -33,7 +54,7 @@ def parse_marks_file(marks_file):
             if m:
                 d = date(*map(int, m.group(1, 2, 3)))
                 color = Color(m.group(4))
-                date_marks.insert(0, (str(d), color))
+                date_marks.append(DateMark((d, d), color))
                 continue
 
             m = date_range_mark_fmt.match(line)
@@ -41,14 +62,13 @@ def parse_marks_file(marks_file):
                 d1 = date(*map(int, m.group(1, 2, 3)))
                 d2 = date(*map(int, m.group(4, 5, 6)))
                 color = Color(m.group(7))
-                date_range_marks.insert(0, (d1, d2, color))
+                date_marks.append(DateMark((d1, d2), color))
                 continue
 
-    for i in date_marks:
-        print(i)
+    for dm in date_marks:
+        print(dm)
 
-    for i in date_range_marks:
-        print(i)
+    return date_marks
 
 
 def main():
@@ -128,7 +148,9 @@ def main():
             if name.startswith('color_'):
                 setattr(conf, name, Color(''))
 
-    else:
-        marks = parse_marks_file(conf.marks)
+        date_marks = tuple()
 
-    render_classic(conf, tr, cal_table, drange, today)
+    else:
+        date_marks = parse_marks_file(conf.marks)
+
+    render_classic(conf, tr, cal_table, date_marks, today)

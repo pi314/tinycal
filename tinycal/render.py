@@ -3,7 +3,7 @@ from itertools import zip_longest
 from unicodedata import east_asian_width
 
 from .color import Color
-from .table_struct import Weekday
+from .table_struct import Weekday, Date
 
 
 class BorderTemplate:
@@ -283,7 +283,7 @@ def rjust(string, width):
     return ' ' * (width - str_width(string)) + string
 
 
-def render_classic(conf, tr, cal_table, drange, today):
+def render_classic(conf, tr, cal_table, date_marks, today):
     # Squash conf.color_default into a single Color object
     conf.color_default = sum(conf.color_default[1:], conf.color_default[0])
 
@@ -345,7 +345,19 @@ def render_classic(conf, tr, cal_table, drange, today):
 
                 output_week += month_hint_range_ind[0]
 
-                output_week += ' '
+                if isinstance(cal_week.days[0], Date):
+                    node = cal_week.days[0]
+                    padding_color = conf.color_default
+                    for dm in date_marks:
+                        if node.is_fill or (node - timedelta(days=1)).is_fill:
+                            pass
+                        elif node in dm and (node - timedelta(days=1)) in dm:
+                            padding_color += dm.color
+
+                    output_week += padding_color(' ')
+
+                else:
+                    output_week += ' '
 
                 # Render days
                 for node in cal_week.days:
@@ -368,10 +380,23 @@ def render_classic(conf, tr, cal_table, drange, today):
                                 day_color = conf.color_default + getattr(conf,
                                         'color_' + tr.weekday_meta[node.weekday()])
 
+                                for dm in date_marks:
+                                    if node in dm:
+                                        day_color += dm.color
+
                             if node == today:
                                 day_color += conf.color_today
 
-                            ds = day_color(rjust(str(node.day), 2)) + ' '
+                            ds = day_color(rjust(str(node.day), 2))
+
+                            padding_color = conf.color_default
+                            for dm in date_marks:
+                                if node.is_fill or (node + timedelta(days=1)).is_fill:
+                                    pass
+                                elif node in dm and (node + timedelta(days=1)) in dm:
+                                    padding_color += dm.color
+
+                            ds += padding_color(' ')
 
                         output_week += ds
 
