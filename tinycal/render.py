@@ -381,7 +381,7 @@ def render_classic(conf, tr, cal_table, drange, today):
                 if conf.mode == 'week':
                     output_week += bt.month_hint_sep
                     if conf.month_hint_text:
-                        output_week += ' ' + conf.color_month_hint_text(cal_week.hint.rjust(7) + ' ')
+                        output_week += ' ' + conf.color_month_hint_text(cal_week.hint.rjust(7)) + ' '
 
                 output_cell.append(output_week)
 

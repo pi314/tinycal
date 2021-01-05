@@ -1,17 +1,54 @@
-import sys
-
 import calendar
+import re
+import sys
 
 from calendar import Calendar, SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY
 from datetime import date, timedelta
+from os.path import exists, isfile
 
 from . import CALRCS
 from . import cli
+from .color import Color
 from .config import TinyCalConfig, Color
+from .misc import DateCursor
+from .misc import Tr
 from .render import render_classic
 from .table_struct import construct_table
-from .misc import Tr
-from .misc import DateCursor
+
+
+def parse_marks_file(marks_file):
+    if not marks_file or not exists(marks_file) or not isfile(marks_file):
+        return []
+
+    date_mark_fmt = re.compile(r'^(\d\d\d\d)/(\d\d)/(\d\d) ([a-zA-Z:]+)(.*)$')
+    date_range_mark_fmt = re.compile(r'^(\d\d\d\d)/(\d\d)/(\d\d) ?[~-] ?(\d\d\d\d)/(\d\d)/(\d\d) ([a-zA-Z:]+)(.*)$')
+
+    date_marks = []
+    date_range_marks = []
+    with open(marks_file) as f:
+        for line in f:
+            line = line.rstrip()
+
+            m = date_mark_fmt.match(line)
+            if m:
+                d = date(*map(int, m.group(1, 2, 3)))
+                color = Color(m.group(4))
+                date_marks.insert(0, (str(d), color))
+                continue
+
+            m = date_range_mark_fmt.match(line)
+            if m:
+                d1 = date(*map(int, m.group(1, 2, 3)))
+                d2 = date(*map(int, m.group(4, 5, 6)))
+                color = Color(m.group(7))
+                date_range_marks.insert(0, (d1, d2, color))
+                continue
+
+    for i in date_marks:
+        print(i)
+
+    for i in date_range_marks:
+        print(i)
 
 
 def main():
@@ -90,5 +127,8 @@ def main():
         for name, field in vars(conf.__class__).items():
             if name.startswith('color_'):
                 setattr(conf, name, Color(''))
+
+    else:
+        marks = parse_marks_file(conf.marks)
 
     render_classic(conf, tr, cal_table, drange, today)
