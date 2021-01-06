@@ -153,7 +153,8 @@ class BorderTemplate:
         t = self.template[4:-2]
 
         # Check template width, if not wide enough, it meas no month hint range int
-        if not all(map(lambda x: len(x) == (self.cell_width + 5), t)):
+        # I'm hardcoding it here as the template format may change
+        if not all(map(lambda x: len(x) == 32, t)):
             return None
 
         l = ''.join(filter(lambda x: x != ' ', (i[6] for i in t)))
@@ -232,6 +233,7 @@ class BorderTemplate:
 
         if isinstance(ret, tuple):
             return tuple(map(self.color, ret))
+
         return self.color(ret)
 
     def table_border(self, number):
@@ -250,10 +252,8 @@ class BorderTemplate:
 
         if isinstance(ret, tuple):
             return tuple(map(self.color, ret))
-        return self.color(ret)
 
-    def __getitem__(self, idx):
-        return self.template[idx]
+        return self.color(ret)
 
 
 class TinyCalTableTextNode:
@@ -426,7 +426,7 @@ def render_classic(conf, tr, cal_table, date_marks, today):
         output_table.append(output_row)
 
     '''
-    Render the result
+    Surround rendered cell content with table borders
     '''
     for row_idx, output_row in enumerate(output_table):
         if row_idx == 0:
