@@ -150,4 +150,4 @@ def main():
     else:
         date_marks = parse_marks_file(conf.marks)
 
-    render_classic(conf, tr, cal_table, date_marks, today)
+    render_classic(conf, tr, date_marks, today, cal_table)

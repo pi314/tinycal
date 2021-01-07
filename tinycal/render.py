@@ -6,6 +6,21 @@ from .color import Color
 from .table_struct import Weekday, Date
 
 
+def str_width(s):
+    return sum(1 + (east_asian_width(c) in 'WF') for c in s)
+
+
+def mjust(string, width):
+    a = str_width(string)
+    left = (width - a) // 2
+    right = width - a - left
+    return (left * ' ') + string + (right * ' ')
+
+
+def rjust(string, width):
+    return ' ' * (width - str_width(string)) + string
+
+
 class BorderTemplate:
     '''
     Table corners numbering:
@@ -256,34 +271,7 @@ class BorderTemplate:
         return self.color(ret)
 
 
-class TinyCalTableTextNode:
-    def __init__(self, text):
-        self.color = Color('')
-        self.text = str(text)
-
-    def __len__(self):
-        return len(self.text)
-
-    def __str__(self):
-        return self.color(self.text)
-
-
-def str_width(s):
-    return sum(1 + (east_asian_width(c) in 'WF') for c in s)
-
-
-def mjust(string, width):
-    a = str_width(string)
-    left = (width - a) // 2
-    right = width - a - left
-    return (left * ' ') + string + (right * ' ')
-
-
-def rjust(string, width):
-    return ' ' * (width - str_width(string)) + string
-
-
-def render_classic(conf, tr, cal_table, date_marks, today):
+def render_classic(conf, tr, date_marks, today, cal_table):
     # Squash conf.color_default into a single Color object
     conf.color_default = sum(conf.color_default[1:], conf.color_default[0])
 
@@ -296,6 +284,11 @@ def render_classic(conf, tr, cal_table, date_marks, today):
     bt = BorderTemplate(conf)
     cw = bt.cell_width
 
+    output_table = render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table)
+    render_classic_table_border(bt, output_table)
+
+
+def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
     '''
     Expand TinyCalTable content into colored strings and shape them into rectangle
     '''
@@ -303,121 +296,18 @@ def render_classic(conf, tr, cal_table, date_marks, today):
     for cal_row in cal_table.rows:
         output_row = []
 
-        row_height = 0
         for cal_cell in cal_row.cells:
-            if not cal_cell:
-                output_row.append([])
-                continue
-
-            # Render title
-            output_cell = [' ' + conf.color_title(mjust(cal_cell.title, cw-2)) + ' ']
-
-            if conf.border_richness == 'full':
-                output_cell.append(bt.title_sep)
-
-            # Render week
-            for idx, cal_week in enumerate(cal_cell.weeks):
-                output_week = ' '
-
-                # Render WK
-                if conf.wk:
-                    wk_color = conf.color_default + conf.color_wk
-                    if today in cal_week.days:
-                        wk_color += conf.color_today_wk
-
-                    output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
-                    output_week += bt.wk_sep
-
-                # Render month hint
-                if isinstance(cal_week.days[0], Weekday):
-                    month_hint_range_ind = (bt.month_hint_range_ind(0, -1), bt.month_hint_range_ind(1, -1))
-
-                else:
-                    month_hint_range_ind = []
-
-                    for left_right, d in zip((0, 1), (cal_week.days[0], cal_week.days[6])):
-                        if d.month != (d - timedelta(days=7)).month:
-                            month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 0))
-                        elif d.month != (d + timedelta(days=7)).month:
-                            month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 2))
-                        else:
-                            month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 1))
-
-                output_week += month_hint_range_ind[0]
-
-                if isinstance(cal_week.days[0], Date):
-                    node = cal_week.days[0]
-                    padding_color = conf.color_default
-                    for dm in date_marks:
-                        if node.is_fill or (node - timedelta(days=1)).is_fill:
-                            pass
-                        elif node in dm and (node - timedelta(days=1)) in dm:
-                            padding_color += dm.color
-
-                    output_week += padding_color(' ')
-
-                else:
-                    output_week += ' '
-
-                # Render days
-                for node in cal_week.days:
-                    if isinstance(node, Weekday):
-                        # Render weekdays
-                        wkd = int(node)
-                        wkd_color = conf.color_default + conf.color_weekday
-                        wkd_color += getattr(conf, 'color_weekday_' + tr.weekday_meta[wkd])
-                        output_week += wkd_color(tr.weekday[wkd]) + ' '
-
-                    else:
-                        # Render dates
-                        if node.is_fill and conf.fill is False:
-                            ds = '  ' + ' '
-
-                        else:
-                            if node.is_fill:
-                                day_color = conf.color_fill
-                            else:
-                                day_color = conf.color_default + getattr(conf,
-                                        'color_' + tr.weekday_meta[node.weekday()])
-
-                                for dm in date_marks:
-                                    if node in dm:
-                                        day_color += dm.color
-
-                            if node == today:
-                                day_color += conf.color_today
-
-                            ds = day_color(rjust(str(node.day), 2))
-
-                            padding_color = conf.color_default
-                            for dm in date_marks:
-                                if node.is_fill or (node + timedelta(days=1)).is_fill:
-                                    pass
-                                elif node in dm and (node + timedelta(days=1)) in dm:
-                                    padding_color += dm.color
-
-                            ds += padding_color(' ')
-
-                        output_week += ds
-
-                output_week += month_hint_range_ind[1]
-
-                # The right side of month hint
-                if conf.mode == 'week':
-                    output_week += bt.month_hint_sep
-                    if conf.month_hint_text:
-                        output_week += ' ' + conf.color_month_hint_text(cal_week.hint.rjust(7)) + ' '
-
-                output_cell.append(output_week)
-
-            row_height = max(row_height, len(output_cell))
-
+            output_cell = render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell)
             output_row.append(output_cell)
 
+        row_height = max(map(len, output_row))
+
         # Make up cells that are too short
+        # zip() will be called later, which makes shortest cell decides the height
         for cell in output_row:
             lc = len(cell)
             for i in range(lc, row_height):
+                # For non-empty cells, a wk_sep is necessary
                 if lc:
                     cell.append((('    ' + bt.wk_sep) * conf.wk) + (' ' * (cw - 5)))
                 else:
@@ -425,6 +315,118 @@ def render_classic(conf, tr, cal_table, date_marks, today):
 
         output_table.append(output_row)
 
+    return output_table
+
+
+def render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell):
+    if not cal_cell:
+        return []
+
+    # Render title
+    output_cell = [' ' + conf.color_title(mjust(cal_cell.title, cw-2)) + ' ']
+
+    if conf.border_richness == 'full':
+        output_cell.append(bt.title_sep)
+
+    # Render week
+    for idx, cal_week in enumerate(cal_cell.weeks):
+        output_week = ' '
+
+        # Render WK
+        if conf.wk:
+            wk_color = conf.color_default + conf.color_wk
+            if today in cal_week.days:
+                wk_color += conf.color_today_wk
+
+            output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
+            output_week += bt.wk_sep
+
+        # Render month hint
+        if isinstance(cal_week.days[0], Weekday):
+            month_hint_range_ind = (bt.month_hint_range_ind(0, -1), bt.month_hint_range_ind(1, -1))
+
+        else:
+            month_hint_range_ind = []
+
+            for left_right, d in zip((0, 1), (cal_week.days[0], cal_week.days[6])):
+                if d.month != (d - timedelta(days=7)).month:
+                    month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 0))
+                elif d.month != (d + timedelta(days=7)).month:
+                    month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 2))
+                else:
+                    month_hint_range_ind.append(bt.month_hint_range_ind(left_right, 1))
+
+        output_week += month_hint_range_ind[0]
+
+        if isinstance(cal_week.days[0], Date):
+            node = cal_week.days[0]
+            padding_color = conf.color_default
+            for dm in date_marks:
+                if node.is_fill or (node - timedelta(days=1)).is_fill:
+                    pass
+                elif node in dm and (node - timedelta(days=1)) in dm:
+                    padding_color += dm.color
+
+            output_week += padding_color(' ')
+
+        else:
+            output_week += ' '
+
+        # Render days
+        for node in cal_week.days:
+            if isinstance(node, Weekday):
+                # Render weekdays
+                wkd = int(node)
+                wkd_color = conf.color_default + conf.color_weekday
+                wkd_color += getattr(conf, 'color_weekday_' + tr.weekday_meta[wkd])
+                output_week += wkd_color(tr.weekday[wkd]) + ' '
+
+            else:
+                # Render dates
+                if node.is_fill and conf.fill is False:
+                    ds = '  ' + ' '
+
+                else:
+                    if node.is_fill:
+                        day_color = conf.color_fill
+                    else:
+                        day_color = conf.color_default + getattr(conf,
+                                'color_' + tr.weekday_meta[node.weekday()])
+
+                        for dm in date_marks:
+                            if node in dm:
+                                day_color += dm.color
+
+                    if node == today:
+                        day_color += conf.color_today
+
+                    ds = day_color(rjust(str(node.day), 2))
+
+                    padding_color = conf.color_default
+                    for dm in date_marks:
+                        if node.is_fill or (node + timedelta(days=1)).is_fill:
+                            pass
+                        elif node in dm and (node + timedelta(days=1)) in dm:
+                            padding_color += dm.color
+
+                    ds += padding_color(' ')
+
+                output_week += ds
+
+        output_week += month_hint_range_ind[1]
+
+        # The right side of month hint
+        if conf.mode == 'week':
+            output_week += bt.month_hint_sep
+            if conf.month_hint_text:
+                output_week += ' ' + conf.color_month_hint_text(cal_week.hint.rjust(7)) + ' '
+
+        output_cell.append(output_week)
+
+    return output_cell
+
+
+def render_classic_table_border(bt, output_table):
     '''
     Surround rendered cell content with table borders
     '''
