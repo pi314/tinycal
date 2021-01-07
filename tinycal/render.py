@@ -303,7 +303,7 @@ def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
         row_height = max(map(len, output_row))
 
         # Make up cells that are too short
-        # zip() will be called later, which makes shortest cell decides the height
+        # zip() will be used on cells later, which makes shortest one decides the height
         for cell in output_row:
             lc = len(cell)
             for i in range(lc, row_height):
@@ -323,13 +323,13 @@ def render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell):
         return []
 
     # Render title
-    output_cell = [' ' + conf.color_title(mjust(cal_cell.title, cw-2)) + ' ']
+    output_cell = [' ' + conf.color_title(mjust(cal_cell.title, cw - 2)) + ' ']
 
     if conf.border_richness == 'full':
         output_cell.append(bt.title_sep)
 
     # Render week
-    for idx, cal_week in enumerate(cal_cell.weeks):
+    for cal_week in cal_cell.weeks:
         output_week = ' '
 
         # Render WK

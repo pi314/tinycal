@@ -143,7 +143,7 @@ def main():
     if not color_enable:
         for name, field in vars(conf.__class__).items():
             if name.startswith('color_'):
-                setattr(conf, name, Color(''))
+                setattr(conf, name, [Color('')])
 
         date_marks = tuple()
 
