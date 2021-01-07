@@ -65,9 +65,6 @@ def parse_marks_file(marks_file):
                 date_marks.append(DateMark((d1, d2), color))
                 continue
 
-    for dm in date_marks:
-        print(dm)
-
     return date_marks
 
 
