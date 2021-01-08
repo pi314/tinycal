@@ -160,7 +160,7 @@ class Color:
         ret = copy.deepcopy(self)
 
         # List[Color]
-        if isinstance(other, list) and all(isinstance(o, Color) for o in other):
+        if isinstance(other, (list, tuple)) and all(isinstance(o, Color) for o in other):
             return sum(other, start=ret)
 
         if not isinstance(other, Color):
