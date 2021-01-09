@@ -12,7 +12,7 @@ class TinyCalConfig:
     before = DisplayRangeMarginField(default=DisplayRangeMargin('0'))
     wk = BoolField(default=False)
     fill = BoolField(default=False)
-    border_richness = SelectorField(('full', 'basic', 'off'), default='full')
+    border_richness = SelectorField(('full', 'basic', 'none'), default='full')
     border_style = SelectorField(('ascii', 'single', 'bold', 'double'), default='single')
     border_weld = BoolField(default=True)
     firstweekday = SelectorField(('sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'), default='sunday')

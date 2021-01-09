@@ -308,8 +308,8 @@ def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
             lc = len(cell)
             for i in range(lc, row_height):
                 # For non-empty cells, a wk_sep is necessary
-                if lc:
-                    cell.append((('    ' + bt.wk_sep) * conf.wk) + (' ' * (cw - (5 * conf.wk))))
+                if lc and conf.border_richness == 'full' and conf.wk:
+                    cell.append(('    ' + bt.wk_sep) + (' ' * (cw - 5)))
                 else:
                     cell.append(' ' * cw)
 
@@ -345,8 +345,9 @@ def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
         if today in cal_week.days:
             wk_color += conf.color_today_wk
 
-        output_week += ' ' + wk_color(rjust(str(cal_week.wk), 2)) + ' '
-        output_week += bt.wk_sep
+        output_week += ' ' + wk_color(rjust(str(cal_week.wk), 2))
+        if conf.border_richness == 'full':
+            output_week += ' ' + bt.wk_sep
 
     # Prepare month hint
     month_hint_range_ind = []
