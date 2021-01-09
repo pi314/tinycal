@@ -285,7 +285,7 @@ def render_classic(conf, tr, date_marks, today, cal_table):
     cw = bt.cell_width
 
     output_table = render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table)
-    render_classic_table_border(bt, output_table)
+    render_classic_table_border(conf, bt, output_table)
 
 
 def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
@@ -422,27 +422,36 @@ def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
     return output_week
 
 
-def render_classic_table_border(bt, output_table):
+def render_classic_table_border(conf, bt, output_table):
     '''
     Surround rendered cell content with table borders
     '''
-    for row_idx, output_row in enumerate(output_table):
-        if row_idx == 0:
-            print(
-                    bt.table_corner(1) +
-                    bt.table_corner(2).join((bt.table_border(1),) * len(output_row)) +
-                    bt.table_corner(3)
-                    )
+    if conf.border_richness == 'none':
+        for row_idx, output_row in enumerate(output_table):
+            for line_idx, line in enumerate(zip(*output_row)):
+                print(' '.join(line))
 
-        for line_idx, line in enumerate(zip(*output_row)):
-            print(bt.table_border(4) + bt.table_border(5).join(line) + bt.table_border(6))
+            if row_idx != len(output_table) - 1:
+                print()
 
-        if row_idx == len(output_table) - 1:
-            print(
-                    bt.table_corner(7) +
-                    bt.table_corner(8).join((bt.table_border(3),) * len(output_row)) +
-                    bt.table_corner(9)
-                    )
-        else:
-            for comp in zip(bt.table_corner(4), bt.table_corner(5), bt.table_corner(6), bt.table_border(2)):
-                print(comp[0] + comp[1].join((comp[3],) * len(output_row)) + comp[2])
+    else:
+        for row_idx, output_row in enumerate(output_table):
+            if row_idx == 0:
+                print(
+                        bt.table_corner(1) +
+                        bt.table_corner(2).join((bt.table_border(1),) * len(output_row)) +
+                        bt.table_corner(3)
+                        )
+
+            for line_idx, line in enumerate(zip(*output_row)):
+                print(bt.table_border(4) + bt.table_border(5).join(line) + bt.table_border(6))
+
+            if row_idx == len(output_table) - 1:
+                print(
+                        bt.table_corner(7) +
+                        bt.table_corner(8).join((bt.table_border(3),) * len(output_row)) +
+                        bt.table_corner(9)
+                        )
+            else:
+                for comp in zip(bt.table_corner(4), bt.table_corner(5), bt.table_corner(6), bt.table_border(2)):
+                    print(comp[0] + comp[1].join((comp[3],) * len(output_row)) + comp[2])
