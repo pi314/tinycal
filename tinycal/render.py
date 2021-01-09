@@ -214,9 +214,9 @@ class BorderTemplate:
             return None
 
         t = self.template
-        ret = t[2][1]
+        ret = ''
         if self.wk:
-            ret += (t[2][2] * 3) + t[2][5]
+            ret += (t[2][2] * 4) + t[2][5]
 
         ret += self.month_hint_range_enable * t[2][2]
         ret += (7 * 2 + 8) * t[2][2]
@@ -224,7 +224,7 @@ class BorderTemplate:
         ret += self.month_hint_sep_enable * t[2][5]
         ret += self.month_hint_text_enable * 9 * t[2][2]
 
-        return self.color(ret)
+        return self.color(t[2][1] + ret[1:-1] + t[2][1])
 
     @property
     def wk_sep(self):
@@ -309,7 +309,7 @@ def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
             for i in range(lc, row_height):
                 # For non-empty cells, a wk_sep is necessary
                 if lc:
-                    cell.append((('    ' + bt.wk_sep) * conf.wk) + (' ' * (cw - 5)))
+                    cell.append((('    ' + bt.wk_sep) * conf.wk) + (' ' * (cw - (5 * conf.wk))))
                 else:
                     cell.append(' ' * cw)
 
@@ -337,7 +337,7 @@ def render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell):
 
 
 def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
-    output_week = ' '
+    output_week = ''
 
     # Render WK
     if conf.wk:
@@ -345,7 +345,7 @@ def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
         if today in cal_week.days:
             wk_color += conf.color_today_wk
 
-        output_week += wk_color(rjust(str(cal_week.wk), 2)) + ' '
+        output_week += ' ' + wk_color(rjust(str(cal_week.wk), 2)) + ' '
         output_week += bt.wk_sep
 
     # Prepare month hint
