@@ -364,19 +364,19 @@ def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
     # Render month hint (left)
     output_week += month_hint_range_ind[0]
 
-    def get_padding_color(d):
+    def get_padding_color(A, B):
         padding_color = conf.color_default
         for dm in date_marks:
-            if d.is_fill or (d - timedelta(days=1)).is_fill:
+            if A.is_fill or B.is_fill:
                 pass
-            elif d in dm and (d - timedelta(days=1)) in dm:
+            elif A in dm and B in dm:
                 padding_color += dm.color
 
         return padding_color
 
     # Render first padding
     if isinstance(cal_week.days[0], Date):
-        output_week += get_padding_color(cal_week.days[0])(' ')
+        output_week += get_padding_color(cal_week.days[0], cal_week.days[0] - timedelta(days=1))(' ')
     else:
         output_week += ' '
 
@@ -406,7 +406,7 @@ def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
             if node == today:
                 day_color += conf.color_today
 
-            ds = day_color(rjust(str(node.day), 2)) + get_padding_color(node)(' ')
+            ds = day_color(rjust(str(node.day), 2)) + get_padding_color(node, node + timedelta(days=1))(' ')
 
         output_week += ds
 
