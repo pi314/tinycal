@@ -69,7 +69,7 @@ def parse_marks_file(marks_file):
 
 
 def main():
-    conf = TinyCalConfig.parse_conf(CALRCS)
+    conf_set = TinyCalConfig.load_conf(CALRCS)
     args = cli.parse_args()
 
     ''' Remove arguments that are not part of TinyCalConfig '''
@@ -88,6 +88,16 @@ def main():
 
     today = args.today or date.today()
     delattr(args, 'today')
+
+    if args.profile not in conf_set:
+        print('Unknown profile:', args.profile, file=sys.stderr)
+        exit(1)
+
+    conf = TinyCalConfig()
+    conf.merge(conf_set['default'])
+
+    if args.profile:
+        conf.merge(conf_set[args.profile])
 
     conf.merge(vars(args))
 

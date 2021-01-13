@@ -101,6 +101,9 @@ parser.add_argument('-m', '--mode', dest='mode', type=str,
 parser.add_argument('--marks', type=FileType('r'), dest='marks', default=None,
                     help='Specify the date marking file.')
 
+parser.add_argument('-p', '--profile', type=str, dest='profile', default='default',
+                    help='Specify the profile.')
+
 def full_date_str(today_str):
     try:
         return date(*map(int, today_str.split('/')))

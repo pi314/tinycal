@@ -71,7 +71,7 @@ class TinyCalConfig:
         return 'TinyCalConfig(' + (', '.join(k + '=' + repr(v) for (k, v) in self.__dict__.items())) + ')'
 
     @classmethod
-    def parse_conf(cls, calrcs):
+    def load_conf(cls, calrcs):
         for rc in calrcs:
             if isinstance(rc, str):
                 rc = expanduser(rc)
@@ -80,15 +80,15 @@ class TinyCalConfig:
 
                 c = configparser.ConfigParser()
                 c.read(rc)
-                return cls().merge(dict(c['default']))
+                return c
 
             elif isinstance(rc, dict):
-                return cls().merge(rc)
+                return rc
 
             else:
                 raise TypeError('Cannot read config from', rc)
 
-        return cls()
+        return {}
 
     def merge(self, attrs):
         # Map 'today.wk.color' to 'color_today_wk'
