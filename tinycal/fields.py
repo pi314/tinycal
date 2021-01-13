@@ -77,6 +77,9 @@ class IntegerField(ValueField):
 
 class DisplayRangeMarginField(ValueField):
     def gogo(self, value):
+        if isinstance(value, DisplayRangeMargin):
+            return value
+
         return DisplayRangeMargin(value)
 
 
