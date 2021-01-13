@@ -114,8 +114,9 @@ def construct_table(conf, tr, cal, drange, today):
             cal_row.cells.append(cal_cell)
 
         # Fill the remaining cell
-        for i in range(len(cal_row.cells), conf.col):
-            cal_row.cells.append(None)
+        if len(cal_table.rows) > 1:
+            for i in range(len(cal_row.cells), conf.col):
+                cal_row.cells.append(None)
 
     else:
         cal_row = TinyCalCellRow()
