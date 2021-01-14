@@ -89,15 +89,16 @@ def main():
     today = args.today or date.today()
     delattr(args, 'today')
 
-    if args.profile not in conf_set:
+    try:
+        conf = TinyCalConfig()
+        conf.merge(conf_set.get('default', {}))
+
+        if args.profile != 'default':
+            conf.merge(conf_set[args.profile])
+
+    except KeyError:
         print('Unknown profile:', args.profile, file=sys.stderr)
         exit(1)
-
-    conf = TinyCalConfig()
-    conf.merge(conf_set['default'])
-
-    if args.profile:
-        conf.merge(conf_set[args.profile])
 
     conf.merge(vars(args))
 

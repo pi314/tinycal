@@ -280,7 +280,6 @@ def render_classic(conf, tr, date_marks, today, cal_table):
     conf.color_fill = conf.color_fill[0] + conf.color_fill[1:]
     conf.color_month_hint_text = conf.color_default + conf.color_month_hint_text
 
-    conf.border_style = 'example'
     bt = BorderTemplate(conf)
     cw = bt.cell_width
 

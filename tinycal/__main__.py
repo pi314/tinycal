@@ -1,3 +1,3 @@
-from . import core
+from . import tcal
 
-core.main()
+tcal.main()

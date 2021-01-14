@@ -79,10 +79,22 @@ class TinyCalConfig:
                     continue
 
                 c = configparser.ConfigParser()
-                c.read(rc)
-                return c
+                try:
+                    c.read(rc)
+                except configparser.MissingSectionHeaderError:
+                    with open(rc) as f:
+                        c.read_string('[default]\n' + f.read())
+
+                return dict(c)
 
             elif isinstance(rc, dict):
+                # For unittest
+
+                if 'default' not in rc:
+                    ret = {}
+                    ret['default'] = rc
+                    return ret
+
                 return rc
 
             else:

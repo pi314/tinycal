@@ -209,7 +209,7 @@ class WeldTestcase(TinyCalTestCase):
 class LangTestcase(TinyCalTestCase):
     @property
     def calrc(self):
-        return StringIO('')
+        return {}
 
     @property
     def args(self):
@@ -226,10 +226,6 @@ class LangTestcase(TinyCalTestCase):
     def test_jp(self):
         stdout = self.run_with_args(['--lang=jp', '2020'])
         self.check_output('lang=jp', stdout)
-
-    def test_jp_cont(self):
-        stdout = self.run_with_args(['--lang=jp', '--cont', '2020'])
-        self.check_output('lang=jp cont', stdout)
 
 
 class ColorTestcase(TinyCalTestCase):
