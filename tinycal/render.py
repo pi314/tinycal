@@ -1,5 +1,4 @@
 from datetime import timedelta
-from itertools import zip_longest
 from unicodedata import east_asian_width
 
 from .color import Color

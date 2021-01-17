@@ -1,4 +1,5 @@
 import configparser
+import sys
 
 from os.path import expanduser, exists
 
@@ -122,6 +123,10 @@ class TinyCalConfig:
                     setattr(self, key, new_value)
 
             except AttributeError:
+                pass
+
+            except InvalidValueError:
+                print('Invalid value for', key, ':', value, file=sys.stderr)
                 pass
 
         return self

@@ -5,6 +5,11 @@ from os.path import expanduser
 from .color import Color
 
 
+class InvalidValueError(Exception):
+    def __init__(self, value):
+        self.value = value
+
+
 class GreaterThanLimiter:
     def __init__(self, n):
         self.limit = n
@@ -19,7 +24,7 @@ class DisplayRangeMargin:
         m = re.match(r'^(\d+)([mw])?$', value)
 
         if not m:
-            raise ValueError('Invalid display range:', value)
+            raise InvalidValueError(value)
 
         self.value = int(m.group(1))
         self.unit = {'m': 'M', 'w': 'W'}.get(m.group(2), 'M')
