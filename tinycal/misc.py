@@ -27,6 +27,7 @@ class Tr:
                 'Apr', 'May', 'Jun',
                 'Jul', 'Aug', 'Sep',
                 'Oct', 'Nov', 'Dec'],
+            'month_year_format': '{month} {year}',
             }
 
     data_zh = {
@@ -36,14 +37,16 @@ class Tr:
                 '４月', '５月', '６月',
                 '７月', '８月', '９月',
                 '１０月', '１１月', '１２月'],
+            'month_year_format': '{year} {month}',
             }
     data_jp = {
             'weekday': ['月', '火', '水', '木', '金', '土', '日', '週'],
             'month': ['<Error>',
-                '睦月 (１月)', '如月 (２月)', '彌生 (３月)',
-                '卯月 (４月)', '皐月 (５月)', '水無月 (６月)',
-                '文月 (７月)', '葉月 (８月)', '長月 (９月)',
-                '神無月 (１０月)', '霜月 (１１月)', '師走 (１２月)'],
+                '１月 (睦月)', '２月 (如月)', '３月 (彌生)',
+                '４月 (卯月)', '５月 (皐月)', '６月 (水無月)',
+                '７月 (文月)', '８月 (葉月)', '９月 (長月)',
+                '１０月 (神無月)', '１１月 (霜月)', '１２月 (師走)'],
+            'month_year_format': '{year} {month}',
             }
 
     def __init__(self, lang):
@@ -58,6 +61,10 @@ class Tr:
         else:
             key = 'month'
         return self.data[key][month]
+
+    @property
+    def month_year_format(self):
+        return self.data['month_year_format']
 
     @property
     def weekday(self):

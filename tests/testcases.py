@@ -185,9 +185,10 @@ class TinyCalTestCase(unittest.TestCase):
 
 
 class WeekModeTestcase(TinyCalTestCase):
-    # def test_1_month(self):
-    #     stdout, stderr = self.run_with_args([])
-    #     self.check_output('border=single', stdout)
+    def test_1_month(self):
+        args, expect = self.parse_answer_file('test_week_1_month')
+        stdout, stderr = self.run_with_args(args)
+        self.check_output(args, expect, stdout)
     #
     # def test_3_months_nofill_nowk(self):
     #     stdout, stderr = self.run_with_args(['-3', '--no-fill', '--no-wk'])
@@ -197,7 +198,7 @@ class WeekModeTestcase(TinyCalTestCase):
     #     stdout, stderr = self.run_with_args(['-3'])
     #     self.check_output('week 3months', stdout)
 
-    def test_week_across_year_first(self):
+    def test_week_across_year_20200101(self):
         args, expect = self.parse_answer_file('test_week_across_year_20200101')
         stdout, stderr = self.run_with_args(args)
         self.check_output(args, expect, stdout)

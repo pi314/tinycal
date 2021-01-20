@@ -87,7 +87,7 @@ def construct_table(conf, tr, cal, drange, today):
             year = umn // 12
             month = (umn % 12) + 1
 
-            cal_cell = TinyCalCell('{m} {y}'.format(m=tr.month(month), y=year))
+            cal_cell = TinyCalCell(tr.month_year_format.format(year=year, month=tr.month(month)))
 
             # Put Weekday header
             cal_week = TinyCalWeek(wk=tr.weekday[-1])
@@ -122,12 +122,15 @@ def construct_table(conf, tr, cal, drange, today):
         cal_row = TinyCalCellRow()
         cal_table.rows.append(cal_row)
 
-        cal_cell = TinyCalCell('{sy:04}/{sm:02} ~ {ey:04}/{em:02}'.format(
-            sy=drange[0].to_date().year,
-            sm=drange[0].to_date().month,
-            ey=drange[1].to_date().year,
-            em=drange[1].to_date().month,
-            ))
+        if drange[0].umn == drange[1].umn:
+            cal_cell = TinyCalCell(tr.month_year_format.format(year=drange[0].year, month=tr.month(drange[0].month)))
+        else:
+            cal_cell = TinyCalCell('{sy:04}/{sm:02} ~ {ey:04}/{em:02}'.format(
+                sy=drange[0].to_date().year,
+                sm=drange[0].to_date().month,
+                ey=drange[1].to_date().year,
+                em=drange[1].to_date().month,
+                ))
         cal_row.cells.append(cal_cell)
 
         # Put Weekday header
