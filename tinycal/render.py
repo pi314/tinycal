@@ -78,45 +78,45 @@ class BorderTemplate:
             '''
 
     template_single = '''
-            ┌───────────────────────────┬┐
-            │        March 2020         ││
-            │────┬──────────────────────││
-            │ WK │ Su Mo Tu We Th Fr Sa ││
-            │ 10 │  1  2  3  4  5  6  7 ││
-            │ 11 │  8  9 10 11 12 13 14 ││
-            │ 12 │ 15 16 17 18 19 20 21 ││
-            │ 13 │ 22 23 24 25 26 27 28 ││
-            │ 14 │ 29 30 31             ││
-            ├───────────────────────────┼┤
-            └───────────────────────────┴┘
+            ┌─────────────────────────────┬┐
+            │         March 2020          ││
+            │────┬────────────────────────││
+            │ WK │  Su Mo Tu We Th Fr Sa  ││
+            │ 10 │┌  1  2  3  4  5  6  7 ┐││
+            │ 11 ││  8  9 10 11 12 13 14 │││
+            │ 12 ││ 15 16 17 18 19 20 21 │││
+            │ 13 ││ 22 23 24 25 26 27 28 ┘││
+            │ 14 │└ 29 30 31              ││
+            ├─────────────────────────────┼┤
+            └─────────────────────────────┴┘
             '''
 
     template_bold = '''
-            ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━┳┓
-            ┃        March 2020         ┃┃
-            ┃━━━━┳━━━━━━━━━━━━━━━━━━━━━━┃┃
-            ┃ WK ┃ Su Mo Tu We Th Fr Sa ┃┃
-            ┃ 10 ┃  1  2  3  4  5  6  7 ┃┃
-            ┃ 11 ┃  8  9 10 11 12 13 14 ┃┃
-            ┃ 12 ┃ 15 16 17 18 19 20 21 ┃┃
-            ┃ 13 ┃ 22 23 24 25 26 27 28 ┃┃
-            ┃ 14 ┃ 29 30 31             ┃┃
-            ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━╋┫
-            ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━┻┛
+            ┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┳┓
+            ┃         March 2020          ┃┃
+            ┃━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┃┃
+            ┃ WK ┃  Su Mo Tu We Th Fr Sa  ┃┃
+            ┃ 10 ┃┌  1  2  3  4  5  6  7 ┐┃┃
+            ┃ 11 ┃│  8  9 10 11 12 13 14 │┃┃
+            ┃ 12 ┃│ 15 16 17 18 19 20 21 │┃┃
+            ┃ 13 ┃│ 22 23 24 25 26 27 28 ┘┃┃
+            ┃ 14 ┃└ 29 30 31              ┃┃
+            ┣━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╋┫
+            ┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┻┛
             '''
 
     template_double = '''
-            ╔═══════════════════════════╦╗
-            ║         2020              ║║
-            ║────┬──────────────────────║║
-            ║ WK │ Su Mo Tu We Th Fr Sa ║║
-            ║ 10 │  1  2  3  4  5  6  7 ║║
-            ║ 11 │  8  9 10 11 12 13 14 ║║
-            ║ 12 │ 15 16 17 18 19 20 21 ║║
-            ║ 13 │ 22 23 24 25 26 27 28 ║║
-            ║ 14 │ 29 30 31             ║║
-            ╠═══════════════════════════╬╣
-            ╚═══════════════════════════╩╝
+            ╔═════════════════════════════╦╗
+            ║          2020               ║║
+            ║────┬────────────────────────║║
+            ║ WK │  Su Mo Tu We Th Fr Sa  ║║
+            ║ 10 │┌  1  2  3  4  5  6  7 ┐║║
+            ║ 11 ││  8  9 10 11 12 13 14 │║║
+            ║ 12 ││ 15 16 17 18 19 20 21 │║║
+            ║ 13 ││ 22 23 24 25 26 27 28 ┘║║
+            ║ 14 │└ 29 30 31              ║║
+            ╠═════════════════════════════╬╣
+            ╚═════════════════════════════╩╝
             '''
 
     template_frame = '''
@@ -152,16 +152,16 @@ class BorderTemplate:
         self.month_hint_sep_enable = False
         self.month_hint_text_enable = False
 
-        if conf.mode == 'week' and conf.month_hint_range:
-            # Parse month range indicator from template
-            self._month_hint_range_ind = self._extract_month_hint_range_ind()
-
-            if self._month_hint_range_ind:
-                self.month_hint_range_enable = True
-
         if conf.mode == 'week':
-            self.month_hint_sep_enable = (conf.month_hint_sep and conf.month_hint_text)
-            self.month_hint_text_enable = conf.month_hint_text
+            if conf.month_hint_range:
+                # Parse month range indicator from template
+                self._month_hint_range_ind = self._extract_month_hint_range_ind()
+
+                if self._month_hint_range_ind:
+                    self.month_hint_range_enable = True
+
+            self.month_hint_sep_enable = bool(conf.month_hint_sep and conf.month_hint_text)
+            self.month_hint_text_enable = bool(conf.month_hint_text)
 
     def _extract_month_hint_range_ind(self):
         t = self.template[4:-2]

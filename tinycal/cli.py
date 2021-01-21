@@ -78,7 +78,7 @@ parser.add_argument('-c', action='store_const', const='always', dest='color',
 parser.add_argument('-C', action='store_const', const='never', dest='color',
                     help='Disable color output, equals to --color=never')
 
-parser.add_argument('-l', '--lang', choices=['jp', 'zh', 'en'], type=str,
+parser.add_argument('-l', '--lang', choices=TinyCalConfig.lang.choices, type=str,
                     help='Select the language used to display weekdays and month names.')
 
 parser.add_argument('-j', action='store_const', const='jp', dest='lang',
@@ -103,6 +103,27 @@ parser.add_argument('--marks', type=FileType('r'), dest='marks', default=None,
 
 parser.add_argument('-p', '--profile', type=str, dest='profile', default='default',
                     help='Specify the profile.')
+
+month_hint_keywords = ('range', 'sep', 'text')
+def month_hint_comma_separated_str(s):
+    ret = []
+    if not s:
+        return []
+
+    for i in s.strip().split(','):
+        i = i.strip()
+        if i in month_hint_keywords:
+            ret.append(i)
+
+        else:
+            raise ArgumentTypeError(
+                    "invalid keyword: '" + i + "'\nAvailable keywords: " + repr(month_hint_keywords))
+
+    return ret
+
+parser.add_argument('--month-hint', type=month_hint_comma_separated_str, dest='month_hint_keywords',
+                    default=[], const=month_hint_keywords, nargs='?', action=ExtendAction,
+                    help='Specify month-hint options in week mode.')
 
 def full_date_str(today_str):
     try:
@@ -144,5 +165,18 @@ def parse_args():
             args.border_weld = (i == 'weld')
 
     delattr(args, 'border_keywords')
+
+    args.month_hint_range = None
+    args.month_hint_sep = None
+    args.month_hint_text = None
+    for i in args.month_hint_keywords:
+        if i == 'range':
+            args.month_hint_range = True
+        elif i == 'sep':
+            args.month_hint_sep = True
+        elif i == 'text':
+            args.month_hint_text = True
+
+    delattr(args, 'month_hint_keywords')
 
     return args
