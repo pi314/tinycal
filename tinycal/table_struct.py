@@ -140,7 +140,7 @@ def construct_table(conf, tr, cal, drange, today):
 
         cal_cell.weeks.append(cal_week)
 
-        dcursor = drange[0].move_to_week_begin().to_date()
+        dcursor = drange[0].copy().move_to_week_begin().to_date()
 
         while dcursor <= drange[1].to_date():
             week = [Date(dcursor + timedelta(days=i)) for i in range(7)]
@@ -156,6 +156,7 @@ def construct_table(conf, tr, cal, drange, today):
                 cal_week.hint = '{:04}/{:02}'.format(week[-1].year, week[-1].month)
 
             for day in week:
+                day.is_fill = (day.year * 12 + day.month - 1) not in range(drange[0].umn, drange[1].umn + 1)
                 cal_week.append(day)
 
             cal_cell.weeks.append(cal_week)

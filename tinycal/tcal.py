@@ -136,6 +136,7 @@ def main():
     if conf.before:
         if conf.before.unit == 'W':
             drange[0] -= timedelta(weeks=conf.before.value)
+            drange[0].move_to_week_begin()
 
         elif conf.before.unit == 'M':
             drange[0].move_back_n_month(conf.before.value)

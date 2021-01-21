@@ -90,6 +90,9 @@ class DateCursor:
     def from_date(cal, d):
         return DateCursor(cal, d.year, d.month, d.day)
 
+    def copy(self):
+        return DateCursor(self.cal, self.year, self.month, self.day)
+
     def to_date(self):
         if self.day == -1:
             day = calendar.monthrange(self.year, self.month)[1]
