@@ -189,14 +189,16 @@ class WeekModeTestcase(TinyCalTestCase):
         args, expect = self.parse_answer_file('test_week_1_month')
         stdout, stderr = self.run_with_args(args)
         self.check_output(args, expect, stdout)
-    #
-    # def test_3_months_nofill_nowk(self):
-    #     stdout, stderr = self.run_with_args(['-3', '--no-fill', '--no-wk'])
-    #     self.check_output('week 3months nofill nowk', stdout)
-    #
-    # def test_3_months(self):
-    #     stdout, stderr = self.run_with_args(['-3'])
-    #     self.check_output('week 3months', stdout)
+
+    def test_week_3_months_nofill_nowk(self):
+        args, expect = self.parse_answer_file('test_week_3_months_nofill_nowk')
+        stdout, stderr = self.run_with_args(args)
+        self.check_output(args, expect, stdout)
+
+    def test_week_3_months(self):
+        args, expect = self.parse_answer_file('test_week_3_months')
+        stdout, stderr = self.run_with_args(args)
+        self.check_output(args, expect, stdout)
 
     def test_week_across_year_20200101(self):
         args, expect = self.parse_answer_file('test_week_across_year_20200101')
