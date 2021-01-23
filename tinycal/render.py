@@ -20,6 +20,10 @@ def rjust(string, width):
     return ' ' * (width - str_width(string)) + string
 
 
+def ljust(string, width):
+    return string + ' ' * (width - str_width(string))
+
+
 class BorderTemplate:
     '''
     Table corners numbering:
@@ -133,13 +137,14 @@ class BorderTemplate:
             ╚═══════════════════════════╧╝
             '''
 
-    def __init__(self, conf):
+    def __init__(self, conf, month_hint_text_width=0):
         self.style = conf.border_style
         self.richness = conf.border_richness
         self.weld = conf.border_weld
         self.wk = conf.wk
         self.color = conf.color_default + conf.color_border
         self.color_month_hint_range = self.color + conf.color_month_hint_range
+        self.month_hint_text_width = month_hint_text_width
 
         try:
             template = getattr(self.__class__, 'template_' + self.style)
@@ -188,7 +193,7 @@ class BorderTemplate:
                 self.wk * (3 + 2 * (self.richness == 'full')),
                 2 * self.month_hint_range_enable,
                 1 * self.month_hint_sep_enable,
-                9 * self.month_hint_text_enable,
+                (2 + self.month_hint_text_width) * self.month_hint_text_enable,
                 ))
 
     @property
@@ -221,7 +226,7 @@ class BorderTemplate:
         ret += (7 * 2 + 8) * t[2][2]
         ret += self.month_hint_range_enable * t[2][2]
         ret += self.month_hint_sep_enable * t[2][5]
-        ret += self.month_hint_text_enable * 9 * t[2][2]
+        ret += self.month_hint_text_enable * (2 + self.month_hint_text_width) * t[2][2]
 
         return self.color(t[2][1] + ret[1:-1] + t[2][1])
 
@@ -279,14 +284,16 @@ def render_classic(conf, tr, date_marks, today, cal_table):
     conf.color_fill = conf.color_fill[0] + conf.color_fill[1:]
     conf.color_month_hint_text = conf.color_default + conf.color_month_hint_text
 
-    bt = BorderTemplate(conf)
+    hw = max([str_width(cal_week.hint) for cal_row in cal_table.rows for cal_cell in cal_row.cells for cal_week in cal_cell.weeks])
+
+    bt = BorderTemplate(conf, month_hint_text_width=hw)
     cw = bt.cell_width
 
-    output_table = render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table)
+    output_table = render_classic_table_cells(conf, tr, date_marks, today, bt, cw, hw, cal_table)
     render_classic_table_border(conf, bt, output_table)
 
 
-def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
+def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, hw, cal_table):
     '''
     Expand TinyCalTable content into colored strings and shape them into rectangle
     '''
@@ -295,7 +302,7 @@ def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
         output_row = []
 
         for cal_cell in cal_row.cells:
-            output_cell = render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell)
+            output_cell = render_classic_cell(conf, tr, date_marks, today, bt, cw, hw, cal_cell)
             output_row.append(output_cell)
 
         row_height = max(map(len, output_row))
@@ -316,7 +323,7 @@ def render_classic_table_cells(conf, tr, date_marks, today, bt, cw, cal_table):
     return output_table
 
 
-def render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell):
+def render_classic_cell(conf, tr, date_marks, today, bt, cw, hw, cal_cell):
     if not cal_cell:
         return []
 
@@ -328,13 +335,13 @@ def render_classic_cell(conf, tr, date_marks, today, bt, cw, cal_cell):
 
     # Render week
     for cal_week in cal_cell.weeks:
-        output_week = render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week)
+        output_week = render_classic_week(conf, tr, date_marks, today, bt, cw, hw, cal_week)
         output_cell.append(output_week)
 
     return output_cell
 
 
-def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
+def render_classic_week(conf, tr, date_marks, today, bt, cw, hw, cal_week):
     output_week = ''
 
     # Render WK
@@ -415,7 +422,7 @@ def render_classic_week(conf, tr, date_marks, today, bt, cw, cal_week):
     if conf.mode == 'week':
         output_week += bt.month_hint_sep
         if conf.month_hint_text:
-            output_week += ' ' + conf.color_month_hint_text(cal_week.hint.rjust(7)) + ' '
+            output_week += ' ' + conf.color_month_hint_text(ljust(cal_week.hint, hw)) + ' '
 
     return output_week
 

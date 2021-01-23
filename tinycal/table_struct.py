@@ -153,7 +153,7 @@ def construct_table(conf, tr, cal, drange, today):
             cal_week = TinyCalWeek(wk=wk)
 
             if (week[-1].day <= 7) or len(cal_cell.weeks) == 1:
-                cal_week.hint = '{:04}/{:02}'.format(week[-1].year, week[-1].month)
+                cal_week.hint = tr.month(week[-1].month, abbr=True)
 
             for day in week:
                 day.is_fill = (day.year * 12 + day.month - 1) not in range(drange[0].umn, drange[1].umn + 1)
